@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiftNet - HubSpot Marketing Hub & Salesforce Integration - Scope of Work</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: #f8f9fa;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 60px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            border-radius: 8px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid #ff5a1f;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #7f8c8d;
+            font-weight: 400;
+        }
+        
+        .summary-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+        }
+        
+        .summary-section h2 {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .summary-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .summary-card h3 {
+            font-size: 0.95em;
+            margin-bottom: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        
+        .summary-card p {
+            font-size: 2.2em;
+            font-weight: 700;
+        }
+        
+        .admin-note {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        
+        .admin-note h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .admin-note ul {
+            list-style-position: inside;
+            color: #555;
+        }
+        
+        .admin-note li {
+            margin: 8px 0;
+            padding-left: 10px;
+        }
+        
+        .table-container {
+            margin: 40px 0;
+        }
+        
+        .table-container h2 {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 20px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: top;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .story-id {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+        
+        .hours {
+            font-weight: 700;
+            color: #27ae60;
+            font-size: 1.1em;
+        }
+        
+        .workstream {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .approach {
+            color: #555;
+            line-height: 1.8;
+        }
+        
+        .approach br {
+            margin-bottom: 8px;
+        }
+        
+        .assumptions {
+            color: #7f8c8d;
+            font-style: italic;
+            line-height: 1.8;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 40px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            table {
+                font-size: 0.9em;
+            }
+            
+            th, td {
+                padding: 12px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>LiftNet</h1>
+            <p class="subtitle">HubSpot Marketing Hub & Salesforce Integration</p>
+            <p class="subtitle">Scope of Work</p>
+        </div>
+
+        <div class="summary-section">
+            <h2>Project Overview</h2>
+            <p>LiftNet is establishing their first comprehensive marketing infrastructure following acquisition by Ascension Private Equity. As a 12-person team with one sales representative, LiftNet needs a streamlined HubSpot Marketing Hub setup integrated with their existing Salesforce CRM to enable automated lead management, event follow-up campaigns, and lifecycle stage tracking. This scope focuses on quick wins through HubSpot-Salesforce integration, automated lead routing, and foundational marketing automation to support immediate event follow-up needs.</p>
+            
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>Total Estimated Hours</h3>
+                    <p>60 Hours</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Build Hours</h3>
+                    <p>45 Hours</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Admin Hours</h3>
+                    <p>15 Hours</p>
+                </div>
+            </div>
+            
+            <div class="admin-note">
+                <h4>Project Management & Admin Hours Breakdown</h4>
+                <ul>
+                    <li><strong>Requirements Validation:</strong> 3 hours (Salesforce field mapping coordination with Kings3 team)</li>
+                    <li><strong>Project Management:</strong> 6 hours (coordination, stakeholder alignment)</li>
+                    <li><strong>Testing & QA:</strong> 3 hours (integration testing, lead flow validation)</li>
+                    <li><strong>Training & Documentation:</strong> 3 hours (Rachel training, process documentation)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h2>Detailed Scope of Work</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Story ID</th>
+                        <th>Hours</th>
+                        <th>Workstream Name</th>
+                        <th>Customer Story</th>
+                        <th>Recommended Approach</th>
+                        <th>Assumptions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="story-id">1</td>
+                        <td class="hours">15</td>
+                        <td class="workstream">HubSpot-Salesforce Integration Setup</td>
+                        <td class="story">LiftNet needs HubSpot and Salesforce to communicate bidirectionally so marketing-qualified leads flow automatically to sales while maintaining data consistency and live reporting visibility</td>
+                        <td class="approach">
+                            → Configure native HubSpot-Salesforce integration using pre-built connector<br>
+                            → Map contacts, companies, and activities between platforms<br>
+                            → Set up one-way sync (HubSpot to Salesforce) for qualified contacts initially<br>
+                            → Configure field mappings coordinated with Kings3 Salesforce team
+                        </td>
+                        <td class="assumptions">
+                            → Uses native HubSpot-Salesforce connector<br>
+                            → One-way sync to start; bidirectional sync as Phase 2 if needed<br>
+                            → Standard lead qualification criteria defined
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="story-id">2</td>
+                        <td class="hours">10</td>
+                        <td class="workstream">Lead Scoring & Qualification Framework</td>
+                        <td class="story">LiftNet needs automated lead scoring based on engagement and firmographic data to identify sales-ready prospects from event attendees and web forms</td>
+                        <td class="approach">
+                            → Build simple lead scoring model based on engagement activities<br>
+                            → Configure scoring for event attendance, web form submissions, email engagement<br>
+                            → Configure MQL threshold and automatic lead assignment to Salesforce<br>
+                            → Set up notifications for sales rep when MQLs are created
+                        </td>
+                        <td class="assumptions">
+                            → Includes default HubSpot lifecycle stages and automation<br>
+                            → Event attendance tracked via list uploads<br>
+                            → Up to 10 scoring criteria
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="story-id">3</td>
+                        <td class="hours">5</td>
+                        <td class="workstream">Automated Lead Routing</td>
+                        <td class="story">LiftNet wants qualified leads automatically assigned to their sales representative in Salesforce with proper routing rules for future inside sales hire</td>
+                        <td class="approach">
+                            → Configure lead assignment workflow in HubSpot<br>
+                            → Set up default assignment to current sales rep<br>
+                            → Configure round-robin logic for future use (inactive until second rep hired)<br>
+                            → Set up Salesforce lead owner field mapping<br>
+                            → Create notification emails for lead assignments
+                        </td>
+                        <td class="assumptions">
+                            → Single sales rep initially; routing rules prepared for Q3/Q4 2026 expansion<br>
+                            → Basic routing only (no complex territory or account-based routing)<br>
+                            → Lead ownership assigned at time of MQL creation
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="story-id">4</td>
+                        <td class="hours">5</td>
+                        <td class="workstream">Event Contact Management</td>
+                        <td class="story">LiftNet needs to efficiently upload event attendee lists and trigger automated follow-up sequences based on event participation</td>
+                        <td class="approach">
+                            → Create event contact property to track event attendance<br>
+                            → Set up list import template for event attendees<br>
+                            → Build workflow to tag contacts by specific events<br>
+                            → Set up event-specific lists for segmentation
+                        </td>
+                        <td class="assumptions">
+                            → Event data captured via manual list uploads (no registration integration)<br>
+                            → Rachel will build email sequences independently
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="story-id">5</td>
+                        <td class="hours">10</td>
+                        <td class="workstream">Web Form Integration</td>
+                        <td class="story">LiftNet needs web forms to create contacts directly in HubSpot and flow through to Salesforce automatically</td>
+                        <td class="approach">
+                            → Integrate existing forms into HubSpot<br>
+                            → Build new forms in HubSpot as needed<br>
+                            → Set up form routing through HubSpot for proper scoring and lifecycle management
+                        </td>
+                        <td class="assumptions">
+                            → Includes up to 10 forms integrated into HubSpot<br>
+                            → Includes 3 webforms built in HubSpot<br>
+                            → Basic form setup only; no conditional logic or progressive profiling
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+    </div>
+</body>
+</html>

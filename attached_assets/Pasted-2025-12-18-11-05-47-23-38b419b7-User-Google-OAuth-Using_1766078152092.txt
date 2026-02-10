@@ -1,0 +1,100 @@
+2025-12-18 11:05:47.23
+38b419b7
+User
+[Google OAuth] Using APP_URL callback: https://work.patchops.io/auth/google/callback
+2025-12-18 11:05:47.23
+38b419b7
+User
+[Google OAuth] Configured callback URL: https://work.patchops.io/auth/google/callback
+2025-12-18 11:05:47.29
+38b419b7
+User
+5:05:47 PM [express] serving on port 5000
+2025-12-18 11:09:43.07
+efad9fbb
+System
+system: received signal terminated
+2025-12-18 11:14:41.86
+38b419b7
+User
+5:14:41 PM [express] GET /api/user 401 in 2ms
+2025-12-18 11:14:44.71
+38b419b7
+User
+5:14:44 PM [express] GET /api/user 401 in 1ms
+2025-12-18 11:14:50.92
+38b419b7
+User
+[Google OAuth] Callback received for email: zach@patchops.io
+2025-12-18 11:14:51.60
+38b419b7
+User
+[Google OAuth] User by Google ID: 76f7c0f6-8d3b-4640-bc59-842725dd61d0
+2025-12-18 11:14:52.44
+38b419b7
+User
+5:14:52 PM [express] GET /api/user 401 in 1ms
+2025-12-18 11:14:59.19
+38b419b7
+User
+[Google OAuth] Callback received for email: zacharybwest@gmail.com
+2025-12-18 11:14:59.23
+38b419b7
+User
+[Google OAuth] User by Google ID: not found
+2025-12-18 11:14:59.28
+38b419b7
+User
+[Google OAuth] User by email: not found
+2025-12-18 11:14:59.28
+38b419b7
+User
+[Google OAuth] REJECTED: No account found for email: zacharybwest@gmail.com
+2025-12-18 11:14:59.68
+38b419b7
+User
+5:14:59 PM [express] GET /api/user 401 in 1ms
+2025-12-18 11:15:05.63
+38b419b7
+User
+[Google OAuth] Callback received for email: zach@patchops.io
+2025-12-18 11:15:05.68
+38b419b7
+User
+[Google OAuth] User by Google ID: 76f7c0f6-8d3b-4640-bc59-842725dd61d0
+2025-12-18 11:15:06.35
+38b419b7
+User
+5:15:06 PM [express] GET /api/user 401 in 1ms
+2025-12-18 11:15:08.62
+38b419b7
+User
+5:15:08 PM [express] GET /api/user 401 in 1ms
+2025-12-18 11:15:09.59
+38b419b7
+User
+5:15:09 PM [express] GET /api/user 401 in 2ms
+2025-12-18 11:15:10.37
+38b419b7
+User
+5:15:10 PM [express] GET /api/user 401 in 1ms
+2025-12-18 11:15:11.05
+38b419b7
+User
+5:15:11 PM [express] GET /api/user 401 in 1ms
+2025-12-18 11:15:15.78
+38b419b7
+User
+[Google OAuth] Callback received for email: zach@patchops.io
+2025-12-18 11:15:15.83
+38b419b7
+User
+[Google OAuth] User by Google ID: 76f7c0f6-8d3b-4640-bc59-842725dd61d0
+2025-12-18 11:15:16.50
+38b419b7
+User
+5:15:16 PM [express] GET /api/user 401 in 1ms
+2025-12-18 11:15:16.50
+38b419b7
+User
+5:15:16 PM [express] GET /api/user 401 in 1ms

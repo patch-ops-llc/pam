@@ -1,0 +1,140 @@
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+internalQuery: undefined,
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+where: undefined,
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+schema: 'public',
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+table: 'slack_configurations',
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+column: undefined,
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+dataType: undefined,
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+constraint: 'slack_configurations_user_id_fkey',
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+file: 'ri_triggers.c',
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+line: '2608',
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+routine: 'ri_ReportViolation'
+2025-10-13 16:30:02.22
+0bd1a5a2
+User
+}
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+Error creating slack configuration: error: insert or update on table "slack_configurations" violates foreign key constraint "slack_configurations_user_id_fkey"
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+at async DatabaseStorage.createSlackConfiguration (file:///home/runner/workspace/dist/index.js:959:27)
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+at async file:///home/runner/workspace/dist/index.js:2311:27 {
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+length: 310,
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+severity: 'ERROR',
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+code: '23503',
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+detail: 'Key (user_id)=(anonymous) is not present in table "users".',
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+hint: undefined,
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+position: undefined,
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+internalPosition: undefined,
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+internalQuery: undefined,
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+where: undefined,
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+schema: 'public',
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+table: 'slack_configurations',
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+column: undefined,
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+dataType: undefined,
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+constraint: 'slack_configurations_user_id_fkey',
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+file: 'ri_triggers.c',
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+line: '2608',
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+routine: 'ri_ReportViolation'
+2025-10-13 16:30:02.98
+0bd1a5a2
+User
+}

@@ -1,0 +1,33 @@
+Warning, this migration may permanently remove some data from your production database, learn more:
+You're about to delete session table with 1 items
+ALTER TABLE "session" DISABLE ROW LEVEL SECURITY;
+DROP TABLE "session" CASCADE;
+ALTER TABLE "project_team_members" DROP CONSTRAINT "project_team_members_project_id_user_id_role_key";
+ALTER TABLE "quota_configs" DROP CONSTRAINT "quota_configs_agency_id_key";
+ALTER TABLE "penguin_hours_tracker" DROP CONSTRAINT "penguin_hours_tracker_agency_id_fkey";
+ALTER TABLE "forecast_invoices" DROP CONSTRAINT "forecast_invoices_agency_id_fkey";
+ALTER TABLE "project_team_members" DROP CONSTRAINT "project_team_members_project_id_fkey";
+ALTER TABLE "project_team_members" DROP CONSTRAINT "project_team_members_user_id_fkey";
+ALTER TABLE "slack_configurations" DROP CONSTRAINT "slack_configurations_user_id_fkey";
+ALTER TABLE "slack_configurations" DROP CONSTRAINT "slack_configurations_agency_id_fkey";
+ALTER TABLE "slack_configurations" DROP CONSTRAINT "slack_configurations_account_id_fkey";
+ALTER TABLE "quota_configs" DROP CONSTRAINT "quota_configs_agency_id_fkey";
+ALTER TABLE "user_availability" DROP CONSTRAINT "user_availability_user_id_fkey";
+ALTER TABLE "proposals" DROP CONSTRAINT "proposals_project_id_fkey";
+ALTER TABLE "time_logs" ALTER COLUMN "task_name" DROP DEFAULT;
+ALTER TABLE "proposals" ALTER COLUMN "company_name" DROP DEFAULT;
+ALTER TABLE "proposals" ADD COLUMN "white_label_logo_url" text;
+ALTER TABLE "proposals" ADD COLUMN "prospect_logo_url" text;
+ALTER TABLE "penguin_hours_tracker" ADD CONSTRAINT "penguin_hours_tracker_agency_id_agencies_id_fk" FOREIGN KEY ("agency_id") REFERENCES "public"."agencies"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "forecast_invoices" ADD CONSTRAINT "forecast_invoices_agency_id_agencies_id_fk" FOREIGN KEY ("agency_id") REFERENCES "public"."agencies"("id") ON DELETE set null ON UPDATE no action;
+ALTER TABLE "project_team_members" ADD CONSTRAINT "project_team_members_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "project_team_members" ADD CONSTRAINT "project_team_members_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "slack_configurations" ADD CONSTRAINT "slack_configurations_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "slack_configurations" ADD CONSTRAINT "slack_configurations_agency_id_agencies_id_fk" FOREIGN KEY ("agency_id") REFERENCES "public"."agencies"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "slack_configurations" ADD CONSTRAINT "slack_configurations_account_id_accounts_id_fk" FOREIGN KEY ("account_id") REFERENCES "public"."accounts"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "quota_configs" ADD CONSTRAINT "quota_configs_agency_id_agencies_id_fk" FOREIGN KEY ("agency_id") REFERENCES "public"."agencies"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "user_availability" ADD CONSTRAINT "user_availability_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "proposals" ADD CONSTRAINT "proposals_project_id_projects_id_fk" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE set null ON UPDATE no action;
+ALTER TABLE "project_team_members" ADD CONSTRAINT "project_team_members_project_user_role_unique" UNIQUE("project_id","user_id","role");
+ALTER TABLE "quota_configs" ADD CONSTRAINT "quota_configs_agency_id_unique" UNIQUE("agency_id");
+ALTER TABLE "proposals" ADD CONSTRAINT "proposals_slug_unique" UNIQUE("slug");

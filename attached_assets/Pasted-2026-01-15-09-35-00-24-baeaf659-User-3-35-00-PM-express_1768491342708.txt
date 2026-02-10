@@ -1,0 +1,116 @@
+2026-01-15 09:35:00.24
+baeaf659
+User
+3:35:00 PM [express] GET /api/projects 304 in 433ms :: [{"id":"265481f4-7fc0-45f8-80f4-99480186bd7d"…
+2026-01-15 09:35:00.28
+baeaf659
+User
+position: '122',
+2026-01-15 09:35:00.28
+baeaf659
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2026-01-15 09:35:00.28
+baeaf659
+User
+dataType: undefined,
+2026-01-15 09:35:00.28
+baeaf659
+User
+at async file:///home/runner/workspace/dist/index.js:9259:32 {
+2026-01-15 09:35:00.28
+baeaf659
+User
+detail: undefined,
+2026-01-15 09:35:00.28
+baeaf659
+User
+internalQuery: undefined,
+2026-01-15 09:35:00.28
+baeaf659
+User
+length: 107,
+2026-01-15 09:35:00.28
+baeaf659
+User
+hint: undefined,
+2026-01-15 09:35:00.28
+baeaf659
+User
+severity: 'ERROR',
+2026-01-15 09:35:00.28
+baeaf659
+User
+line: '3722',
+2026-01-15 09:35:00.28
+baeaf659
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-01-15 09:35:00.28
+baeaf659
+User
+where: undefined,
+2026-01-15 09:35:00.28
+baeaf659
+User
+}
+2026-01-15 09:35:00.28
+baeaf659
+User
+code: '42703',
+2026-01-15 09:35:00.28
+baeaf659
+User
+at async file:///home/runner/workspace/dist/index.js:9261:31
+2026-01-15 09:35:00.28
+baeaf659
+User
+Error fetching UAT sessions: error: column "status" does not exist
+2026-01-15 09:35:00.28
+baeaf659
+User
+routine: 'errorMissingColumn'
+2026-01-15 09:35:00.28
+baeaf659
+User
+internalPosition: undefined,
+2026-01-15 09:35:00.28
+baeaf659
+User
+column: undefined,
+2026-01-15 09:35:00.28
+baeaf659
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2026-01-15 09:35:00.28
+baeaf659
+User
+constraint: undefined,
+2026-01-15 09:35:00.28
+baeaf659
+User
+at async Promise.all (index 0)
+2026-01-15 09:35:00.28
+baeaf659
+User
+at async DatabaseStorage.getUatSessionWithRelations (file:///home/runner/workspace/dist/index.js:3621:32)
+2026-01-15 09:35:00.28
+baeaf659
+User
+table: undefined,
+2026-01-15 09:35:00.28
+baeaf659
+User
+file: 'parse_relation.c',
+2026-01-15 09:35:00.28
+baeaf659
+User
+schema: undefined,
+2026-01-15 09:35:00.32
+baeaf659
+User
+3:35:00 PM [express] GET /api/uat-sessions 500 in 520ms :: {"error":"Failed to fetch UAT sessions"}
+2026-01-15 09:35:12.38
+baeaf659
+User
+3:35:12 PM [express] POST /api/uat-sessions 201 in 181ms :: {"id":"be1560e8-4434-4db1-a1df-e9c28ed7f…

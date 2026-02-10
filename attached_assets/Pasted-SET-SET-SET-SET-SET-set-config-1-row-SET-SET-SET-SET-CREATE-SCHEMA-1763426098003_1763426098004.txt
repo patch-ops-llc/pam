@@ -1,0 +1,309 @@
+SET
+SET
+SET
+SET
+SET
+ set_config 
+------------
+ 
+(1 row)
+
+SET
+SET
+SET
+SET
+CREATE SCHEMA
+ALTER SCHEMA
+SET
+SET
+CREATE TABLE
+ALTER TABLE
+CREATE SEQUENCE
+ALTER SEQUENCE
+ALTER SEQUENCE
+ERROR:  relation "account_forecast_allocations" already exists
+ALTER TABLE
+ERROR:  relation "account_notes" already exists
+ALTER TABLE
+ERROR:  relation "accounts" already exists
+ALTER TABLE
+ERROR:  relation "agencies" already exists
+ALTER TABLE
+ERROR:  relation "branding_config" already exists
+ALTER TABLE
+ERROR:  relation "calendar_connections" already exists
+ALTER TABLE
+ERROR:  relation "calendar_events" already exists
+ALTER TABLE
+ERROR:  relation "calendars" already exists
+ALTER TABLE
+ERROR:  relation "chat_transcripts" already exists
+ALTER TABLE
+ERROR:  relation "deals" already exists
+ALTER TABLE
+ERROR:  relation "forecast_account_revenue" already exists
+ALTER TABLE
+ERROR:  relation "forecast_expenses" already exists
+ALTER TABLE
+ERROR:  relation "forecast_invoices" already exists
+ALTER TABLE
+ERROR:  relation "forecast_resources" already exists
+ALTER TABLE
+ERROR:  relation "forecast_retainers" already exists
+ALTER TABLE
+ERROR:  relation "forecast_scenarios" already exists
+ALTER TABLE
+ERROR:  relation "forecast_settings" already exists
+ALTER TABLE
+ERROR:  relation "guidance_settings" already exists
+ALTER TABLE
+ERROR:  relation "holidays" already exists
+ALTER TABLE
+ERROR:  relation "knowledge_base_documents" already exists
+ALTER TABLE
+ERROR:  relation "leads" already exists
+ALTER TABLE
+ERROR:  relation "penguin_hours_tracker" already exists
+ALTER TABLE
+ERROR:  relation "pipeline_stages" already exists
+ALTER TABLE
+ERROR:  relation "project_attachments" already exists
+ALTER TABLE
+ERROR:  relation "project_team_members" already exists
+ALTER TABLE
+ERROR:  relation "projects" already exists
+ALTER TABLE
+ERROR:  relation "proposal_scope_items" already exists
+ALTER TABLE
+ERROR:  relation "proposals" already exists
+ALTER TABLE
+ERROR:  relation "quota_configs" already exists
+ALTER TABLE
+ERROR:  relation "resource_monthly_capacity" already exists
+ALTER TABLE
+ERROR:  relation "slack_configurations" already exists
+ALTER TABLE
+ERROR:  relation "task_collaborators" already exists
+ALTER TABLE
+ERROR:  relation "task_label_assignments" already exists
+ALTER TABLE
+ERROR:  relation "task_labels" already exists
+ALTER TABLE
+ERROR:  relation "tasks" already exists
+ALTER TABLE
+ERROR:  relation "time_logs" already exists
+ALTER TABLE
+ERROR:  relation "user_availability" already exists
+ALTER TABLE
+ERROR:  relation "users" already exists
+ALTER TABLE
+ALTER TABLE
+COPY 18
+COPY 0
+COPY 1
+ERROR:  duplicate key value violates unique constraint "accounts_pkey"
+DETAIL:  Key (id)=(245248bc-ccf8-4875-9e13-7d1dcedb4c3a) already exists.
+CONTEXT:  COPY accounts, line 1
+ERROR:  duplicate key value violates unique constraint "agencies_pkey"
+DETAIL:  Key (id)=(21927933-edd9-49ed-970f-d45c0776231a) already exists.
+CONTEXT:  COPY agencies, line 1
+COPY 1
+COPY 0
+COPY 0
+COPY 0
+ERROR:  insert or update on table "chat_transcripts" violates foreign key constraint "chat_transcripts_proposal_id_proposals_id_fk"
+DETAIL:  Key (proposal_id)=(7433884c-6621-4981-989a-c29ce7b33f0a) is not present in table "proposals".
+COPY 0
+COPY 4
+COPY 1
+ERROR:  duplicate key value violates unique constraint "forecast_invoices_pkey"
+DETAIL:  Key (id)=(dc2fc854-4dfb-49f1-9e84-648685720558) already exists.
+CONTEXT:  COPY forecast_invoices, line 1
+COPY 0
+ERROR:  insert or update on table "forecast_retainers" violates foreign key constraint "forecast_retainers_agency_id_agencies_id_fk"
+DETAIL:  Key (agency_id)=(0acc41aa-7ddc-4ae9-890f-f45980a4b7d8) is not present in table "agencies".
+COPY 0
+COPY 3
+COPY 3
+COPY 1
+COPY 4
+COPY 0
+ERROR:  duplicate key value violates unique constraint "penguin_hours_tracker_pkey"
+DETAIL:  Key (id)=(7cba46de-6a94-4c11-89e1-e4e4381f9af2) already exists.
+CONTEXT:  COPY penguin_hours_tracker, line 1
+COPY 0
+COPY 0
+COPY 1
+ERROR:  duplicate key value violates unique constraint "projects_pkey"
+DETAIL:  Key (id)=(265481f4-7fc0-45f8-80f4-99480186bd7d) already exists.
+CONTEXT:  COPY projects, line 1
+ERROR:  insert or update on table "proposal_scope_items" violates foreign key constraint "proposal_scope_items_proposal_id_proposals_id_fk"
+DETAIL:  Key (proposal_id)=(7433884c-6621-4981-989a-c29ce7b33f0a) is not present in table "proposals".
+COPY 2
+ERROR:  duplicate key value violates unique constraint "quota_configs_pkey"
+DETAIL:  Key (id)=(9e932e50-36fb-4a09-a2b5-7ef493780783) already exists.
+CONTEXT:  COPY quota_configs, line 1
+COPY 0
+COPY 0
+COPY 0
+COPY 0
+COPY 0
+ERROR:  duplicate key value violates unique constraint "tasks_pkey"
+DETAIL:  Key (id)=(ee003ed0-cd08-4e06-925d-cd29b71424c0) already exists.
+CONTEXT:  COPY tasks, line 1
+ERROR:  duplicate key value violates unique constraint "time_logs_pkey"
+DETAIL:  Key (id)=(9244311d-3988-4fd0-8c88-2c9aefd84c95) already exists.
+CONTEXT:  COPY time_logs, line 1
+ERROR:  duplicate key value violates unique constraint "user_availability_pkey"
+DETAIL:  Key (id)=(f8598d28-47c3-4ca6-a649-c6345c5f7520) already exists.
+CONTEXT:  COPY user_availability, line 1
+ERROR:  duplicate key value violates unique constraint "users_pkey"
+DETAIL:  Key (id)=(76f7c0f6-8d3b-4640-bc59-842725dd61d0) already exists.
+CONTEXT:  COPY users, line 1
+ setval 
+--------
+     18
+(1 row)
+
+ALTER TABLE
+ERROR:  multiple primary keys for table "account_forecast_allocations" are not allowed
+ERROR:  multiple primary keys for table "account_notes" are not allowed
+ERROR:  multiple primary keys for table "accounts" are not allowed
+ERROR:  multiple primary keys for table "agencies" are not allowed
+ERROR:  multiple primary keys for table "branding_config" are not allowed
+ERROR:  multiple primary keys for table "calendar_connections" are not allowed
+ERROR:  relation "calendar_events_calendar_google_unique" already exists
+ERROR:  multiple primary keys for table "calendar_events" are not allowed
+ERROR:  relation "calendars_connection_google_unique" already exists
+ERROR:  multiple primary keys for table "calendars" are not allowed
+ERROR:  multiple primary keys for table "chat_transcripts" are not allowed
+ERROR:  multiple primary keys for table "deals" are not allowed
+ERROR:  multiple primary keys for table "forecast_account_revenue" are not allowed
+ERROR:  multiple primary keys for table "forecast_expenses" are not allowed
+ERROR:  multiple primary keys for table "forecast_invoices" are not allowed
+ERROR:  multiple primary keys for table "forecast_resources" are not allowed
+ERROR:  multiple primary keys for table "forecast_retainers" are not allowed
+ERROR:  multiple primary keys for table "forecast_scenarios" are not allowed
+ERROR:  multiple primary keys for table "forecast_settings" are not allowed
+ERROR:  multiple primary keys for table "guidance_settings" are not allowed
+ERROR:  multiple primary keys for table "holidays" are not allowed
+ERROR:  multiple primary keys for table "knowledge_base_documents" are not allowed
+ERROR:  multiple primary keys for table "leads" are not allowed
+ERROR:  multiple primary keys for table "penguin_hours_tracker" are not allowed
+ERROR:  multiple primary keys for table "pipeline_stages" are not allowed
+ERROR:  multiple primary keys for table "project_attachments" are not allowed
+ERROR:  multiple primary keys for table "project_team_members" are not allowed
+ERROR:  relation "project_team_members_project_user_role_unique" already exists
+ERROR:  multiple primary keys for table "projects" are not allowed
+ERROR:  multiple primary keys for table "proposal_scope_items" are not allowed
+ERROR:  multiple primary keys for table "proposals" are not allowed
+ERROR:  relation "proposals_slug_key" already exists
+ERROR:  relation "quota_configs_agency_id_key" already exists
+ERROR:  multiple primary keys for table "quota_configs" are not allowed
+ERROR:  multiple primary keys for table "resource_monthly_capacity" are not allowed
+ERROR:  relation "resource_monthly_capacity_resource_month_unique" already exists
+ERROR:  multiple primary keys for table "slack_configurations" are not allowed
+ERROR:  multiple primary keys for table "task_collaborators" are not allowed
+ERROR:  relation "task_collaborators_task_user_unique" already exists
+ERROR:  multiple primary keys for table "task_label_assignments" are not allowed
+ERROR:  relation "task_label_assignments_task_label_unique" already exists
+ERROR:  relation "task_labels_name_unique" already exists
+ERROR:  multiple primary keys for table "task_labels" are not allowed
+ERROR:  multiple primary keys for table "tasks" are not allowed
+ERROR:  multiple primary keys for table "time_logs" are not allowed
+ERROR:  multiple primary keys for table "user_availability" are not allowed
+ERROR:  relation "users_email_unique" already exists
+ERROR:  multiple primary keys for table "users" are not allowed
+ERROR:  relation "users_username_unique" already exists
+CREATE INDEX
+ERROR:  relation "account_forecast_allocations_agency_id_idx" already exists
+ERROR:  relation "account_forecast_allocations_month_idx" already exists
+ERROR:  relation "account_forecast_allocations_resource_id_idx" already exists
+ERROR:  relation "account_notes_account_id_idx" already exists
+ERROR:  relation "calendar_connections_user_id_idx" already exists
+ERROR:  relation "calendar_events_calendar_id_idx" already exists
+ERROR:  relation "calendar_events_start_date_idx" already exists
+ERROR:  relation "calendar_events_start_time_idx" already exists
+ERROR:  relation "calendars_connection_id_idx" already exists
+ERROR:  relation "calendars_google_calendar_id_idx" already exists
+ERROR:  relation "chat_transcripts_proposal_id_idx" already exists
+ERROR:  relation "deals_assigned_to_user_id_idx" already exists
+ERROR:  relation "deals_close_date_idx" already exists
+ERROR:  relation "deals_lead_id_idx" already exists
+ERROR:  relation "deals_stage_id_idx" already exists
+ERROR:  relation "guidance_settings_category_idx" already exists
+ERROR:  relation "guidance_settings_order_idx" already exists
+ERROR:  relation "holidays_date_idx" already exists
+ERROR:  relation "knowledge_base_documents_project_type_idx" already exists
+ERROR:  relation "knowledge_base_documents_tags_idx" already exists
+ERROR:  relation "leads_assigned_to_user_id_idx" already exists
+ERROR:  relation "leads_company_idx" already exists
+ERROR:  relation "leads_stage_id_idx" already exists
+ERROR:  relation "pipeline_stages_order_idx" already exists
+ERROR:  relation "pipeline_stages_type_idx" already exists
+ERROR:  relation "project_attachments_project_id_idx" already exists
+ERROR:  relation "project_team_members_project_id_idx" already exists
+ERROR:  relation "project_team_members_user_id_idx" already exists
+ERROR:  relation "proposal_scope_items_order_idx" already exists
+ERROR:  relation "proposal_scope_items_proposal_id_idx" already exists
+ERROR:  relation "proposals_project_id_idx" already exists
+ERROR:  relation "proposals_slug_idx" already exists
+ERROR:  relation "proposals_status_idx" already exists
+ERROR:  relation "quota_configs_agency_id_idx" already exists
+ERROR:  relation "resource_monthly_capacity_month_idx" already exists
+ERROR:  relation "resource_monthly_capacity_resource_id_idx" already exists
+ERROR:  relation "slack_configurations_account_id_idx" already exists
+ERROR:  relation "slack_configurations_agency_id_idx" already exists
+ERROR:  relation "slack_configurations_user_id_idx" already exists
+ERROR:  relation "task_collaborators_task_id_idx" already exists
+ERROR:  relation "task_collaborators_user_id_idx" already exists
+ERROR:  relation "task_label_assignments_label_id_idx" already exists
+ERROR:  relation "task_label_assignments_task_id_idx" already exists
+ERROR:  relation "user_availability_start_date_idx" already exists
+ERROR:  relation "user_availability_user_id_idx" already exists
+ERROR:  constraint "account_forecast_allocations_agency_id_agencies_id_fk" for relation "account_forecast_allocations" already exists
+ERROR:  constraint "account_forecast_allocations_resource_id_forecast_resources_id_" for relation "account_forecast_allocations" already exists
+ERROR:  constraint "account_notes_account_id_accounts_id_fk" for relation "account_notes" already exists
+ERROR:  constraint "accounts_agency_id_agencies_id_fk" for relation "accounts" already exists
+ERROR:  constraint "calendar_connections_user_id_users_id_fk" for relation "calendar_connections" already exists
+ERROR:  constraint "calendar_events_calendar_id_calendars_id_fk" for relation "calendar_events" already exists
+ERROR:  constraint "calendars_connection_id_calendar_connections_id_fk" for relation "calendars" already exists
+ERROR:  constraint "chat_transcripts_proposal_id_proposals_id_fk" for relation "chat_transcripts" already exists
+ERROR:  constraint "deals_assigned_to_user_id_users_id_fk" for relation "deals" already exists
+ERROR:  constraint "deals_lead_id_leads_id_fk" for relation "deals" already exists
+ERROR:  constraint "deals_stage_id_pipeline_stages_id_fk" for relation "deals" already exists
+ERROR:  constraint "forecast_account_revenue_agency_id_agencies_id_fk" for relation "forecast_account_revenue" already exists
+ERROR:  constraint "forecast_invoices_agency_id_agencies_id_fk" for relation "forecast_invoices" already exists
+ERROR:  constraint "forecast_retainers_agency_id_agencies_id_fk" for relation "forecast_retainers" already exists
+ERROR:  constraint "leads_assigned_to_user_id_users_id_fk" for relation "leads" already exists
+ERROR:  constraint "leads_stage_id_pipeline_stages_id_fk" for relation "leads" already exists
+ERROR:  constraint "penguin_hours_tracker_agency_id_agencies_id_fk" for relation "penguin_hours_tracker" already exists
+ERROR:  constraint "project_attachments_project_id_projects_id_fk" for relation "project_attachments" already exists
+ERROR:  constraint "project_attachments_user_id_users_id_fk" for relation "project_attachments" already exists
+ERROR:  constraint "project_team_members_project_id_projects_id_fk" for relation "project_team_members" already exists
+ERROR:  constraint "project_team_members_user_id_users_id_fk" for relation "project_team_members" already exists
+ERROR:  constraint "projects_account_id_accounts_id_fk" for relation "projects" already exists
+ERROR:  constraint "projects_agency_id_agencies_id_fk" for relation "projects" already exists
+ERROR:  constraint "proposal_scope_items_proposal_id_proposals_id_fk" for relation "proposal_scope_items" already exists
+ERROR:  constraint "proposals_project_id_projects_id_fk" for relation "proposals" already exists
+ERROR:  constraint "quota_configs_agency_id_agencies_id_fk" for relation "quota_configs" already exists
+ERROR:  constraint "resource_monthly_capacity_resource_id_forecast_resources_id_fk" for relation "resource_monthly_capacity" already exists
+ERROR:  constraint "slack_configurations_account_id_accounts_id_fk" for relation "slack_configurations" already exists
+ERROR:  constraint "slack_configurations_agency_id_agencies_id_fk" for relation "slack_configurations" already exists
+ERROR:  constraint "slack_configurations_user_id_users_id_fk" for relation "slack_configurations" already exists
+ERROR:  constraint "task_collaborators_task_id_tasks_id_fk" for relation "task_collaborators" already exists
+ERROR:  constraint "task_collaborators_user_id_users_id_fk" for relation "task_collaborators" already exists
+ERROR:  constraint "task_label_assignments_label_id_task_labels_id_fk" for relation "task_label_assignments" already exists
+ERROR:  constraint "task_label_assignments_task_id_tasks_id_fk" for relation "task_label_assignments" already exists
+ERROR:  constraint "tasks_account_id_accounts_id_fk" for relation "tasks" already exists
+ERROR:  constraint "tasks_agency_id_agencies_id_fk" for relation "tasks" already exists
+ERROR:  constraint "tasks_assigned_to_user_id_users_id_fk" for relation "tasks" already exists
+ERROR:  constraint "tasks_project_id_projects_id_fk" for relation "tasks" already exists
+ERROR:  constraint "time_logs_account_id_accounts_id_fk" for relation "time_logs" already exists
+ERROR:  constraint "time_logs_agency_id_agencies_id_fk" for relation "time_logs" already exists
+ERROR:  constraint "time_logs_project_id_projects_id_fk" for relation "time_logs" already exists
+ERROR:  constraint "time_logs_task_id_tasks_id_fk" for relation "time_logs" already exists
+ERROR:  constraint "time_logs_user_id_users_id_fk" for relation "time_logs" already exists
+ERROR:  constraint "user_availability_user_id_users_id_fk" for relation "user_availability" already exists
+ERROR:  permission denied to change default privileges
+ERROR:  permission denied to change default privileges

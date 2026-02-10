@@ -1,0 +1,180 @@
+$ pg_dump --data-only --disable-triggers "postgresql://neondb_owner:npg_3wnID6YXCaWr@ep-jolly-cell-afvr7k51.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require" | psql $DATABASE_URL
+SET
+SET
+SET
+SET
+SET
+ set_config 
+------------
+ 
+(1 row)
+
+SET
+SET
+SET
+SET
+SET
+ALTER TABLE
+ERROR:  duplicate key value violates unique constraint "replit_database_migrations_v1_pkey"
+DETAIL:  Key (id)=(1) already exists.
+CONTEXT:  COPY replit_database_migrations_v1, line 1
+ALTER TABLE
+ERROR:  permission denied: "RI_ConstraintTrigger_a_196615" is a system trigger
+ERROR:  duplicate key value violates unique constraint "agencies_pkey"
+DETAIL:  Key (id)=(21927933-edd9-49ed-970f-d45c0776231a) already exists.
+CONTEXT:  COPY agencies, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_a_196615" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_a_524323" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_a_524323" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_524325" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_c_524325" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_a_196620" is a system trigger
+ERROR:  duplicate key value violates unique constraint "accounts_pkey"
+DETAIL:  Key (id)=(245248bc-ccf8-4875-9e13-7d1dcedb4c3a) already exists.
+CONTEXT:  COPY accounts, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_a_196620" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_311311" is a system trigger
+ERROR:  duplicate key value violates unique constraint "account_notes_pkey"
+DETAIL:  Key (id)=(befd1465-562a-4850-9f01-bf5f7b6845d1) already exists.
+CONTEXT:  COPY account_notes, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_c_311311" is a system trigger
+ALTER TABLE
+ERROR:  duplicate key value violates unique constraint "branding_config_pkey"
+DETAIL:  Key (id)=(66eb0a4f-c8e8-498a-9270-f3781ae61f47) already exists.
+CONTEXT:  COPY branding_config, line 1
+ALTER TABLE
+ERROR:  permission denied: "RI_ConstraintTrigger_a_196610" is a system trigger
+ERROR:  duplicate key value violates unique constraint "users_pkey"
+DETAIL:  Key (id)=(76f7c0f6-8d3b-4640-bc59-842725dd61d0) already exists.
+CONTEXT:  COPY users, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_a_196610" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_a_32818" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_a_32818" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_a_32813" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_a_32813" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_32815" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_c_32815" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_a_196625" is a system trigger
+ERROR:  duplicate key value violates unique constraint "projects_pkey"
+DETAIL:  Key (id)=(265481f4-7fc0-45f8-80f4-99480186bd7d) already exists.
+CONTEXT:  COPY projects, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_a_196625" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_a_401454" is a system trigger
+ERROR:  duplicate key value violates unique constraint "proposals_pkey"
+DETAIL:  Key (id)=(7433884c-6621-4981-989a-c29ce7b33f0a) already exists.
+CONTEXT:  COPY proposals, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_a_401454" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_401456" is a system trigger
+COPY 3
+ERROR:  permission denied: "RI_ConstraintTrigger_c_401456" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_a_254012" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_a_254012" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_a_254007" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_a_254007" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_254009" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_c_254009" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_442382" is a system trigger
+ERROR:  duplicate key value violates unique constraint "forecast_account_revenue_pkey"
+DETAIL:  Key (id)=(b41216de-cfa1-4302-b8b6-0ef8fcabeaf6) already exists.
+CONTEXT:  COPY forecast_account_revenue, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_c_442382" is a system trigger
+ALTER TABLE
+ERROR:  duplicate key value violates unique constraint "forecast_expenses_pkey"
+DETAIL:  Key (id)=(fc04e913-5cc6-4e97-810b-6e2bd456a65e) already exists.
+CONTEXT:  COPY forecast_expenses, line 1
+ALTER TABLE
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196642" is a system trigger
+ERROR:  duplicate key value violates unique constraint "forecast_invoices_pkey"
+DETAIL:  Key (id)=(dc2fc854-4dfb-49f1-9e84-648685720558) already exists.
+CONTEXT:  COPY forecast_invoices, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196642" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_344078" is a system trigger
+ERROR:  insert or update on table "forecast_retainers" violates foreign key constraint "forecast_retainers_agency_id_agencies_id_fk"
+DETAIL:  Key (agency_id)=(0acc41aa-7ddc-4ae9-890f-f45980a4b7d8) is not present in table "agencies".
+ERROR:  permission denied: "RI_ConstraintTrigger_c_344078" is a system trigger
+ALTER TABLE
+COPY 0
+ALTER TABLE
+ALTER TABLE
+ERROR:  duplicate key value violates unique constraint "forecast_settings_pkey"
+DETAIL:  Key (id)=(fb8bac44-937e-490f-b125-56d6bb52702e) already exists.
+CONTEXT:  COPY forecast_settings, line 1
+ALTER TABLE
+ALTER TABLE
+ERROR:  duplicate key value violates unique constraint "guidance_settings_pkey"
+DETAIL:  Key (id)=(a4cd7029-1c84-44f7-b9b5-7abeb9bf217f) already exists.
+CONTEXT:  COPY guidance_settings, line 1
+ALTER TABLE
+ALTER TABLE
+ERROR:  duplicate key value violates unique constraint "holidays_pkey"
+DETAIL:  Key (id)=(7d71fe74-e8c8-4b50-afd6-c27c68a8ca90) already exists.
+CONTEXT:  COPY holidays, line 1
+ALTER TABLE
+ALTER TABLE
+ERROR:  duplicate key value violates unique constraint "knowledge_base_documents_pkey"
+DETAIL:  Key (id)=(b6a73eae-0ae6-4e70-9aae-17a887f90ea2) already exists.
+CONTEXT:  COPY knowledge_base_documents, line 1
+ALTER TABLE
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196637" is a system trigger
+ERROR:  duplicate key value violates unique constraint "penguin_hours_tracker_pkey"
+DETAIL:  Key (id)=(7cba46de-6a94-4c11-89e1-e4e4381f9af2) already exists.
+CONTEXT:  COPY penguin_hours_tracker, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196637" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_319501" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_c_319501" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196647" is a system trigger
+ERROR:  duplicate key value violates unique constraint "project_team_members_pkey"
+DETAIL:  Key (id)=(5c5bbdd5-b2cd-40a0-ad9a-a683a3d37168) already exists.
+CONTEXT:  COPY project_team_members, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196647" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_401461" is a system trigger
+COPY 21
+ERROR:  permission denied: "RI_ConstraintTrigger_c_401461" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196632" is a system trigger
+ERROR:  duplicate key value violates unique constraint "quota_configs_pkey"
+DETAIL:  Key (id)=(9e932e50-36fb-4a09-a2b5-7ef493780783) already exists.
+CONTEXT:  COPY quota_configs, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196632" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_524335" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_c_524335" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196612" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196612" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_a_270348" is a system trigger
+ERROR:  duplicate key value violates unique constraint "tasks_pkey"
+DETAIL:  Key (id)=(ee003ed0-cd08-4e06-925d-cd29b71424c0) already exists.
+CONTEXT:  COPY tasks, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_a_270348" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_450598" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_c_450598" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_a_450611" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_a_450611" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_450608" is a system trigger
+COPY 0
+ERROR:  permission denied: "RI_ConstraintTrigger_c_450608" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_24692" is a system trigger
+ERROR:  duplicate key value violates unique constraint "time_logs_pkey"
+DETAIL:  Key (id)=(9244311d-3988-4fd0-8c88-2c9aefd84c95) already exists.
+CONTEXT:  COPY time_logs, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_c_24692" is a system trigger
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196657" is a system trigger
+ERROR:  duplicate key value violates unique constraint "user_availability_pkey"
+DETAIL:  Key (id)=(f8598d28-47c3-4ca6-a649-c6345c5f7520) already exists.
+CONTEXT:  COPY user_availability, line 1
+ERROR:  permission denied: "RI_ConstraintTrigger_c_196657" is a system trigger
+ setval 
+--------
+     18
+(1 row)

@@ -1,0 +1,193 @@
+2025-11-10 18:33:00.37
+543ec1b3
+User
+Error updating proposal: TypeError: storage.getProposalById is not a function
+2025-11-10 18:33:00.37
+543ec1b3
+User
+at file:///home/runner/workspace/dist/index.js:6019:46
+2025-11-10 18:33:00.37
+543ec1b3
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-10 18:33:00.37
+543ec1b3
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-10 18:33:00.37
+543ec1b3
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-11-10 18:33:00.37
+543ec1b3
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-10 18:33:00.37
+543ec1b3
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-11-10 18:33:00.37
+543ec1b3
+User
+at param (/home/runner/workspace/node_modules/express/lib/router/index.js:365:14)
+2025-11-10 18:33:00.37
+543ec1b3
+User
+at param (/home/runner/workspace/node_modules/express/lib/router/index.js:376:14)
+2025-11-10 18:33:00.37
+543ec1b3
+User
+at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:421:3)
+2025-11-10 18:33:00.37
+543ec1b3
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+2025-11-10 18:33:00.37
+543ec1b3
+User
+12:33:00 AM [express] PATCH /api/proposals/7433884c-6621-4981-989a-c29ce7b33f0a 500 in 4ms :: {"error…
+2025-11-10 18:33:02.82
+543ec1b3
+User
+Error updating proposal: TypeError: storage.getProposalById is not a function
+2025-11-10 18:33:02.82
+543ec1b3
+User
+at file:///home/runner/workspace/dist/index.js:6019:46
+2025-11-10 18:33:02.82
+543ec1b3
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-10 18:33:02.82
+543ec1b3
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-10 18:33:02.82
+543ec1b3
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-11-10 18:33:02.82
+543ec1b3
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-10 18:33:02.82
+543ec1b3
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-11-10 18:33:02.82
+543ec1b3
+User
+at param (/home/runner/workspace/node_modules/express/lib/router/index.js:365:14)
+2025-11-10 18:33:02.82
+543ec1b3
+User
+at param (/home/runner/workspace/node_modules/express/lib/router/index.js:376:14)
+2025-11-10 18:33:02.82
+543ec1b3
+User
+at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:421:3)
+2025-11-10 18:33:02.82
+543ec1b3
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+2025-11-10 18:33:02.82
+543ec1b3
+User
+12:33:02 AM [express] PATCH /api/proposals/7433884c-6621-4981-989a-c29ce7b33f0a 500 in 1ms :: {"error…
+2025-11-10 18:33:07.74
+543ec1b3
+User
+Error updating proposal: TypeError: storage.getProposalById is not a function
+2025-11-10 18:33:07.74
+543ec1b3
+User
+at file:///home/runner/workspace/dist/index.js:6019:46
+2025-11-10 18:33:07.74
+543ec1b3
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-10 18:33:07.74
+543ec1b3
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-10 18:33:07.74
+543ec1b3
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-11-10 18:33:07.74
+543ec1b3
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-10 18:33:07.74
+543ec1b3
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-11-10 18:33:07.74
+543ec1b3
+User
+at param (/home/runner/workspace/node_modules/express/lib/router/index.js:365:14)
+2025-11-10 18:33:07.74
+543ec1b3
+User
+at param (/home/runner/workspace/node_modules/express/lib/router/index.js:376:14)
+2025-11-10 18:33:07.74
+543ec1b3
+User
+at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:421:3)
+2025-11-10 18:33:07.74
+543ec1b3
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+
+2025-11-10 18:33:07.74
+543ec1b3
+User
+12:33:07 AM [express] PATCH /api/proposals/7433884c-6621-4981-989a-c29ce7b33f0a 500 in 2ms :: {"error…
+2025-11-10 18:33:42.02
+543ec1b3
+User
+Error updating proposal: TypeError: storage.getProposalById is not a function
+2025-11-10 18:33:42.02
+543ec1b3
+User
+at file:///home/runner/workspace/dist/index.js:6019:46
+2025-11-10 18:33:42.02
+543ec1b3
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-10 18:33:42.02
+543ec1b3
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-11-10 18:33:42.02
+543ec1b3
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-11-10 18:33:42.02
+543ec1b3
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-11-10 18:33:42.02
+543ec1b3
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-11-10 18:33:42.02
+543ec1b3
+User
+at param (/home/runner/workspace/node_modules/express/lib/router/index.js:365:14)
+2025-11-10 18:33:42.02
+543ec1b3
+User
+at param (/home/runner/workspace/node_modules/express/lib/router/index.js:376:14)
+2025-11-10 18:33:42.02
+543ec1b3
+User
+at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:421:3)
+2025-11-10 18:33:42.02
+543ec1b3
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+2025-11-10 18:33:42.02
+543ec1b3
+User
+12:33:42 AM [express] PATCH /api/proposals/7433884c-6621-4981-989a-c29ce7b33f0a 500 in 1ms :: {"error…

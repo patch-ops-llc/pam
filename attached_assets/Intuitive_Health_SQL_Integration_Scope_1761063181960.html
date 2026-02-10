@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intuitive Health - SQL to HubSpot Integration Scope</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a5f 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.2em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .summary-section {
+            padding: 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .summary-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2c5aa0;
+        }
+        .summary-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1em;
+        }
+        .summary-card p {
+            margin: 0;
+            color: #666;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        .admin-note {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+        .admin-note h4 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 1.1em;
+        }
+        .admin-note ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .admin-note li {
+            margin-bottom: 8px;
+            color: #666;
+        }
+        .table-container {
+            padding: 30px;
+        }
+        .table-container h2 {
+            color: #333;
+            margin: 0 0 20px 0;
+            font-size: 1.8em;
+            font-weight: 400;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        thead {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1e3a5f 100%);
+            color: white;
+        }
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .story-id {
+            font-weight: 600;
+            color: #2c5aa0;
+            font-size: 1.1em;
+        }
+        .hours {
+            font-weight: 600;
+            color: #28a745;
+            font-size: 1.1em;
+        }
+        .workstream {
+            font-weight: 600;
+            color: #333;
+        }
+        .story {
+            color: #666;
+            line-height: 1.5;
+        }
+        .approach {
+            color: #495057;
+            line-height: 1.6;
+        }
+        .assumptions {
+            color: #6c757d;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Intuitive Health</h1>
+            <p>SQL Database to HubSpot Integration - Scope of Work</p>
+        </div>
+
+        <div class="summary-section">
+            <h2 style="color: #333; margin: 0 0 20px 0;">Project Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>Total Estimated Hours</h3>
+                    <p>115 Hours</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Build Hours</h3>
+                    <p>85 Hours</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Admin Hours</h3>
+                    <p>30 Hours</p>
+                </div>
+            </div>
+            
+            <div class="admin-note">
+                <h4>Project Management & Admin Hours Breakdown</h4>
+                <ul>
+                    <li><strong>Requirements Validation:</strong> 5 hours (data model review, field mapping validation)</li>
+                    <li><strong>Project Management:</strong> 10 hours (coordination, stakeholder alignment)</li>
+                    <li><strong>Testing & QA:</strong> 10 hours (sync validation, deduplication testing)</li>
+                    <li><strong>Training & Documentation:</strong> 5 hours (integration documentation, troubleshooting guide)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h2>Detailed Scope of Work</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">Story ID</th>
+                        <th style="width: 5%;">Hours</th>
+                        <th style="width: 13%;">Workstream Name</th>
+                        <th style="width: 18%;">Customer Story</th>
+                        <th style="width: 30%;">Recommended Approach</th>
+                        <th style="width: 29%;">Assumptions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="story-id">1</td>
+                        <td class="hours">15</td>
+                        <td class="workstream">Patient Visit Data Model & Custom Object Setup</td>
+                        <td class="story">Intuitive Health wants to sync patient visit data from their SQL database into HubSpot to enable B2C marketing automation and build lasting relationships beyond transactional care visits</td>
+                        <td class="approach">
+                            → Create custom "Patient Visits" object in HubSpot with ~25 properties<br>
+                            → Configure properties for visit identifiers (Visit ID, Patient MRN)<br>
+                            → Set up market/brand properties (Market ID, Intuitive Brand, Facility Location)<br>
+                            → Build patient demographic fields (gender, age, patient class, financial class)<br>
+                            → Configure NPS score fields (score, comments, request dates, follow-up status)<br>
+                            → Configure referral source and date of service tracking
+                        </td>
+                        <td class="assumptions">
+                            → Data model based on Andrew's consolidated table from 3 SQL tables<br>
+                            → Approximately 25 custom properties for Patient Visits object<br>
+                            → Patient Visits have one-to-many relationship with Contacts<br>
+                            → Properties accommodate both owned facilities and JV partner data<br>
+                            → Financial class categories: Medicare, Medicaid, Commercial, Self-Pay<br>
+                            → Patient class types: Urgent Care, Emergency
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="story-id">2</td>
+                        <td class="hours">35</td>
+                        <td class="workstream">SFTP Integration Setup via Skyvia</td>
+                        <td class="story">Intuitive Health needs a secure, reliable daily sync of patient visit data from their SQL database to HubSpot that respects their security requirements (no direct external database connections)</td>
+                        <td class="approach">
+                            → Set up Skyvia integration platform for SFTP-based data transfer<br>
+                            → Configure SFTP connection to receive daily exports from Intuitive Health database<br>
+                            → Build data mapping from source CSV/export to HubSpot Patient Visits object<br>
+                            → Configure daily sync schedule to run after JV partner data loads (morning/early afternoon)<br>
+                            → Configure batch upsert logic for ~2,000 daily records<br>
+                            → Document export file format requirements and SFTP credentials setup
+                        </td>
+                        <td class="assumptions">
+                            → Intuitive Health provides daily CSV/Excel exports via SFTP<br>
+                            → Daily volume approximately 2,000 records (80% from JV partners, 20% owned facilities)<br>
+                            → Data arrives in batches morning/early afternoon from various sources<br>
+                            → Andrew's team prepares consolidated data table from 3 SQL sources<br>
+                            → No direct SQL or API connections to Intuitive Health database<br>
+                            → Skyvia or comparable SFTP integration platform<br>
+                            → Daily sync frequency is sufficient for marketing automation needs<br>
+                            → Includes up to 3 iterations of mapping refinement
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="story-id">3</td>
+                        <td class="hours">20</td>
+                        <td class="workstream">Contact Association & Deduplication Workflows</td>
+                        <td class="story">Intuitive Health wants to identify when the same patient visits multiple brands/locations and ensure marketing communications are properly coordinated while maintaining accurate patient visit history</td>
+                        <td class="approach">
+                            → Build workflow to associate Patient Visits to Contacts using email as primary match<br>
+                            → Configure secondary matching using MRN (Medical Record Number) for identification<br>
+                            → Create deduplication logic using compound matching (First Name + Last Name + Address + DOB)<br>
+                            → Build "Most Recent Visit" stamp on contact records for segmentation
+                        </td>
+                        <td class="assumptions">
+                            → Email is primary matching field when available<br>
+                            → MRN serves as secondary identifier but varies by health system<br>
+                            → Compound matching uses: First Name, Last Name, Address, Date of Birth<br>
+                            → Some patients may legitimately visit multiple brands (vacation/travel scenarios)<br>
+                            → Deduplication preserves visit history across all locations
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="story-id">4</td>
+                        <td class="hours">15</td>
+                        <td class="workstream">Patient Segmentation & Marketing Automation Foundation</td>
+                        <td class="story">Intuitive Health wants to enable targeted marketing journeys based on patient visit type, location, demographics, and visit history to build relationships beyond transactional care</td>
+                        <td class="approach">
+                            → Create active lists for key patient segments (Urgent Care patients, ER patients)<br>
+                            → Build geographic segmentation by facility location and brand<br>
+                            → Set up NPS score-based lists (promoters, passives, detractors)<br>
+                            → Create visit recency lists (recent patients, 6-month inactive, 18-month inactive)
+                        </td>
+                        <td class="assumptions">
+                            → Priority journeys: Urgent Care to ER cross-sell, geographic health alerts, re-engagement<br>
+                            → Secondary use cases: new facility openings, seasonal health education, holiday hours
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</body>
+</html>

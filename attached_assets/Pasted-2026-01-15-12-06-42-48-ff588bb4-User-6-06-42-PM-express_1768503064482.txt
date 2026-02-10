@@ -1,0 +1,140 @@
+2026-01-15 12:06:42.48
+ff588bb4
+User
+6:06:42 PM [express] GET /api/users 304 in 340ms :: [{"id":"195bc3d3-859d-41b7-86ab-2dbe203c18dc","u…
+2026-01-15 12:06:51.62
+ff588bb4
+User
+6:06:51 PM [express] GET /api/user 200 in 124ms :: {"id":"76f7c0f6-8d3b-4640-bc59-842725dd61d0","use…
+2026-01-15 12:06:51.91
+ff588bb4
+User
+6:06:51 PM [express] GET /api/accounts 200 in 208ms :: [{"id":"7f9c2abf-4f63-4a6b-9cf7-ca708c3da554"…
+2026-01-15 12:06:51.92
+ff588bb4
+User
+6:06:51 PM [express] GET /api/projects 200 in 215ms :: [{"id":"265481f4-7fc0-45f8-80f4-99480186bd7d"…
+2026-01-15 12:06:52.05
+ff588bb4
+User
+6:06:52 PM [express] GET /api/users 200 in 329ms :: [{"id":"195bc3d3-859d-41b7-86ab-2dbe203c18dc","u…
+2026-01-15 12:06:52.11
+ff588bb4
+User
+Error fetching UAT sessions: error: column "status" does not exist
+2026-01-15 12:06:52.11
+ff588bb4
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2026-01-15 12:06:52.11
+ff588bb4
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-01-15 12:06:52.11
+ff588bb4
+User
+severity: 'ERROR',
+2026-01-15 12:06:52.11
+ff588bb4
+User
+at async Promise.all (index 3)
+2026-01-15 12:06:52.11
+ff588bb4
+User
+at async DatabaseStorage.getUatSessionWithRelations (file:///home/runner/workspace/dist/index.js:3621:32)
+2026-01-15 12:06:52.11
+ff588bb4
+User
+internalQuery: undefined,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+detail: undefined,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+constraint: undefined,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2026-01-15 12:06:52.11
+ff588bb4
+User
+line: '3722',
+2026-01-15 12:06:52.11
+ff588bb4
+User
+at async file:///home/runner/workspace/dist/index.js:9261:31
+2026-01-15 12:06:52.11
+ff588bb4
+User
+schema: undefined,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+internalPosition: undefined,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+dataType: undefined,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+length: 107,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+at async file:///home/runner/workspace/dist/index.js:9259:32 {
+2026-01-15 12:06:52.11
+ff588bb4
+User
+}
+2026-01-15 12:06:52.11
+ff588bb4
+User
+where: undefined,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+file: 'parse_relation.c',
+2026-01-15 12:06:52.11
+ff588bb4
+User
+code: '42703',
+2026-01-15 12:06:52.11
+ff588bb4
+User
+position: '122',
+2026-01-15 12:06:52.11
+ff588bb4
+User
+table: undefined,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+column: undefined,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+hint: undefined,
+2026-01-15 12:06:52.11
+ff588bb4
+User
+routine: 'errorMissingColumn'
+2026-01-15 12:06:52.16
+ff588bb4
+User
+6:06:52 PM [express] GET /api/uat-sessions 500 in 447ms :: {"error":"Failed to fetch UAT sessions"}
+2026-01-15 12:07:21.51
+ff588bb4
+User
+6:07:21 PM [express] GET /api/user 200 in 135ms :: {"id":"76f7c0f6-8d3b-4640-bc59-842725dd61d0","use…
+2026-01-15 12:07:21.82
+ff588bb4
+User
+6:07:21 PM [express] GET /api/users 200 in 191ms :: [{"id":"195bc3d3-859d-41b7-86ab-2dbe203c18dc","u…
+2026-01-15 12:07:21.83
+ff588bb4
+User
+6:07:21 PM [express] GET /api/accounts 200 in 206ms :: [{"id":"7f9c2abf-4f63-4a6b-9cf7-ca708c3da554"…

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlyGuys - HubSpot Foundation Retainer Scope</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #f8f9fa;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .summary-section {
+            padding: 40px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .summary-section h2 {
+            color: #1e3a8a;
+            margin: 0 0 30px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 6px solid #1e3a8a;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .summary-card h3 {
+            margin: 0 0 12px 0;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .summary-card p {
+            margin: 0;
+            color: #1e3a8a;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .priority-highlight {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);
+        }
+        .priority-highlight h4 {
+            margin: 0 0 15px 0;
+            color: #92400e;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .priority-highlight p {
+            margin: 0;
+            color: #451a03;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .engagement-note {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border: 2px solid #0284c7;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.1);
+        }
+        .engagement-note h4 {
+            margin: 0 0 15px 0;
+            color: #0c4a6e;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .engagement-note ul {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        .engagement-note li {
+            margin: 8px 0;
+            color: #0c4a6e;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .engagement-note strong {
+            color: #0c4a6e;
+            font-weight: 700;
+        }
+        .table-container {
+            padding: 40px;
+        }
+        .table-container h2 {
+            color: #1e3a8a;
+            margin: 0 0 30px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            background: white;
+        }
+        th {
+            background: #1e3a8a;
+            color: white;
+            font-weight: 600;
+            padding: 20px 15px;
+            text-align: center;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 20px 15px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .story-id {
+            font-weight: 700;
+            color: #1e3a8a;
+            text-align: center;
+            width: 60px;
+            font-size: 16px;
+        }
+        .month {
+            text-align: center;
+            font-weight: 600;
+            width: 60px;
+            color: #059669;
+            font-size: 16px;
+        }
+        .hours {
+            text-align: center;
+            font-weight: 700;
+            width: 70px;
+            color: #7c3aed;
+            font-size: 16px;
+        }
+        .workstream {
+            font-weight: 700;
+            color: #1e3a8a;
+            width: 160px;
+            font-size: 15px;
+        }
+        .description {
+            color: #4b5563;
+            line-height: 1.5;
+            width: 180px;
+            font-size: 14px;
+        }
+        .deliverables {
+            line-height: 1.6;
+            color: #374151;
+            width: 300px;
+            font-size: 14px;
+        }
+        .deliverables strong {
+            color: #1e3a8a;
+        }
+        .month-separator {
+            background: #374151 !important;
+            font-weight: 700;
+            text-align: center;
+            color: white !important;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .month-separator td {
+            padding: 15px;
+        }
+        .total-row {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+            font-weight: 700;
+        }
+        .total-row td {
+            font-size: 16px;
+            color: #1f2937;
+            padding: 20px 15px;
+        }
+        .future-section {
+            padding: 40px;
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            margin-top: 0;
+        }
+        .future-section h2 {
+            color: #1e3a8a;
+            margin: 0 0 30px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .future-section h3 {
+            color: #059669;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 30px 0 15px 0;
+        }
+        .future-section ul {
+            margin: 15px 0 25px 0;
+            padding-left: 25px;
+        }
+        .future-section li {
+            margin: 10px 0;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #374151;
+        }
+        .future-section strong {
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="summary-section">
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>Monthly Commitment</h3>
+                    <p>40 Hours</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Total Engagement</h3>
+                    <p>120 Hours</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Duration</h3>
+                    <p>3 Months</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Monthly Investment</h3>
+                    <p>$6,000</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Total Investment</h3>
+                    <p>$18,000</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Primary Focus</h3>
+                    <p>Data Confidence</p>
+                </div>
+            </div>
+            
+            <div class="priority-highlight">
+                <h4>Primary Objective: Build Data Confidence</h4>
+                <p>Address the core issue of data mistrust that prevents leadership from making confident decisions. Focus on foundational improvements to HubSpot structure, sales adoption, and reporting accuracy before tackling complex platform integrations.</p>
+            </div>
+
+            <div class="engagement-note">
+                <h4>Investment & Terms</h4>
+                <ul>
+                    <li><strong>90-Day Commitment Discount:</strong> 10% reduction for 3-month commitment</li>
+                    <li><strong>Monthly Investment:</strong> $6,000 (40 hours per month)</li>
+                    <li><strong>Total Investment:</strong> $18,000 over 3 months</li>
+                    <li><strong>Billing:</strong> Monthly invoicing from engagement start date</li>
+                    <li><strong>Payment Terms:</strong> Net 30 days</li>
+                </ul>
+            </div>
+
+            <div class="engagement-note">
+                <h4>Retainer Structure & Approach</h4>
+                <ul>
+                    <li><strong>Agile Implementation:</strong> Monthly sprints with specific deliverables and quick wins</li>
+                    <li><strong>Champions Program:</strong> Work with identified sales team champions (Grace/Clay) for beta testing</li>
+                    <li><strong>Parallel Track Planning:</strong> Develop platform integration requirements alongside foundational work</li>
+                    <li><strong>Stakeholder Accountability:</strong> Monthly leadership check-ins on adoption and system usage</li>
+                    <li><strong>Documentation Focus:</strong> Create comprehensive documentation for sustainable long-term success</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h2>3-Month Retainer Roadmap</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Story ID</th>
+                            <th>Month</th>
+                            <th>Hours</th>
+                            <th>Workstream</th>
+                            <th>Description</th>
+                            <th>Key Deliverables</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Month 1 -->
+                        <tr class="month-separator">
+                            <td colspan="6">MONTH 1: Assessment & Quick Wins (40 Hours)</td>
+                        </tr>
+                        <tr>
+                            <td class="story-id">1</td>
+                            <td class="month">1</td>
+                            <td class="hours">20</td>
+                            <td class="workstream">Current State Assessment</td>
+                            <td class="description">Comprehensive audit of existing HubSpot setup, data quality issues, and sales team usage patterns</td>
+                            <td class="deliverables">
+                                <strong>→</strong> Document current pipeline structure and identify missing deals (Apex, Google X)<br>
+                                <strong>→</strong> Audit data accuracy issues causing leadership mistrust<br>
+                                <strong>→</strong> Interview sales champions (Grace/Clay) on workflow friction points<br>
+                                <strong>→</strong> Analyze lead-to-deal creation process and lifecycle stage issues<br>
+                                <strong>→</strong> Create prioritized improvement roadmap with quick wins identified
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="story-id">2</td>
+                            <td class="month">1</td>
+                            <td class="hours">10</td>
+                            <td class="workstream">DealHub CPQ Assessment</td>
+                            <td class="description">Audit current CPQ implementation and create optimization plan</td>
+                            <td class="deliverables">
+                                <strong>→</strong> Assess DealHub configuration against pricing model needs<br>
+                                <strong>→</strong> Document product catalog and pricing standardization gaps<br>
+                                <strong>→</strong> Identify immediate workflow improvements for quote generation<br>
+                                <strong>→</strong> Create CPQ optimization roadmap with quick wins
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="story-id">3</td>
+                            <td class="month">1</td>
+                            <td class="hours">10</td>
+                            <td class="workstream">Sales Team Permission & Access Fixes</td>
+                            <td class="description">Resolve immediate friction points preventing sales team CRM adoption</td>
+                            <td class="deliverables">
+                                <strong>→</strong> Fix permission issues preventing contact updates and call logging<br>
+                                <strong>→</strong> Streamline data entry workflows for common sales activities<br>
+                                <strong>→</strong> Implement basic meeting integration improvements<br>
+                                <strong>→</strong> Create quick reference guide for sales team CRM usage<br>
+                                <strong>→</strong> Set up basic data validation for critical fields
+                            </td>
+                        </tr>
+
+                        <!-- Month 2 -->
+                        <tr class="month-separator">
+                            <td colspan="6">MONTH 2: Implementation & Process Fixes (40 Hours)</td>
+                        </tr>
+                        <tr>
+                            <td class="story-id">4</td>
+                            <td class="month">2</td>
+                            <td class="hours">15</td>
+                            <td class="workstream">Contract Pipeline Implementation</td>
+                            <td class="description">Fix missing enterprise deal tracking and implement systematic contract management</td>
+                            <td class="deliverables">
+                                <strong>→</strong> Create standardized process for enterprise deal creation in contract pipeline<br>
+                                <strong>→</strong> Implement missing high-value deals (Apex, Google X examples)<br>
+                                <strong>→</strong> Set up automated contract renewal notifications and tracking<br>
+                                <strong>→</strong> Build MSA documentation and association workflows<br>
+                                <strong>→</strong> Train sales team on proper contract vs mission deal usage
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="story-id">5</td>
+                            <td class="month">2</td>
+                            <td class="hours">15</td>
+                            <td class="workstream">Marketing Attribution & Lifecycle Setup</td>
+                            <td class="description">Implement enterprise upside value tracking and improve lead qualification process</td>
+                            <td class="deliverables">
+                                <strong>→</strong> Configure enterprise upside value mandatory field and workflows<br>
+                                <strong>→</strong> Set up Google Ads conversion tracking with lifetime value data<br>
+                                <strong>→</strong> Implement improved lead qualification stages before deal creation<br>
+                                <strong>→</strong> Create basic attribution reports for ad spend optimization<br>
+                                <strong>→</strong> Build automated lead scoring and qualification workflows
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="story-id">6</td>
+                            <td class="month">2</td>
+                            <td class="hours">10</td>
+                            <td class="workstream">DealHub Quick Wins & Process Automation</td>
+                            <td class="description">Implement immediate CPQ improvements and basic process automation</td>
+                            <td class="deliverables">
+                                <strong>→</strong> Configure priority product catalog items and pricing<br>
+                                <strong>→</strong> Streamline quote generation workflow for common deal types<br>
+                                <strong>→</strong> Implement mandatory field validation for critical deal properties
+                            </td>
+                        </tr>
+
+                        <!-- Month 3 -->
+                        <tr class="month-separator">
+                            <td colspan="6">MONTH 3: Integration & Future Planning (40 Hours)</td>
+                        </tr>
+                        <tr>
+                            <td class="story-id">7</td>
+                            <td class="month">3</td>
+                            <td class="hours">20</td>
+                            <td class="workstream">QuickBooks Revenue Integration</td>
+                            <td class="description">Connect HubSpot bookings with QuickBooks realized revenue for commission tracking</td>
+                            <td class="deliverables">
+                                <strong>→</strong> Implement HubSpot-QuickBooks integration for automated revenue sync<br>
+                                <strong>→</strong> Create commission tracking workflow connecting bookings to payments<br>
+                                <strong>→</strong> Set up sales team visibility into realized revenue and commission pipeline<br>
+                                <strong>→</strong> Configure automated invoice status updates from QuickBooks to HubSpot<br>
+                                <strong>→</strong> Build basic revenue reporting combining bookings and collections
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="story-id">8</td>
+                            <td class="month">3</td>
+                            <td class="hours">10</td>
+                            <td class="workstream">Platform Integration Planning</td>
+                            <td class="description">Create technical roadmap for future product bookings integration</td>
+                            <td class="deliverables">
+                                <strong>→</strong> Document product API requirements and current architecture<br>
+                                <strong>→</strong> Create technical specification for engineering team<br>
+                                <strong>→</strong> Estimate timeline and resource requirements for full integration<br>
+                                <strong>→</strong> Present integration business case and timeline to leadership
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="story-id">9</td>
+                            <td class="month">3</td>
+                            <td class="hours">10</td>
+                            <td class="workstream">Sales Training & Documentation</td>
+                            <td class="description">Create comprehensive training materials and establish ongoing support structure</td>
+                            <td class="deliverables">
+                                <strong>→</strong> Develop training materials based on implemented improvements<br>
+                                <strong>→</strong> Create video tutorials for new workflows and processes<br>
+                                <strong>→</strong> Document standard operating procedures for contract vs mission deals<br>
+                                <strong>→</strong> Establish regular office hours for ongoing team support<br>
+                                <strong>→</strong> Plan rollout strategy for remaining team members
+                            </td>
+                        </tr>
+
+                        <!-- Totals -->
+                        <tr class="total-row">
+                            <td colspan="3"><strong>TOTAL RETAINER</strong></td>
+                            <td class="hours"><strong>120</strong></td>
+                            <td colspan="2"><strong>3-Month Foundation Optimization Program</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="future-section">
+            <h2>Key Workstreams for 2026</h2>
+            
+            <h3>Product Bookings Integration Project</h3>
+            <ul>
+                <li><strong>Engineering Development:</strong> API endpoint creation for product bookings into HubSpot deal pipeline</li>
+                <li><strong>Revenue Reconciliation:</strong> Complete integration between product, HubSpot, and QuickBooks systems</li>
+                <li><strong>Forecasting Automation:</strong> Eliminate spreadsheet-based forecasting with unified data sources</li>
+            </ul>
+
+            <h3>DealHub CPQ Complete Implementation</h3>
+            <ul>
+                <li><strong>Product Standardization:</strong> Complete product catalog and pricing structure across all deal types</li>
+                <li><strong>Advanced Quote Automation:</strong> Complex pricing rules, approval workflows, and template optimization</li>
+                <li><strong>Organization-Wide Rollout:</strong> Full CPQ adoption across entire sales organization</li>
+            </ul>
+
+            <h3>Advanced HubSpot Optimization</h3>
+            <ul>
+                <li><strong>Pipeline Architecture Overhaul:</strong> Complete restructure of lifecycle stages and deal progression</li>
+                <li><strong>Executive Reporting Suite:</strong> Comprehensive leadership dashboards with automated board reporting</li>
+                <li><strong>Commission Automation:</strong> Full automation of commission tracking and payment processing</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WellDatabase - HubSpot Implementation Scope</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #0066cc 0%, #004d99 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.2em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .summary-section {
+            padding: 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .summary-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #0066cc;
+        }
+        .summary-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1em;
+        }
+        .summary-card p {
+            margin: 0;
+            color: #666;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        .context-highlight {
+            background-color: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .context-highlight h4 {
+            margin: 0 0 15px 0;
+            color: #0c5460;
+            font-size: 1.2em;
+        }
+        .context-highlight p {
+            margin: 0 0 10px 0;
+            color: #495057;
+            line-height: 1.5;
+        }
+        .priority-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .priority-section h4 {
+            margin: 0 0 15px 0;
+            color: #856404;
+            font-size: 1.2em;
+        }
+        .priority-section ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        .priority-section li {
+            margin: 6px 0;
+            color: #856404;
+            font-size: 14px;
+        }
+        .table-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        th {
+            background-color: #f8f9fa;
+            color: #333;
+            font-weight: 600;
+            padding: 15px 12px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+        }
+        td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .story-id {
+            font-weight: 600;
+            color: #0066cc;
+            text-align: center;
+        }
+        .hours {
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        .workstream {
+            font-weight: 600;
+            color: #333;
+        }
+        .story {
+            color: #666;
+            line-height: 1.4;
+        }
+        .approach {
+            line-height: 1.4;
+            color: #333;
+        }
+        .assumptions {
+            line-height: 1.4;
+            color: #666;
+            font-style: italic;
+        }
+        .phase-separator {
+            background-color: #e9ecef !important;
+            font-weight: 600;
+            text-align: center;
+            color: #495057;
+        }
+        .total-row {
+            background-color: #f8f9fa !important;
+            font-weight: 600;
+        }
+        .admin-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .admin-note h4 {
+            margin: 0 0 10px 0;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WellDatabase</h1>
+            <p>HubSpot Marketing Hub Enterprise Implementation - Scope of Work</p>
+        </div>
+
+        <div class="summary-section">
+            <h2>Project Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h3>Total Estimated Hours</h3>
+                    <p>95 Hours</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Build Hours</h3>
+                    <p>80 Hours</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Admin Hours</h3>
+                    <p>15 Hours</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Custom Event Packages</h3>
+                    <p>5 Total</p>
+                </div>
+            </div>
+            
+
+
+
+
+
+            
+            <div class="admin-note">
+                <h4>Project Management & Admin Hours Breakdown:</h4>
+                <ul>
+                    <li><strong>Project Management:</strong> 10 hours (agile delivery coordination, iterative package management, client communication)</li>
+                    <li><strong>Documentation & Enablement:</strong> 5 hours (comprehensive framework documentation, technical team training, process guides for future expansion)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h2>Phase 1: Foundation & Trial Conversion (MVP)</h2>
+            <p><em>Agile approach focusing on custom event packages. Each package includes: custom event configuration, lead/engagement scoring updates, supporting workflows, and dashboard/reporting integration.</em></p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Story ID</th>
+                        <th>Hours</th>
+                        <th>Workstream Name</th>
+                        <th>Customer Story</th>
+                        <th>Recommended Approach</th>
+                        <th>Assumptions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="phase-separator">
+                        <td colspan="6"><strong>FOUNDATION: Discovery & Framework (5 Hours)</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="story-id">1</td>
+                        <td class="hours">5</td>
+                        <td class="workstream">Custom Event Framework & Discovery</td>
+                        <td class="story">WellDatabase wants to establish a scalable framework for implementing any custom tracking events with consistent automation and reporting, plus identify priority events</td>
+                        <td class="approach">
+                            → Discovery session to identify priority custom events based on business goals<br>
+                            → Design event taxonomy and naming conventions for scalability<br>
+                            → Design lead/engagement scoring framework to support custom events
+                        </td>
+                        <td class="assumptions">
+                            → Event selection determined collaboratively during discovery<br>
+                            → Framework supports any JavaScript-trackable user behavior
+                        </td>
+                    </tr>
+
+                    <tr class="phase-separator">
+                        <td colspan="6"><strong>CUSTOM EVENT PACKAGES: Implementation (75 Hours)</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="story-id">2</td>
+                        <td class="hours">75</td>
+                        <td class="workstream">Custom Event Package Implementation (5 Complete Packages)</td>
+                        <td class="story">WellDatabase wants comprehensive automation around key user behaviors through complete event packages that track, score, automate, and report</td>
+                        <td class="approach">
+                            Each event package (15 hours) includes:<br>
+                            → <strong>Custom Event Configuration (10 hours):</strong><br>
+                            &nbsp;&nbsp;• JavaScript event tracking setup using HubSpot global script<br>
+                            &nbsp;&nbsp;• Event parameter configuration and data capture<br>
+                            &nbsp;&nbsp;• Testing and validation across user scenarios<br>
+                            &nbsp;&nbsp;• Event debugging and performance optimization<br>
+                            → <strong>Lead/Engagement Scoring Integration (1 hour):</strong><br>
+                            &nbsp;&nbsp;• Configure scoring weights for the specific event<br>
+                            &nbsp;&nbsp;• Update lead scoring and engagement scoring models<br>
+                            → <strong>Workflow Automation (3 hours):</strong><br>
+                            &nbsp;&nbsp;• Build single workflow triggered by event occurrence<br>
+                            &nbsp;&nbsp;• Configure record updates and list management<br>
+                            &nbsp;&nbsp;• Set up enrollment/exit criteria and workflow logic<br>
+                            &nbsp;&nbsp;• Client provides all email content and copy<br>
+                            → <strong>Reporting Integration (1 hour):</strong><br>
+                            &nbsp;&nbsp;• Add event data to relevant dashboard reports<br>
+                            &nbsp;&nbsp;• Configure event performance tracking and insights<br><br>
+                            <strong>Package delivery includes:</strong><br>
+                            → Event-driven user journey workflows with multi-step automation<br>
+                            → Comprehensive analytics dashboard showing event performance and business impact
+                        </td>
+                        <td class="assumptions">
+                            → 5 complete event packages delivered iteratively<br>
+                            → Each package includes single workflow with standard HubSpot functionality only<br>
+                            → Events determined during discovery phase<br>
+                            → Client provides all email content, copy, and templates<br>
+                            → No custom code development included in workflow automation<br>
+                            → Framework scales as new event packages are added
+                        </td>
+                    </tr>
+
+
+
+                    <!-- Totals -->
+                    <tr class="total-row">
+                        <td colspan="2"><strong>BUILD HOURS TOTAL (PHASE 1 MVP)</strong></td>
+                        <td class="hours"><strong>80</strong></td>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="2"><strong>ADMIN HOURS TOTAL</strong></td>
+                        <td class="hours"><strong>15</strong></td>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="2"><strong>PROJECT TOTAL (PHASE 1 MVP)</strong></td>
+                        <td class="hours"><strong>95</strong></td>
+                        <td colspan="3"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary-section">
+            <h2>Implementation Methodology: Custom Event Packages</h2>
+            
+            <div class="context-highlight">
+                <h4>Event Package Structure</h4>
+                <p>Each custom event is delivered as a complete, integrated package including:</p>
+                <ul>
+                    <li><strong>Custom Event Configuration:</strong> JavaScript-based event setup using HubSpot's global tracking script</li>
+                    <li><strong>Lead/Engagement Scoring Updates:</strong> Event factored into scoring models with appropriate weights</li>
+                    <li><strong>Workflow Automation:</strong> Targeted workflows triggered by event occurrence (nurture, intervention, sales alerts)</li>
+                    <li><strong>Dashboard Integration:</strong> Event data incorporated into relevant reporting dashboards</li>
+                    <li><strong>Documentation:</strong> Event purpose, trigger criteria, scoring impact, and workflow logic documented</li>
+                </ul>
+                <p><strong>Agile Delivery:</strong> Event packages delivered iteratively in groups of 2-3, allowing for testing, feedback, and refinement before expanding to full implementation. This approach ensures maximum business impact and provides a proven framework for future event expansion.</p>
+            </div>
+
+            <div class="context-highlight">
+                <h4>Discovery-Driven Event Selection</h4>
+                <p>Rather than prescribing specific events, we'll work collaboratively during discovery to identify the highest-value custom events based on:</p>
+                <ul>
+                    <li><strong>Conversion Hypotheses:</strong> Events that correlate with trial-to-paid conversion</li>
+                    <li><strong>Upgrade Intent Signals:</strong> Behaviors indicating readiness to move to higher-tier packages</li>
+                    <li><strong>Engagement Quality:</strong> Actions that demonstrate real product value realization</li>
+                    <li><strong>Churn Risk Indicators:</strong> Behaviors or lack thereof that predict trial abandonment</li>
+                    <li><strong>Enterprise Signals:</strong> Usage patterns that indicate enterprise-level needs</li>
+                </ul>
+                <p>This discovery-driven approach ensures we focus on events with proven business impact rather than assumptions about user behavior.</p>
+            </div>
+
+            <h2>Future Phase Opportunities (Post-MVP)</h2>
+            
+            <div class="context-highlight">
+                <h4>Phase 2: Expansion & Optimization</h4>
+                <p><strong>Additional Event Packages:</strong> Implement additional custom event packages based on MVP learnings and performance data</p>
+                <p><strong>Advanced Segmentation:</strong> Industry-based nurture tracks, company size-specific messaging, geographic targeting</p>
+                <p><strong>Churn Prevention:</strong> Paying customer health monitoring, at-risk customer intervention workflows, renewal automation</p>
+                <p><strong>Progressive Nurture:</strong> Multi-tier progression campaigns with sophisticated event-driven branching</p>
+            </div>
+
+            <div class="context-highlight">
+                <h4>Phase 3: Sales Process Automation</h4>
+                <p><strong>Deal Pipeline Optimization:</strong> Complete sales process automation with integrated document generation and renewal management</p>
+                <p><strong>Renewal Pipeline:</strong> Automated renewal deal creation with event-driven retention campaigns</p>
+                <p><strong>Revenue Intelligence:</strong> Subscription tracking, upgrade/downgrade monitoring, expansion revenue opportunities</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

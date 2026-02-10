@@ -1,0 +1,96 @@
+2025-10-14 16:54:26.77
+2afe666d
+User
+9:54:26 PM [express] POST /api/time-logs 201 in 289ms :: {"id":"6736083c-a015-49b4-8efd-33c2151c6cd8…
+2025-10-14 16:54:26.86
+2afe666d
+User
+9:54:26 PM [express] GET /api/tasks 200 in 341ms :: [{"id":"ee003ed0-cd08-4e06-925d-cd29b71424c0","a…
+2025-10-14 16:54:26.93
+2afe666d
+User
+9:54:26 PM [express] GET /api/time-logs 200 in 104ms :: [{"id":"6736083c-a015-49b4-8efd-33c2151c6cd8…
+2025-10-14 16:54:27.13
+2afe666d
+User
+9:54:27 PM [express] GET /api/tasks 304 in 145ms :: [{"id":"ee003ed0-cd08-4e06-925d-cd29b71424c0","a…
+2025-10-14 16:55:01.63
+2afe666d
+User
+9:55:01 PM [express] POST /api/tasks 201 in 395ms :: {"id":"92d90457-df1d-47bb-b13f-0db581522def","a…
+2025-10-14 16:55:01.87
+2afe666d
+User
+9:55:01 PM [express] GET /api/tasks 200 in 185ms :: [{"id":"ee003ed0-cd08-4e06-925d-cd29b71424c0","a…
+2025-10-14 16:55:01.90
+2afe666d
+User
+🔔 Checking for Slack configurations for time_log_created event...
+2025-10-14 16:55:01.99
+2afe666d
+User
+Found 1 Slack configurations
+2025-10-14 16:55:02.12
+2afe666d
+User
+Checking config: Hamilton Updates, active: true, eventTypes: time_log_created, task_created, task_updated, task_completed
+2025-10-14 16:55:02.12
+2afe666d
+User
+9:55:02 PM [express] POST /api/time-logs 201 in 424ms :: {"id":"b047a1f1-1d87-4544-830e-40a559ab50b4…
+2025-10-14 16:55:02.28
+2afe666d
+User
+9:55:02 PM [express] GET /api/time-logs 200 in 98ms :: [{"id":"b047a1f1-1d87-4544-830e-40a559ab50b4"…
+2025-10-14 16:55:02.51
+2afe666d
+User
+9:55:02 PM [express] GET /api/tasks 304 in 145ms :: [{"id":"ee003ed0-cd08-4e06-925d-cd29b71424c0","a…
+2025-10-14 17:11:46.58
+2afe666d
+User
+10:11:46 PM [express] GET /api/agencies 304 in 208ms :: [{"id":"21927933-edd9-49ed-970f-d45c0776231a"…
+2025-10-14 17:11:46.59
+2afe666d
+User
+10:11:46 PM [express] GET /api/users 304 in 216ms :: [{"id":"76f7c0f6-8d3b-4640-bc59-842725dd61d0","u…
+2025-10-14 17:11:46.75
+2afe666d
+User
+10:11:46 PM [express] GET /api/time-logs 200 in 379ms :: [{"id":"b047a1f1-1d87-4544-830e-40a559ab50b4…
+2025-10-14 17:11:47.31
+2afe666d
+User
+10:11:47 PM [express] GET /api/accounts 304 in 56ms :: [{"id":"7f9c2abf-4f63-4a6b-9cf7-ca708c3da554",…
+2025-10-14 17:11:47.37
+2afe666d
+User
+10:11:47 PM [express] GET /api/tasks 200 in 128ms :: [{"id":"ee003ed0-cd08-4e06-925d-cd29b71424c0","a…
+2025-10-14 17:11:47.40
+2afe666d
+User
+10:11:47 PM [express] GET /api/time-logs 200 in 162ms :: [{"id":"b047a1f1-1d87-4544-830e-40a559ab50b4…
+2025-10-14 17:39:42.25
+2afe666d
+System
+system: received signal terminated
+2025-10-14 17:45:26.29
+2afe666d
+System
+starting up user application
+2025-10-14 17:45:26.30
+2afe666d
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-14 17:45:27.05
+2afe666d
+User
+> rest-express@1.0.0 start
+2025-10-14 17:45:27.05
+2afe666d
+User
+> NODE_ENV=production node dist/index.js
+2025-10-14 17:45:27.64
+2afe666d
+User
+10:45:27 PM [express] serving on port 5000

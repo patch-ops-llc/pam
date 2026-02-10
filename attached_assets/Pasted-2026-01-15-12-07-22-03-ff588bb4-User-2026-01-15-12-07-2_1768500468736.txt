@@ -1,0 +1,104 @@
+2026-01-15 12:07:22.03
+ff588bb4
+User
+}
+2026-01-15 12:07:22.03
+ff588bb4
+User
+Error fetching UAT sessions: error: column "status" does not exist
+2026-01-15 12:07:22.03
+ff588bb4
+User
+detail: undefined,
+2026-01-15 12:07:22.03
+ff588bb4
+User
+at async file:///home/runner/workspace/dist/index.js:9261:31
+2026-01-15 12:07:22.03
+ff588bb4
+User
+table: undefined,
+2026-01-15 12:07:22.03
+ff588bb4
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2026-01-15 12:07:22.03
+ff588bb4
+User
+severity: 'ERROR',
+2026-01-15 12:07:22.03
+ff588bb4
+User
+at async Promise.all (index 1)
+2026-01-15 12:07:22.03
+ff588bb4
+User
+hint: undefined,
+2026-01-15 12:07:22.03
+ff588bb4
+User
+at async DatabaseStorage.getUatSessionWithRelations (file:///home/runner/workspace/dist/index.js:3621:32)
+2026-01-15 12:07:22.03
+ff588bb4
+User
+routine: 'errorMissingColumn'
+2026-01-15 12:07:22.03
+ff588bb4
+User
+internalQuery: undefined,
+2026-01-15 12:07:22.03
+ff588bb4
+User
+at async file:///home/runner/workspace/dist/index.js:9259:32 {
+2026-01-15 12:07:22.03
+ff588bb4
+User
+internalPosition: undefined,
+2026-01-15 12:07:22.03
+ff588bb4
+User
+code: '42703',
+2026-01-15 12:07:22.03
+ff588bb4
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-01-15 12:07:22.03
+ff588bb4
+User
+column: undefined,
+2026-01-15 12:07:22.03
+ff588bb4
+User
+position: '122',
+2026-01-15 12:07:22.03
+ff588bb4
+User
+file: 'parse_relation.c',
+2026-01-15 12:07:22.03
+ff588bb4
+User
+dataType: undefined,
+2026-01-15 12:07:22.03
+ff588bb4
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2026-01-15 12:07:22.03
+ff588bb4
+User
+where: undefined,
+2026-01-15 12:07:22.03
+ff588bb4
+User
+line: '3722',
+2026-01-15 12:07:22.03
+ff588bb4
+User
+schema: undefined,
+2026-01-15 12:07:22.03
+ff588bb4
+User
+length: 107,
+2026-01-15 12:07:22.07
+ff588bb4
+User
+6:07:22 PM [express] GET /api/uat-sessions 500 in 442ms :: {"error":"Failed to fetch UAT sessions"}

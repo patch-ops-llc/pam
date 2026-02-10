@@ -1,0 +1,607 @@
+# PatchOps Migration Package
+
+**Purpose**: This document contains everything needed to merge PatchOps (quote/proposal management system) into an existing project/agency management tool.
+
+---
+
+## 📋 Executive Summary
+
+**What is PatchOps?**
+A quote and proposal management system that allows agencies to create, manage, and publish professional proposals for clients. Features include:
+- Client management with branding (logos, colors)
+- Proposal/scope creation with rich HTML content
+- Two template types: Project-based and Retainer-based
+- Public viewing URLs for published proposals
+- PDF export capabilities
+- Proposal acceptance workflow
+
+**Tech Stack:**
+- Frontend: React + TypeScript + Vite + Wouter (routing) + TanStack Query
+- Backend: Express.js + TypeScript
+- Database: PostgreSQL with Drizzle ORM
+- UI: shadcn/ui + Radix UI + Tailwind CSS
+
+---
+
+## 🗄️ Database Schema
+
+### Tables
+
+#### 1. `users` table
+```typescript
+{
+  id: varchar (UUID, primary key),
+  username: text (unique, not null),
+  password: text (not null)
+}
+```
+**Purpose**: Authentication for the dashboard/admin area
+
+#### 2. `clients` table
+```typescript
+{
+  id: varchar (UUID, primary key),
+  name: text (not null),
+  slug: text (unique, not null),
+  logo_url: text (optional),
+  primary_color: text (optional),
+  secondary_color: text (optional),
+  created_at: timestamp (default now)
+}
+```
+**Purpose**: Store client information and branding for proposals
+
+#### 3. `scopes` table
+```typescript
+{
+  id: varchar (UUID, primary key),
+  title: text (not null),
+  slug: text (not null),
+  client_id: varchar (foreign key to clients.id),
+  html_content: text (not null),
+  template_type: enum('project', 'retainer', default 'project'),
+  contact_name: text (optional),
+  contact_email: text (optional),
+  engagement_timeline: text (optional),
+  is_published: boolean (default false),
+  created_at: timestamp (default now),
+  updated_at: timestamp (default now)
+}
+```
+**Purpose**: Store proposals/quotes with their content and metadata
+
+### Relationships
+- One client → Many scopes (one-to-many)
+- Scopes reference clients via `client_id`
+
+### Migration Notes
+- All IDs use `varchar` with UUID generation (`gen_random_uuid()`)
+- Use Drizzle schema definition in `shared/schema.ts`
+- Push schema with: `npm run db:push` (or `npm run db:push --force` if needed)
+
+---
+
+## 🔌 API Endpoints
+
+### Authentication
+- **POST** `/api/register` - Create new user account
+- **POST** `/api/login` - Login with username/password
+- **POST** `/api/logout` - Logout current user
+- **GET** `/api/user` - Get current authenticated user
+
+### Clients
+- **GET** `/api/clients` - List all clients
+- **POST** `/api/clients` - Create new client
+  ```typescript
+  Body: { name, slug, logoUrl?, primaryColor?, secondaryColor? }
+  ```
+
+### Scopes (Proposals)
+- **GET** `/api/scopes` - List all scopes with client info
+- **GET** `/api/scopes/:id` - Get single scope by ID
+- **POST** `/api/scopes` - Create new scope
+  ```typescript
+  Body: {
+    clientName, // Creates client if needed
+    title,
+    htmlContent,
+    templateType: 'project' | 'retainer',
+    contactName?,
+    contactEmail?,
+    engagementTimeline?,
+    clientLogoUrl?,
+    clientPrimaryColor?,
+    clientSecondaryColor?
+  }
+  ```
+- **PATCH** `/api/scopes/:id` - Update scope (including publish)
+  ```typescript
+  Body: {
+    title?,
+    htmlContent?,
+    isPublished?,
+    contactName?,
+    contactEmail?,
+    engagementTimeline?,
+    clientLogoUrl?,
+    clientPrimaryColor?,
+    clientSecondaryColor?
+  }
+  ```
+- **DELETE** `/api/scopes/:id` - Delete scope
+
+### Public Endpoints
+- **GET** `/api/published/:clientSlug/:scopeSlug` - Get published scope (no auth required)
+- **POST** `/api/scopes/:id/accept` - Accept proposal
+  ```typescript
+  Body: { contactName, contactEmail, message }
+  ```
+
+### Statistics
+- **GET** `/api/stats` - Get dashboard statistics
+  ```typescript
+  Returns: {
+    totalScopes,
+    activeClients,
+    publishedScopes,
+    drafts
+  }
+  ```
+
+---
+
+## 📁 File Structure & Key Files
+
+### Backend Files
+
+#### `server/index.ts`
+Main Express server setup with:
+- Session management (express-session + connect-pg-simple)
+- Passport authentication
+- Vite middleware for development
+- Routes mounting
+
+#### `server/routes.ts`
+All API route handlers:
+- Authentication routes
+- Client CRUD
+- Scope CRUD
+- Published scope endpoint
+- Accept proposal endpoint
+- Statistics endpoint
+
+#### `server/storage.ts`
+Database storage interface:
+- Uses Drizzle ORM
+- PostgreSQL connection via Neon
+- All CRUD operations
+
+#### `shared/schema.ts`
+Drizzle schema definitions:
+- Table schemas (users, clients, scopes)
+- Relationships
+- Insert/select types
+- Zod validation schemas
+
+### Frontend Files
+
+#### `client/src/App.tsx`
+Main app component:
+- Routing setup (wouter)
+- Query client provider
+- Routes:
+  - `/` - Dashboard (protected)
+  - `/scopes` - Scopes list (protected)
+  - `/:clientSlug/:scopeSlug` - Public scope viewer
+
+#### `client/src/pages/dashboard.tsx`
+Main dashboard page:
+- Statistics cards
+- Recent scopes list
+- Create new scope button
+
+#### `client/src/pages/scopes.tsx`
+Scopes management page:
+- List all scopes
+- Filter by client
+- Create/edit scopes
+- Publish/unpublish
+- Delete scopes
+
+#### `client/src/pages/scope-view.tsx`
+Public scope viewer:
+- Displays published proposals
+- White-label branding
+- Zoom controls
+- PDF export
+- Accept proposal modal
+
+#### `client/src/components/scope-form.tsx`
+Scope creation/editing form:
+- Client selection/creation
+- Rich text editor (TipTap)
+- Template type selection
+- Contact information
+- Validation with Zod
+
+#### `client/src/components/proposal-acceptance-modal.tsx`
+Modal for accepting proposals:
+- Contact form
+- Email sending via SendGrid
+
+#### `client/src/components/password-protection.tsx`
+Simple password protection for dashboard:
+- Checks for `VITE_ACCESS_PASSWORD` env var
+- Session-based access control
+
+#### `client/src/lib/proposal-template.tsx`
+Proposal parsing and rendering:
+- Parses HTML content into structured data
+- Extracts metrics (hours, costs, timeline)
+- Template-specific rendering (project vs retainer)
+- Handles two template types with different sections
+
+#### `client/src/lib/queryClient.ts`
+TanStack Query setup:
+- Default fetcher function
+- API request helper
+- Error handling
+
+---
+
+## 🎨 UI Components (shadcn/ui)
+
+The app uses shadcn/ui components. Key components used:
+- Button, Card, Dialog, Form, Input, Label
+- Select, Separator, Tabs, Textarea, Toast
+- Alert, Badge, Dropdown Menu, Popover
+- Skeleton (for loading states)
+
+All components are in `client/src/components/ui/`
+
+---
+
+## 📦 Dependencies
+
+### Key Dependencies
+```json
+{
+  "react": "^18.3.1",
+  "react-dom": "^18.3.1",
+  "express": "^4.21.2",
+  "drizzle-orm": "^0.39.1",
+  "drizzle-zod": "^0.7.0",
+  "@neondatabase/serverless": "^0.10.4",
+  "@tanstack/react-query": "^5.60.5",
+  "wouter": "^3.3.5",
+  "zod": "^3.24.2",
+  "tailwindcss": "^3.4.17",
+  "lucide-react": "^0.453.0",
+  "@radix-ui/react-*": "various",
+  "passport": "^0.7.0",
+  "passport-local": "^1.0.0",
+  "express-session": "^1.18.1",
+  "connect-pg-simple": "^10.0.0",
+  "@sendgrid/mail": "^8.1.6"
+}
+```
+
+### Install Command
+```bash
+# Already installed in this project, but for reference:
+npm install [dependencies above]
+```
+
+---
+
+## 🔧 Environment Variables
+
+Required environment variables:
+
+```bash
+# Database (auto-configured in Replit)
+DATABASE_URL=postgresql://...
+
+# SendGrid (for email notifications)
+SENDGRID_API_KEY=your_key_here
+
+# Password protection (optional)
+VITE_ACCESS_PASSWORD=your_password_here
+
+# Session secret (auto-generated)
+SESSION_SECRET=random_string_here
+```
+
+---
+
+## 🚀 Integration Strategy
+
+### Option 1: Full Merge (Recommended for similar stacks)
+
+**If your app uses Express + React + PostgreSQL:**
+
+1. **Database**: Copy tables from `shared/schema.ts` to your schema
+2. **API Routes**: Copy routes from `server/routes.ts`, namespace under `/api/proposals/*` if needed
+3. **Frontend Pages**: Copy pages to your pages directory
+4. **Components**: Copy UI components you don't have
+5. **Routes**: Add to your router configuration
+6. **Dependencies**: Install missing packages
+
+### Option 2: Modular Integration
+
+**Add as a feature module:**
+
+1. Create a `proposals/` module in your app
+2. Copy all relevant files into this module
+3. Import and mount the module in your main app
+4. Add database tables to your schema
+5. Link proposals to your existing projects/clients
+
+### Option 3: Microservice
+
+**Keep separate but connected:**
+
+1. Run PatchOps as a separate service
+2. Share the same database
+3. Link via foreign keys to your existing data
+4. Embed the proposal viewer in your app via iframe or component
+
+---
+
+## 🔗 Integration Points for Agency Management
+
+### Connecting to Projects
+```typescript
+// In your scopes table, add foreign key to your projects
+scopes: {
+  // ... existing fields
+  project_id: varchar("project_id").references(() => projects.id)
+}
+```
+
+### Connecting to Clients
+```typescript
+// If you already have a clients table, merge the schemas
+// Add these fields to your existing clients:
+clients: {
+  // ... your existing fields
+  logo_url: text("logo_url"),
+  primary_color: text("primary_color"),
+  secondary_color: text("secondary_color")
+}
+```
+
+### Workflow Integration
+```typescript
+// Link proposal acceptance to project status
+app.post('/api/scopes/:id/accept', async (req, res) => {
+  // 1. Accept the proposal
+  await acceptProposal(scopeId, contactInfo);
+  
+  // 2. Update your project status
+  await updateProjectStatus(projectId, 'approved');
+  
+  // 3. Create tasks, send notifications, etc.
+});
+```
+
+---
+
+## 🎯 Key Features to Integrate
+
+### 1. Proposal Creation
+- Rich HTML content editor
+- Template types (project vs retainer)
+- Client branding
+- Contact information
+
+### 2. Proposal Viewing
+- Public URLs (/:clientSlug/:scopeSlug)
+- White-label branding
+- PDF export
+- Zoom controls
+
+### 3. Proposal Management
+- List/filter scopes
+- Publish/unpublish
+- Edit content
+- Delete proposals
+
+### 4. Client Branding
+- Logo upload
+- Custom colors
+- Applied to all proposals
+
+### 5. Statistics
+- Total scopes
+- Active clients
+- Published vs drafts
+
+---
+
+## 📝 Code Patterns
+
+### Database Queries (Drizzle)
+```typescript
+// Get all scopes with clients
+const scopes = await db
+  .select()
+  .from(scopesTable)
+  .leftJoin(clientsTable, eq(scopesTable.clientId, clientsTable.id));
+```
+
+### API Responses
+```typescript
+// Success
+res.json({ data });
+
+// Error
+res.status(400).json({ message: "Error message" });
+```
+
+### Frontend Data Fetching
+```typescript
+// With TanStack Query
+const { data, isLoading } = useQuery({
+  queryKey: ['/api/scopes'],
+});
+```
+
+### Frontend Mutations
+```typescript
+const mutation = useMutation({
+  mutationFn: async (data) => apiRequest('/api/scopes', 'POST', data),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/scopes'] });
+  }
+});
+```
+
+---
+
+## 🔒 Authentication Flow
+
+1. User visits protected route
+2. `PasswordProtection` component checks session
+3. If no access, shows password input
+4. Password stored in session
+5. Protected pages render normally
+
+**Note**: This is a simple password protection, not per-user auth. For production, use proper user authentication with the `users` table.
+
+---
+
+## 📧 Email Integration
+
+Uses SendGrid for proposal acceptance notifications:
+
+```typescript
+import sgMail from '@sendgrid/mail';
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+await sgMail.send({
+  to: 'recipient@example.com',
+  from: 'your@email.com',
+  subject: 'Proposal Accepted',
+  html: '<p>Proposal has been accepted</p>'
+});
+```
+
+---
+
+## 🎨 Styling Approach
+
+- **Tailwind CSS** for utility classes
+- **CSS Custom Properties** for theming (in `client/src/index.css`)
+- **shadcn/ui** components for consistent UI
+- **Responsive design** with mobile-first approach
+
+Custom colors defined in `:root`:
+```css
+--background, --foreground, --primary, --secondary, etc.
+```
+
+---
+
+## 🧪 Testing Recommendations
+
+1. **Test database migrations**: Ensure tables are created correctly
+2. **Test authentication**: Login/logout flows
+3. **Test CRUD operations**: Create/read/update/delete scopes
+4. **Test public URLs**: Verify published proposals are accessible
+5. **Test branding**: Ensure client colors/logos appear correctly
+6. **Test PDF export**: Verify print functionality works
+7. **Test proposal acceptance**: Check email sending
+
+---
+
+## ⚠️ Important Considerations
+
+### 1. Naming Conflicts
+- If your app has "clients", consider renaming PatchOps clients to "proposal_clients"
+- If you have "scopes", rename to "proposals" or "quotes"
+
+### 2. Route Conflicts
+- PatchOps uses `/:clientSlug/:scopeSlug` for public URLs
+- Ensure this doesn't conflict with your existing routes
+- Consider namespacing under `/proposals/` or `/quotes/`
+
+### 3. Database Schema
+- **Don't change ID column types** if tables already exist
+- Use `npm run db:push --force` for schema updates
+- Backup database before major schema changes
+
+### 4. Environment Variables
+- Merge env vars from both apps
+- Don't overwrite existing vars with same names
+
+### 5. Dependencies
+- Check for version conflicts
+- Test thoroughly after merging package.json
+
+---
+
+## 📋 Merge Checklist
+
+- [ ] Copy database schema to your `schema.ts`
+- [ ] Run database migration (`npm run db:push`)
+- [ ] Copy API routes (namespace if needed)
+- [ ] Copy frontend pages
+- [ ] Copy UI components you don't have
+- [ ] Update routing configuration
+- [ ] Install missing dependencies
+- [ ] Set up environment variables
+- [ ] Test all CRUD operations
+- [ ] Test public proposal viewing
+- [ ] Test proposal acceptance flow
+- [ ] Test branding/customization
+- [ ] Update navigation to include new features
+- [ ] Add links from your projects to proposals
+
+---
+
+## 🎯 Suggested Integration Workflow
+
+1. **Database First**: Add PatchOps tables to your schema
+2. **Backend Routes**: Add API endpoints (test with Postman/curl)
+3. **Test Data**: Create sample clients and scopes
+4. **Frontend Pages**: Add proposal management pages
+5. **Navigation**: Link from your existing UI
+6. **Integration**: Connect proposals to your projects/clients
+7. **Customization**: Adjust branding and styling
+8. **Testing**: Full end-to-end testing
+9. **Documentation**: Update your app's documentation
+
+---
+
+## 💡 Quick Start for Agent
+
+**Tell the agent:**
+
+"I want to merge PatchOps proposal management into this app. Key things to add:
+
+1. **Three database tables**: users, clients, scopes (see Database Schema section)
+2. **API endpoints** for CRUD operations (see API Endpoints section)
+3. **Three main pages**: Dashboard, Scopes list, Public scope viewer
+4. **Key components**: Scope form, Proposal acceptance modal
+5. **Link proposals to my existing projects** (add project_id foreign key to scopes table)
+
+Files to focus on:
+- `shared/schema.ts` - Add tables
+- `server/routes.ts` - Add API routes  
+- `client/src/App.tsx` - Add routes
+- Copy pages from `client/src/pages/` (dashboard, scopes, scope-view)
+
+Start with the database schema, then routes, then frontend."
+
+---
+
+## 📞 Key Contacts & Support
+
+- Original PatchOps codebase is in this Replit project
+- All source code is available for reference
+- Use this migration package as the single source of truth
+
+---
+
+**This package contains everything needed to successfully merge PatchOps into your agency management tool. Follow the integration strategy that best fits your architecture, and refer to the original source code for implementation details.**

@@ -1,0 +1,27 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz
+
+# Database exports (may contain secrets)
+database_exports/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Replit artifacts (no longer needed)
+.replit
+.local/
+replit.md
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+*.log
