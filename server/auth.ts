@@ -86,7 +86,12 @@ export function setupAuth(app: Express) {
     // Build absolute callback URL with HTTPS
     const getCallbackUrl = () => {
       if (process.env.APP_URL) {
-        const url = `${process.env.APP_URL}/auth/google/callback`;
+        let appUrl = process.env.APP_URL.trim().replace(/\/+$/, ''); // trim trailing slashes
+        // Ensure the URL has a protocol prefix
+        if (!appUrl.startsWith('http://') && !appUrl.startsWith('https://')) {
+          appUrl = `https://${appUrl}`;
+        }
+        const url = `${appUrl}/auth/google/callback`;
         console.log("[Google OAuth] Using APP_URL callback:", url);
         return url;
       }
