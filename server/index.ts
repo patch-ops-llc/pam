@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { serveStatic, log } from "./vite";
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -94,6 +94,9 @@ export async function getAnonymousUserId(): Promise<string> {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
+    // Variable import path prevents esbuild from bundling dev-only vite dependency
+    const devModule = "./vite-dev";
+    const { setupVite } = await import(devModule);
     await setupVite(app, server);
   } else {
     serveStatic(app);
