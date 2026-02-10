@@ -1,15 +1,12 @@
 node_modules
 dist
 .git
-.gitignore
 .replit
 .local
 .DS_Store
-*.md
-!shared/**
-attached_assets
 database_exports
 .env
-.env.*
+.env.local
+.env.production
 Thumbs.db
 *.tar.gz
