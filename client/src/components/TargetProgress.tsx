@@ -273,9 +273,11 @@ export function TargetProgress() {
     );
   }
 
-  const filteredProgress = selectedAgencies.length > 0
-    ? targetProgress.filter((p: any) => selectedAgencies.includes(p.agency.id))
-    : targetProgress;
+  const filteredProgress = useMemo(() => {
+    return selectedAgencies.length > 0
+      ? targetProgress.filter((p: any) => selectedAgencies.includes(p.agency.id))
+      : targetProgress;
+  }, [selectedAgencies, targetProgress]);
 
   const selectedCount = selectedAgencies.length;
   const totalCount = targetProgress.length;

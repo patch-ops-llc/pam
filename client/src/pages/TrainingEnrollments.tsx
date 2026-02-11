@@ -84,7 +84,7 @@ export default function TrainingEnrollments() {
               <SelectValue placeholder="Select a program..." />
             </SelectTrigger>
             <SelectContent>
-              {activePrograms.map((p) => (
+              {programs?.filter(p => p.status === "active").map((p) => (
                 <SelectItem key={p.id} value={p.id} className="text-base">
                   {p.title}
                 </SelectItem>
