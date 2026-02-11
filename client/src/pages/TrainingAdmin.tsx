@@ -39,6 +39,7 @@ import {
   Layers,
   Upload,
   Users,
+  Sparkles,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -53,6 +54,9 @@ export default function TrainingAdmin() {
   const [isCreating, setIsCreating] = useState(false);
   const [seedDialogOpen, setSeedDialogOpen] = useState(false);
   const [seedJson, setSeedJson] = useState("");
+  const [aiGenerateDialogOpen, setAiGenerateDialogOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiGeneratedData, setAiGeneratedData] = useState<{ program: Record<string, unknown>; phases: Array<Record<string, unknown>> } | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -192,7 +196,23 @@ export default function TrainingAdmin() {
       queryClient.invalidateQueries({ queryKey: ["/api/training/programs"] });
       setSeedDialogOpen(false);
       setSeedJson("");
-      toast({ title: "Success", description: "Training program seeded successfully" });
+      setAiGenerateDialogOpen(false);
+      setAiGeneratedData(null);
+      setAiPrompt("");
+      toast({ title: "Success", description: "Training program created successfully" });
+    },
+    onError: (error) => toast({ title: "Error", description: error.message, variant: "destructive" }),
+  });
+
+  // AI Generate mutation
+  const generateMutation = useMutation({
+    mutationFn: async (prompt: string) => {
+      const response = await apiRequest("/api/training/generate", "POST", { prompt });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setAiGeneratedData(data);
+      toast({ title: "Generated", description: "Program structure generated. Review and create when ready." });
     },
     onError: (error) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
@@ -328,6 +348,10 @@ export default function TrainingAdmin() {
               Enrollments
             </Button>
           </Link>
+          <Button variant="outline" onClick={() => setAiGenerateDialogOpen(true)}>
+            <Sparkles className="h-4 w-4 mr-2" />
+            Generate with AI
+          </Button>
           <Button variant="outline" onClick={() => setSeedDialogOpen(true)}>
             <Upload className="h-4 w-4 mr-2" />
             Import Seed Data
@@ -706,6 +730,86 @@ export default function TrainingAdmin() {
               Import
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Generate Dialog */}
+      <Dialog open={aiGenerateDialogOpen} onOpenChange={(open) => {
+        setAiGenerateDialogOpen(open);
+        if (!open) {
+          setAiPrompt("");
+          setAiGeneratedData(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              Generate Program with AI
+            </DialogTitle>
+            <DialogDescription>
+              Describe the training program you want. The AI will generate a complete structure with phases, modules, client stories, assignments, and checklists.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {!aiGeneratedData ? (
+              <>
+                <div className="space-y-2">
+                  <Label>What kind of training program do you want?</Label>
+                  <Textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="e.g., A HubSpot implementation training for new consultants with 3 phases: foundations (CRM basics), intermediate (workflows & automation), and advanced (custom objects). Include realistic client scenarios like a gym and a B2B SaaS company."
+                    rows={6}
+                  />
+                </div>
+                <Button
+                  onClick={() => generateMutation.mutate(aiPrompt)}
+                  disabled={!aiPrompt.trim() || generateMutation.isPending}
+                >
+                  {generateMutation.isPending ? (
+                    <>
+                      <span className="animate-pulse">Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generate Program
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                  <h4 className="font-medium">{String(aiGeneratedData.program.title)}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {aiGeneratedData.phases.length} phases, {aiGeneratedData.phases.reduce((n, p) => n + ((p.modules as unknown[])?.length ?? 0), 0)} modules
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Generated structure</Label>
+                  <Textarea
+                    value={JSON.stringify(aiGeneratedData, null, 2)}
+                    readOnly
+                    rows={12}
+                    className="font-mono text-xs"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setAiGeneratedData(null)}>
+                    Generate Different
+                  </Button>
+                  <Button
+                    onClick={() => seedMutation.mutate(aiGeneratedData)}
+                    disabled={seedMutation.isPending}
+                  >
+                    Create Program
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

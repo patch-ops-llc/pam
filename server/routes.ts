@@ -8033,6 +8033,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Training AI Generate endpoint - generates program structure from natural language
+  app.post("/api/training/generate", requireAuth, async (req, res) => {
+    try {
+      const { prompt } = req.body;
+      if (!prompt || typeof prompt !== "string") {
+        return res.status(400).json({ error: "prompt is required" });
+      }
+      const result = await aiService.generateTrainingProgram(prompt.trim());
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating training program:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to generate training program",
+      });
+    }
+  });
+
   // Training Seed Data endpoint (admin only)
   app.post("/api/training/seed", requireAuth, async (req, res) => {
     try {

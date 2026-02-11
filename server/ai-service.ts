@@ -695,6 +695,82 @@ Return ONLY valid JSON, no markdown formatting.`;
       throw new Error("Failed to enrich lead. Please try again.");
     }
   }
+
+  async generateTrainingProgram(prompt: string): Promise<{ program: Record<string, unknown>; phases: Array<Record<string, unknown>> }> {
+    const systemPrompt = `You are an expert instructional designer. Your task is to generate a complete training program structure based on the user's description.
+
+Output a JSON object with this exact structure:
+{
+  "program": {
+    "title": "string",
+    "description": "string",
+    "philosophy": "string (optional - learning approach)",
+    "prerequisites": "string (optional)",
+    "estimatedHours": "string (e.g. '40-60')",
+    "status": "draft",
+    "order": 0
+  },
+  "phases": [
+    {
+      "title": "string",
+      "description": "string",
+      "estimatedHours": "string (optional)",
+      "milestoneReview": "string (optional)",
+      "passCriteria": "string (optional)",
+      "order": 0,
+      "modules": [
+        {
+          "title": "string",
+          "estimatedHours": "string (optional)",
+          "clientStory": "string (the business context and scenario)",
+          "assignment": "string (goals and key decisions)",
+          "testingRequirements": "string (optional)",
+          "deliverablesAndPresentation": "string (optional)",
+          "beReadyToAnswer": "string (optional - questions to prepare for)",
+          "order": 0,
+          "resourceLinks": [{"label": "string", "url": "string", "description": "string"}],
+          "checklist": [{"id": "string", "text": "string"}]
+        }
+      ]
+    }
+  ]
+}
+
+Create a structured, practical program with 2-4 phases and 2-5 modules per phase. Each module should have realistic client stories, clear assignments, and useful checklists. Use progressive complexity. Return ONLY valid JSON, no markdown or code fences.`;
+
+    const userPrompt = `Generate a training program based on this description:\n\n${prompt}`;
+
+    try {
+      const message = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 16000,
+        temperature: 0.4,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      });
+
+      const responseText = message.content[0].type === "text" ? message.content[0].text : "";
+
+      const cleanedResponse = responseText
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
+
+      const result = JSON.parse(cleanedResponse);
+
+      if (!result.program || !result.phases || !Array.isArray(result.phases)) {
+        throw new Error("Invalid structure: missing program or phases array");
+      }
+
+      return {
+        program: result.program,
+        phases: result.phases,
+      };
+    } catch (error) {
+      console.error("Failed to generate training program:", error);
+      throw new Error("Failed to generate training program. Please try again with a clearer description.");
+    }
+  }
 }
 
 export const aiService = new AIService();
