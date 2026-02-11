@@ -1,13 +1,11 @@
 import {
   BarChart3,
-  Users,
   Building2,
   Settings,
   Timer,
   UserPlus,
   TrendingUp,
   UsersRound,
-  FileText,
   CheckSquare,
   ChevronDown,
   FolderOpen,
@@ -16,8 +14,6 @@ import {
   GraduationCap,
   LogOut,
   FlaskConical,
-  GitBranch,
-  Contact,
 } from "lucide-react";
 import patchopsLogo from "@assets/patchops-brandmark-2_1758758915355.jpg";
 import { Link, useLocation } from "wouter";
@@ -87,11 +83,6 @@ const deliveryItems = [
     url: "/capacity",
     icon: UsersRound,
   },
-  {
-    title: "Team Resources",
-    url: "/team-resources",
-    icon: Users,
-  },
 ];
 
 const operationsItems = [
@@ -99,16 +90,6 @@ const operationsItems = [
     title: "Forecasting",
     url: "/forecasting",
     icon: TrendingUp,
-  },
-  {
-    title: "Pipeline",
-    url: "/pipeline",
-    icon: GitBranch,
-  },
-  {
-    title: "CRM",
-    url: "/crm",
-    icon: Contact,
   },
 ];
 

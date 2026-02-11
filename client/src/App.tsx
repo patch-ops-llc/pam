@@ -28,7 +28,6 @@ import Users from "@/pages/Users";
 import Settings from "@/pages/Settings";
 import SlackConfiguration from "@/pages/SlackConfiguration";
 import Forecasting from "@/pages/Forecasting";
-import TeamResources from "@/pages/TeamResources";
 import Capacity from "@/pages/Capacity";
 import Proposals from "@/pages/Proposals";
 import CreateProposal from "@/pages/CreateProposal";
@@ -38,10 +37,8 @@ import VisualProposalEditor from "@/pages/VisualProposalEditor";
 import DocumentProposalIngestion from "@/pages/DocumentProposalIngestion";
 import KnowledgeBase from "@/pages/KnowledgeBase";
 import GuidanceSettings from "@/pages/GuidanceSettings";
-import Pipeline from "@/pages/Pipeline";
 import Archive from "@/pages/Archive";
 import Tasks from "@/pages/Tasks";
-import CRM from "@/pages/CRM";
 import ApiDocs from "@/pages/ApiDocs";
 import UatSessions from "@/pages/UatSessions";
 import UatSessionDetail from "@/pages/UatSessionDetail";
@@ -76,7 +73,6 @@ const routeTitles: Record<string, string> = {
   "/settings": "Settings",
   "/slack-configuration": "Slack Configuration",
   "/forecasting": "Forecasting",
-  "/team-resources": "Team Resources",
   "/proposals": "Proposals",
   "/proposals/create": "New Proposal",
   "/proposals/create/transcript": "Transcript Proposal",
@@ -84,9 +80,7 @@ const routeTitles: Record<string, string> = {
   "/proposals/create/visual": "Visual Proposal",
   "/knowledge-base": "Knowledge Base",
   "/guidance-settings": "Guidance Settings",
-  "/pipeline": "Pipeline",
   "/archive": "Archive",
-  "/crm": "CRM",
   "/api-docs": "API Documentation",
   "/uat": "UAT Sessions",
   "/uat/pm": "PM Overview",
@@ -120,8 +114,6 @@ const searchableRoutes = [
   { label: "Users", path: "/users", group: "System" },
   { label: "Settings", path: "/settings", group: "System" },
   { label: "Calendar", path: "/calendar", group: "Main" },
-  { label: "Pipeline", path: "/pipeline", group: "Operations" },
-  { label: "CRM", path: "/crm", group: "Operations" },
 ];
 
 function getPageTitle(path: string): string {
@@ -153,7 +145,6 @@ function Router() {
       <Route path="/slack-configuration" component={() => <Layout><SlackConfiguration /></Layout>} />
       <Route path="/quota-settings" component={() => <Redirect to="/capacity" />} />
       <Route path="/forecasting" component={() => <Layout><Forecasting /></Layout>} />
-      <Route path="/team-resources" component={() => <Layout><TeamResources /></Layout>} />
       <Route path="/holidays" component={() => <Redirect to="/capacity" />} />
       <Route path="/proposals" component={() => <Layout><Proposals /></Layout>} />
       <Route path="/proposals/create" component={() => <Layout><NewProposalSelector /></Layout>} />
@@ -165,9 +156,7 @@ function Router() {
       <Route path="/proposals/:slug" component={ProposalView} />
       <Route path="/knowledge-base" component={() => <Layout><KnowledgeBase /></Layout>} />
       <Route path="/guidance-settings" component={() => <Layout><GuidanceSettings /></Layout>} />
-      <Route path="/pipeline" component={() => <Layout><Pipeline /></Layout>} />
       <Route path="/archive" component={() => <Layout><Archive /></Layout>} />
-      <Route path="/crm" component={() => <Layout><CRM /></Layout>} />
       <Route path="/api-docs" component={() => <Layout><ApiDocs /></Layout>} />
       <Route path="/uat" component={() => <Layout><UatSessions /></Layout>} />
       <Route path="/uat/pm" component={() => <Layout><UatPmView /></Layout>} />
