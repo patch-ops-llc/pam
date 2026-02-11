@@ -250,6 +250,26 @@ export function TargetProgress() {
     return grouped;
   }, [accountHoursData]);
 
+  // All hooks must be called before any early return (Rules of Hooks)
+  const filteredProgress = useMemo(() => {
+    return selectedAgencies.length > 0
+      ? targetProgress.filter((p: any) => selectedAgencies.includes(p.agency.id))
+      : targetProgress;
+  }, [selectedAgencies, targetProgress]);
+
+  // Aggregate totals for headline: single monthly quota (sum of agency targets) and progress to it
+  const totals = useMemo(() => {
+    let totalBillable = 0;
+    let totalTarget = 0;
+    filteredProgress.forEach((p: TargetProgressData) => {
+      if (!p.noQuota) {
+        totalBillable += Number(p.monthlyBillable) || 0;
+        totalTarget += Number(p.monthlyTarget) || 0;
+      }
+    });
+    return { totalBillable, totalTarget };
+  }, [filteredProgress]);
+
   if (isLoading) {
     return (
       <Card>
@@ -273,27 +293,8 @@ export function TargetProgress() {
     );
   }
 
-  const filteredProgress = useMemo(() => {
-    return selectedAgencies.length > 0
-      ? targetProgress.filter((p: any) => selectedAgencies.includes(p.agency.id))
-      : targetProgress;
-  }, [selectedAgencies, targetProgress]);
-
   const selectedCount = selectedAgencies.length;
   const totalCount = targetProgress.length;
-
-  // Aggregate totals for headline: single monthly quota (sum of agency targets) and progress to it
-  const totals = useMemo(() => {
-    let totalBillable = 0;
-    let totalTarget = 0;
-    filteredProgress.forEach((p: TargetProgressData) => {
-      if (!p.noQuota) {
-        totalBillable += Number(p.monthlyBillable) || 0;
-        totalTarget += Number(p.monthlyTarget) || 0;
-      }
-    });
-    return { totalBillable, totalTarget };
-  }, [filteredProgress]);
 
   const monthlyPacingHeadline = calculatePacing(totals.totalBillable, totals.totalTarget, pacingData.monthProgress);
   const headlineProgressPercent = totals.totalTarget > 0
