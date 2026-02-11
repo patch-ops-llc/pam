@@ -415,7 +415,7 @@ export function TargetProgress() {
               </CollapsibleTrigger>
               <CollapsibleContent>
               <div className="space-y-3 mt-3">
-            {filteredProgress.map((progress: any) => {
+            {[...filteredProgress].sort((a, b) => (Number(b.monthlyBillable) || 0) - (Number(a.monthlyBillable) || 0)).map((progress: any) => {
               const monthlyBillable = Number(progress.monthlyBillable) || 0;
               const monthlyTarget = Number(progress.monthlyTarget) || 0;
               const monthlyPercent = monthlyTarget > 0 ? Math.min((monthlyBillable / monthlyTarget) * 100, 100) : 0;
@@ -452,7 +452,7 @@ export function TargetProgress() {
                     <CollapsibleContent>
                       {hasAccounts && (
                         <div className="ml-6 mt-2 border-l-2 border-muted pl-3 space-y-1.5">
-                          {agencyAccounts.map((account) => (
+                          {[...agencyAccounts].sort((a, b) => (b.monthlyBilled || 0) - (a.monthlyBilled || 0)).map((account) => (
                             <div key={account.account.id} className="flex items-center justify-between py-1.5 px-2 bg-muted/30 rounded text-sm" data-testid={`account-${account.account.id}`}>
                               <span>{account.account.name}</span>
                               <span className="text-muted-foreground">{Math.round(account.monthlyBilled || 0)}h</span>

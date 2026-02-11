@@ -196,9 +196,11 @@ export function ResourceQuotaTracker() {
           </div>
         </div>
 
-        {/* Per-team-member progress bars */}
+        {/* Per-team-member progress bars (leaderboard: sorted by pacing descending) */}
         <div className="space-y-3">
-          {resourceQuotaData.map((item) => {
+          {[...resourceQuotaData]
+            .sort((a, b) => (b.billedHours + b.prebilledHours - b.expectedHours) - (a.billedHours + a.prebilledHours - a.expectedHours))
+            .map((item) => {
             const totalHours = item.billedHours + item.prebilledHours;
             const remaining = item.adjustedTarget - totalHours;
             const pacingHours = totalHours - item.expectedHours;
