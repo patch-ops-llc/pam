@@ -716,18 +716,26 @@ export default function TimeLogAudit() {
       )}
 
       {accountMetrics && accountMetrics.length > 0 && (
-        <div className="border rounded-lg p-4 bg-card min-w-0 overflow-hidden" data-testid="account-hours-breakdown">
-          <p className="text-sm font-medium text-muted-foreground mb-3">Hours by Account</p>
-          <div className="space-y-1 min-w-0">
-            {(() => {
-              const grouped = accountMetrics.reduce((acc, am) => {
-                const key = am.agencyName;
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(am);
-                return acc;
-              }, {} as Record<string, AccountMetric[]>);
-              return Object.entries(grouped).map(([agencyName, accounts]) => (
-                <Collapsible key={agencyName} defaultOpen={true}>
+        <Collapsible defaultOpen={false}>
+          <div className="border rounded-lg p-4 bg-card min-w-0 overflow-hidden" data-testid="account-hours-breakdown">
+            <CollapsibleTrigger className="flex items-center gap-2 w-full py-1 hover:bg-muted/50 rounded-md px-2 -mx-2 -mt-1 -mb-2 text-left group">
+              <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
+              <p className="text-sm font-medium text-muted-foreground">Hours by Account</p>
+              <span className="text-xs text-muted-foreground shrink-0">
+                {new Set(accountMetrics.map(a => a.agencyName)).size} agencies
+              </span>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-1 min-w-0 pt-2">
+                {(() => {
+                  const grouped = accountMetrics.reduce((acc, am) => {
+                    const key = am.agencyName;
+                    if (!acc[key]) acc[key] = [];
+                    acc[key].push(am);
+                    return acc;
+                  }, {} as Record<string, AccountMetric[]>);
+                  return Object.entries(grouped).map(([agencyName, accounts]) => (
+                    <Collapsible key={agencyName} defaultOpen={false}>
                   <CollapsibleTrigger className="flex items-center gap-2 w-full py-1.5 hover:bg-muted/50 rounded-md px-2 -mx-2 text-left group">
                     <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
                     <p className="text-sm font-semibold truncate flex-1">{agencyName}</p>
@@ -745,11 +753,13 @@ export default function TimeLogAudit() {
                       ))}
                     </div>
                   </CollapsibleContent>
-                </Collapsible>
-              ));
-            })()}
+                    </Collapsible>
+                  ));
+                })()}
+              </div>
+            </CollapsibleContent>
           </div>
-        </div>
+        </Collapsible>
       )}
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -873,7 +883,7 @@ export default function TimeLogAudit() {
                         }}
                         disabled={updateTimeLogMutation.isPending || deleteTimeLogMutation.isPending}
                       >
-                        <SelectTrigger className="h-8 w-36 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`agency-select-${log.id}`}>
+                        <SelectTrigger className="h-8 w-28 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`agency-select-${log.id}`}>
                           <SelectValue placeholder="Select agency..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -900,7 +910,7 @@ export default function TimeLogAudit() {
                         }}
                         disabled={updateTimeLogMutation.isPending || deleteTimeLogMutation.isPending}
                       >
-                        <SelectTrigger className="h-8 w-36 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`account-select-${log.id}`}>
+                        <SelectTrigger className="h-8 w-28 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`account-select-${log.id}`}>
                           <SelectValue placeholder="Select account..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -927,7 +937,7 @@ export default function TimeLogAudit() {
                         }}
                         disabled={updateTimeLogMutation.isPending || deleteTimeLogMutation.isPending}
                       >
-                        <SelectTrigger className="h-8 w-36 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`project-select-${log.id}`}>
+                        <SelectTrigger className="h-8 w-28 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`project-select-${log.id}`}>
                           <SelectValue placeholder="Select project..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -955,7 +965,7 @@ export default function TimeLogAudit() {
                             });
                           }
                         }}
-                        className="h-8 w-32 text-xs border-none bg-transparent focus-visible:ring-1 focus-visible:ring-ring rounded-sm hover-elevate disabled:opacity-50"
+                        className="h-8 w-24 min-w-0 text-xs border-none bg-transparent focus-visible:ring-1 focus-visible:ring-ring rounded-sm hover-elevate disabled:opacity-50"
                         data-testid={`task-input-${log.id}`}
                       />
                     </TableCell>
@@ -979,7 +989,7 @@ export default function TimeLogAudit() {
                               setEditingDescription(null);
                             }
                           }}
-                          className="min-h-20 text-xs max-w-[180px]"
+                          className="min-h-20 text-xs max-w-[140px]"
                           data-testid={`description-textarea-${log.id}`}
                         />
                       ) : (
@@ -1012,7 +1022,7 @@ export default function TimeLogAudit() {
                           
                           handleTimeUpdate(log.id, actualValue, billedValue, tierValue, billingTypeValue);
                         }}
-                        className="h-8 w-20 text-center border-none bg-transparent focus-visible:ring-1 focus-visible:ring-ring rounded-sm hover-elevate disabled:opacity-50"
+                        className="h-8 w-16 min-w-0 text-center border-none bg-transparent focus-visible:ring-1 focus-visible:ring-ring rounded-sm hover-elevate disabled:opacity-50"
                         data-testid={`actual-input-${log.id}`}
                         data-type="actual"
                       />
@@ -1056,7 +1066,7 @@ export default function TimeLogAudit() {
                         }}
                         disabled={updateTimeLogMutation.isPending || deleteTimeLogMutation.isPending}
                       >
-                        <SelectTrigger className="h-8 w-24 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-type="tier" data-testid={`tier-select-${log.id}`}>
+                        <SelectTrigger className="h-8 w-16 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-type="tier" data-testid={`tier-select-${log.id}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -1080,7 +1090,7 @@ export default function TimeLogAudit() {
                         }}
                         disabled={updateTimeLogMutation.isPending || deleteTimeLogMutation.isPending}
                       >
-                        <SelectTrigger className="h-8 w-24 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-type="billingType" data-testid={`billingType-select-${log.id}`}>
+                        <SelectTrigger className="h-8 w-20 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-type="billingType" data-testid={`billingType-select-${log.id}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
