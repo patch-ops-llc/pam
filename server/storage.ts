@@ -63,7 +63,15 @@ import {
   type UatTestStepResult, type InsertUatTestStepResult,
   type AccountWithAgency, type ProjectWithAccountAndAgency, type TaskWithRelations, type TimeLogWithRelations,
   type CalendarEventWithRelations, type ProjectTeamMemberWithUser, type ProjectWithTeamAndRelations, type UserAvailabilityWithUser,
-  type ProposalWithProject, type ProposalWithScopeItems
+  type ProposalWithProject, type ProposalWithScopeItems,
+  trainingPrograms, trainingPhases, trainingModules, trainingModuleSections, trainingEnrollments, trainingModuleSubmissions,
+  type TrainingProgram, type InsertTrainingProgram,
+  type TrainingPhase, type InsertTrainingPhase,
+  type TrainingModule, type InsertTrainingModule,
+  type TrainingModuleSection, type InsertTrainingModuleSection,
+  type TrainingEnrollment, type InsertTrainingEnrollment,
+  type TrainingModuleSubmission, type InsertTrainingModuleSubmission,
+  type TrainingProgramWithPhases, type TrainingEnrollmentWithProgress
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, gte, lte, sql, isNull, isNotNull } from "drizzle-orm";
@@ -538,6 +546,48 @@ export interface IStorage {
   // UAT Test Step Results
   getUatTestStepResults(runId: string): Promise<UatTestStepResult[]>;
   updateUatTestStepResult(runId: string, stepId: string, updates: Partial<InsertUatTestStepResult>): Promise<UatTestStepResult>;
+
+  // Training Programs
+  getTrainingPrograms(): Promise<TrainingProgram[]>;
+  getTrainingProgram(id: string): Promise<TrainingProgram | undefined>;
+  getTrainingProgramWithPhases(id: string): Promise<TrainingProgramWithPhases | undefined>;
+  createTrainingProgram(program: InsertTrainingProgram): Promise<TrainingProgram>;
+  updateTrainingProgram(id: string, updates: Partial<InsertTrainingProgram>): Promise<TrainingProgram>;
+  deleteTrainingProgram(id: string): Promise<void>;
+
+  // Training Phases
+  getTrainingPhases(programId: string): Promise<TrainingPhase[]>;
+  getTrainingPhase(id: string): Promise<TrainingPhase | undefined>;
+  createTrainingPhase(phase: InsertTrainingPhase): Promise<TrainingPhase>;
+  updateTrainingPhase(id: string, updates: Partial<InsertTrainingPhase>): Promise<TrainingPhase>;
+  deleteTrainingPhase(id: string): Promise<void>;
+
+  // Training Modules
+  getTrainingModules(phaseId: string): Promise<TrainingModule[]>;
+  getTrainingModule(id: string): Promise<TrainingModule | undefined>;
+  createTrainingModule(module: InsertTrainingModule): Promise<TrainingModule>;
+  updateTrainingModule(id: string, updates: Partial<InsertTrainingModule>): Promise<TrainingModule>;
+  deleteTrainingModule(id: string): Promise<void>;
+
+  // Training Module Sections
+  getTrainingModuleSections(moduleId: string): Promise<TrainingModuleSection[]>;
+  createTrainingModuleSection(section: InsertTrainingModuleSection): Promise<TrainingModuleSection>;
+  updateTrainingModuleSection(id: string, updates: Partial<InsertTrainingModuleSection>): Promise<TrainingModuleSection>;
+  deleteTrainingModuleSection(id: string): Promise<void>;
+
+  // Training Enrollments
+  getTrainingEnrollments(userId: string): Promise<TrainingEnrollmentWithProgress[]>;
+  getTrainingEnrollment(id: string): Promise<TrainingEnrollment | undefined>;
+  getTrainingEnrollmentByUserAndProgram(userId: string, programId: string): Promise<TrainingEnrollment | undefined>;
+  createTrainingEnrollment(enrollment: InsertTrainingEnrollment): Promise<TrainingEnrollment>;
+  updateTrainingEnrollment(id: string, updates: Partial<InsertTrainingEnrollment>): Promise<TrainingEnrollment>;
+
+  // Training Module Submissions
+  getTrainingModuleSubmissions(enrollmentId: string): Promise<TrainingModuleSubmission[]>;
+  getTrainingModuleSubmission(enrollmentId: string, moduleId: string): Promise<TrainingModuleSubmission | undefined>;
+  createTrainingModuleSubmission(submission: InsertTrainingModuleSubmission): Promise<TrainingModuleSubmission>;
+  updateTrainingModuleSubmission(id: string, updates: Partial<InsertTrainingModuleSubmission>): Promise<TrainingModuleSubmission>;
+  getAllPendingReviews(): Promise<(TrainingModuleSubmission & { module: TrainingModule; enrollment: TrainingEnrollment; user: User })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4099,6 +4149,248 @@ export class DatabaseStorage implements IStorage {
       }).returning();
       return created;
     }
+  }
+
+  // ==========================================
+  // Training / LMS
+  // ==========================================
+
+  // Training Programs
+  async getTrainingPrograms(): Promise<TrainingProgram[]> {
+    return await db.select().from(trainingPrograms).orderBy(trainingPrograms.order);
+  }
+
+  async getTrainingProgram(id: string): Promise<TrainingProgram | undefined> {
+    const [program] = await db.select().from(trainingPrograms).where(eq(trainingPrograms.id, id));
+    return program;
+  }
+
+  async getTrainingProgramWithPhases(id: string): Promise<TrainingProgramWithPhases | undefined> {
+    const program = await this.getTrainingProgram(id);
+    if (!program) return undefined;
+
+    const phases = await db.select().from(trainingPhases)
+      .where(eq(trainingPhases.programId, id))
+      .orderBy(trainingPhases.order);
+
+    const phasesWithModules = await Promise.all(
+      phases.map(async (phase) => {
+        const modules = await db.select().from(trainingModules)
+          .where(eq(trainingModules.phaseId, phase.id))
+          .orderBy(trainingModules.order);
+        return { ...phase, modules };
+      })
+    );
+
+    return { ...program, phases: phasesWithModules };
+  }
+
+  async createTrainingProgram(program: InsertTrainingProgram): Promise<TrainingProgram> {
+    const [created] = await db.insert(trainingPrograms).values(program).returning();
+    return created;
+  }
+
+  async updateTrainingProgram(id: string, updates: Partial<InsertTrainingProgram>): Promise<TrainingProgram> {
+    const [updated] = await db.update(trainingPrograms)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(trainingPrograms.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrainingProgram(id: string): Promise<void> {
+    await db.delete(trainingPrograms).where(eq(trainingPrograms.id, id));
+  }
+
+  // Training Phases
+  async getTrainingPhases(programId: string): Promise<TrainingPhase[]> {
+    return await db.select().from(trainingPhases)
+      .where(eq(trainingPhases.programId, programId))
+      .orderBy(trainingPhases.order);
+  }
+
+  async getTrainingPhase(id: string): Promise<TrainingPhase | undefined> {
+    const [phase] = await db.select().from(trainingPhases).where(eq(trainingPhases.id, id));
+    return phase;
+  }
+
+  async createTrainingPhase(phase: InsertTrainingPhase): Promise<TrainingPhase> {
+    const [created] = await db.insert(trainingPhases).values(phase).returning();
+    return created;
+  }
+
+  async updateTrainingPhase(id: string, updates: Partial<InsertTrainingPhase>): Promise<TrainingPhase> {
+    const [updated] = await db.update(trainingPhases)
+      .set(updates)
+      .where(eq(trainingPhases.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrainingPhase(id: string): Promise<void> {
+    await db.delete(trainingPhases).where(eq(trainingPhases.id, id));
+  }
+
+  // Training Modules
+  async getTrainingModules(phaseId: string): Promise<TrainingModule[]> {
+    return await db.select().from(trainingModules)
+      .where(eq(trainingModules.phaseId, phaseId))
+      .orderBy(trainingModules.order);
+  }
+
+  async getTrainingModule(id: string): Promise<TrainingModule | undefined> {
+    const [mod] = await db.select().from(trainingModules).where(eq(trainingModules.id, id));
+    return mod;
+  }
+
+  async createTrainingModule(mod: InsertTrainingModule): Promise<TrainingModule> {
+    const [created] = await db.insert(trainingModules).values(mod).returning();
+    return created;
+  }
+
+  async updateTrainingModule(id: string, updates: Partial<InsertTrainingModule>): Promise<TrainingModule> {
+    const [updated] = await db.update(trainingModules)
+      .set(updates)
+      .where(eq(trainingModules.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrainingModule(id: string): Promise<void> {
+    await db.delete(trainingModules).where(eq(trainingModules.id, id));
+  }
+
+  // Training Module Sections
+  async getTrainingModuleSections(moduleId: string): Promise<TrainingModuleSection[]> {
+    return await db.select().from(trainingModuleSections)
+      .where(eq(trainingModuleSections.moduleId, moduleId))
+      .orderBy(trainingModuleSections.order);
+  }
+
+  async createTrainingModuleSection(section: InsertTrainingModuleSection): Promise<TrainingModuleSection> {
+    const [created] = await db.insert(trainingModuleSections).values(section).returning();
+    return created;
+  }
+
+  async updateTrainingModuleSection(id: string, updates: Partial<InsertTrainingModuleSection>): Promise<TrainingModuleSection> {
+    const [updated] = await db.update(trainingModuleSections)
+      .set(updates)
+      .where(eq(trainingModuleSections.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrainingModuleSection(id: string): Promise<void> {
+    await db.delete(trainingModuleSections).where(eq(trainingModuleSections.id, id));
+  }
+
+  // Training Enrollments
+  async getTrainingEnrollments(userId: string): Promise<TrainingEnrollmentWithProgress[]> {
+    const enrollments = await db.select().from(trainingEnrollments)
+      .where(eq(trainingEnrollments.userId, userId))
+      .orderBy(desc(trainingEnrollments.createdAt));
+
+    return await Promise.all(
+      enrollments.map(async (enrollment) => {
+        const program = await this.getTrainingProgram(enrollment.programId);
+        const submissions = await this.getTrainingModuleSubmissions(enrollment.id);
+
+        // Count total modules in this program
+        const phases = await db.select().from(trainingPhases)
+          .where(eq(trainingPhases.programId, enrollment.programId));
+        let totalModules = 0;
+        for (const phase of phases) {
+          const modules = await db.select().from(trainingModules)
+            .where(eq(trainingModules.phaseId, phase.id));
+          totalModules += modules.length;
+        }
+
+        const completedModules = submissions.filter(s => s.status === "passed").length;
+
+        return {
+          ...enrollment,
+          program: program!,
+          submissions,
+          totalModules,
+          completedModules,
+        };
+      })
+    );
+  }
+
+  async getTrainingEnrollment(id: string): Promise<TrainingEnrollment | undefined> {
+    const [enrollment] = await db.select().from(trainingEnrollments)
+      .where(eq(trainingEnrollments.id, id));
+    return enrollment;
+  }
+
+  async getTrainingEnrollmentByUserAndProgram(userId: string, programId: string): Promise<TrainingEnrollment | undefined> {
+    const [enrollment] = await db.select().from(trainingEnrollments)
+      .where(and(
+        eq(trainingEnrollments.userId, userId),
+        eq(trainingEnrollments.programId, programId)
+      ));
+    return enrollment;
+  }
+
+  async createTrainingEnrollment(enrollment: InsertTrainingEnrollment): Promise<TrainingEnrollment> {
+    const [created] = await db.insert(trainingEnrollments).values(enrollment).returning();
+    return created;
+  }
+
+  async updateTrainingEnrollment(id: string, updates: Partial<InsertTrainingEnrollment>): Promise<TrainingEnrollment> {
+    const [updated] = await db.update(trainingEnrollments)
+      .set(updates)
+      .where(eq(trainingEnrollments.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Training Module Submissions
+  async getTrainingModuleSubmissions(enrollmentId: string): Promise<TrainingModuleSubmission[]> {
+    return await db.select().from(trainingModuleSubmissions)
+      .where(eq(trainingModuleSubmissions.enrollmentId, enrollmentId))
+      .orderBy(trainingModuleSubmissions.createdAt);
+  }
+
+  async getTrainingModuleSubmission(enrollmentId: string, moduleId: string): Promise<TrainingModuleSubmission | undefined> {
+    const [submission] = await db.select().from(trainingModuleSubmissions)
+      .where(and(
+        eq(trainingModuleSubmissions.enrollmentId, enrollmentId),
+        eq(trainingModuleSubmissions.moduleId, moduleId)
+      ));
+    return submission;
+  }
+
+  async createTrainingModuleSubmission(submission: InsertTrainingModuleSubmission): Promise<TrainingModuleSubmission> {
+    const [created] = await db.insert(trainingModuleSubmissions).values(submission).returning();
+    return created;
+  }
+
+  async updateTrainingModuleSubmission(id: string, updates: Partial<InsertTrainingModuleSubmission>): Promise<TrainingModuleSubmission> {
+    const [updated] = await db.update(trainingModuleSubmissions)
+      .set(updates)
+      .where(eq(trainingModuleSubmissions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getAllPendingReviews(): Promise<(TrainingModuleSubmission & { module: TrainingModule; enrollment: TrainingEnrollment; user: User })[]> {
+    const submissions = await db.select().from(trainingModuleSubmissions)
+      .where(or(
+        eq(trainingModuleSubmissions.status, "submitted"),
+        eq(trainingModuleSubmissions.status, "under_review")
+      ))
+      .orderBy(trainingModuleSubmissions.submittedAt);
+
+    return await Promise.all(
+      submissions.map(async (sub) => {
+        const mod = await this.getTrainingModule(sub.moduleId);
+        const enrollment = await this.getTrainingEnrollment(sub.enrollmentId);
+        const user = await this.getUser(enrollment!.userId);
+        return { ...sub, module: mod!, enrollment: enrollment!, user: user! };
+      })
+    );
   }
 }
 

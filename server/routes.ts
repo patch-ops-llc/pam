@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertUserSchema, insertBrandingConfigSchema, insertAgencySchema, insertAccountSchema, insertAccountNoteSchema, insertProjectSchema, insertProjectAttachmentSchema, insertTaskSchema, insertSlackConfigurationSchema, insertQuotaConfigSchema, insertResourceQuotaSchema, insertPenguinHoursTrackerSchema, insertForecastInvoiceSchema, insertForecastExpenseSchema, insertForecastPayrollMemberSchema, insertForecastScenarioSchema, insertForecastRetainerSchema, insertForecastAccountRevenueSchema, insertForecastCapacityResourceSchema, insertForecastCapacityAllocationSchema, insertForecastResourceSchema, insertResourceMonthlyCapacitySchema, insertAccountForecastAllocationSchema, insertProjectTeamMemberSchema, insertUserAvailabilitySchema, insertHolidaySchema, insertProposalSchema, insertProposalDraftSchema, insertProposalPublishSchema, insertProposalScopeItemSchema, insertKnowledgeBaseDocumentSchema, insertGuidanceSettingSchema, insertChatTranscriptSchema, insertUatSessionSchema, insertUatGuestSchema, insertUatSessionCollaboratorSchema, insertUatChecklistItemSchema, insertUatResponseSchema, insertUatItemCommentSchema, insertUatChecklistItemStepSchema, uatImportSchema } from "@shared/schema";
+import { insertUserSchema, insertBrandingConfigSchema, insertAgencySchema, insertAccountSchema, insertAccountNoteSchema, insertProjectSchema, insertProjectAttachmentSchema, insertTaskSchema, insertSlackConfigurationSchema, insertQuotaConfigSchema, insertResourceQuotaSchema, insertPenguinHoursTrackerSchema, insertForecastInvoiceSchema, insertForecastExpenseSchema, insertForecastPayrollMemberSchema, insertForecastScenarioSchema, insertForecastRetainerSchema, insertForecastAccountRevenueSchema, insertForecastCapacityResourceSchema, insertForecastCapacityAllocationSchema, insertForecastResourceSchema, insertResourceMonthlyCapacitySchema, insertAccountForecastAllocationSchema, insertProjectTeamMemberSchema, insertUserAvailabilitySchema, insertHolidaySchema, insertProposalSchema, insertProposalDraftSchema, insertProposalPublishSchema, insertProposalScopeItemSchema, insertKnowledgeBaseDocumentSchema, insertGuidanceSettingSchema, insertChatTranscriptSchema, insertUatSessionSchema, insertUatGuestSchema, insertUatSessionCollaboratorSchema, insertUatChecklistItemSchema, insertUatResponseSchema, insertUatItemCommentSchema, insertUatChecklistItemStepSchema, uatImportSchema, insertTrainingProgramSchema, insertTrainingPhaseSchema, insertTrainingModuleSchema, insertTrainingModuleSectionSchema, insertTrainingEnrollmentSchema, insertTrainingModuleSubmissionSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { z } from "zod";
 import session from "express-session";
@@ -7689,6 +7689,376 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting attachment:", error);
       res.status(500).json({ error: "Failed to delete attachment" });
+    }
+  });
+
+  // ==========================================
+  // Training / LMS Routes
+  // ==========================================
+
+  // Training Programs
+  app.get("/api/training/programs", requireAuth, async (req, res) => {
+    try {
+      const programs = await storage.getTrainingPrograms();
+      res.json(programs);
+    } catch (error) {
+      console.error("Error fetching training programs:", error);
+      res.status(500).json({ error: "Failed to fetch training programs" });
+    }
+  });
+
+  app.get("/api/training/programs/:id", requireAuth, async (req, res) => {
+    try {
+      const program = await storage.getTrainingProgramWithPhases(req.params.id);
+      if (!program) return res.status(404).json({ error: "Program not found" });
+      res.json(program);
+    } catch (error) {
+      console.error("Error fetching training program:", error);
+      res.status(500).json({ error: "Failed to fetch training program" });
+    }
+  });
+
+  app.post("/api/training/programs", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingProgramSchema.safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const program = await storage.createTrainingProgram(validation.data);
+      res.status(201).json(program);
+    } catch (error) {
+      console.error("Error creating training program:", error);
+      res.status(500).json({ error: "Failed to create training program" });
+    }
+  });
+
+  app.patch("/api/training/programs/:id", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingProgramSchema.partial().safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const program = await storage.updateTrainingProgram(req.params.id, validation.data);
+      res.json(program);
+    } catch (error) {
+      console.error("Error updating training program:", error);
+      res.status(500).json({ error: "Failed to update training program" });
+    }
+  });
+
+  app.delete("/api/training/programs/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteTrainingProgram(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting training program:", error);
+      res.status(500).json({ error: "Failed to delete training program" });
+    }
+  });
+
+  // Training Phases
+  app.get("/api/training/programs/:programId/phases", requireAuth, async (req, res) => {
+    try {
+      const phases = await storage.getTrainingPhases(req.params.programId);
+      res.json(phases);
+    } catch (error) {
+      console.error("Error fetching training phases:", error);
+      res.status(500).json({ error: "Failed to fetch training phases" });
+    }
+  });
+
+  app.post("/api/training/phases", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingPhaseSchema.safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const phase = await storage.createTrainingPhase(validation.data);
+      res.status(201).json(phase);
+    } catch (error) {
+      console.error("Error creating training phase:", error);
+      res.status(500).json({ error: "Failed to create training phase" });
+    }
+  });
+
+  app.patch("/api/training/phases/:id", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingPhaseSchema.partial().safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const phase = await storage.updateTrainingPhase(req.params.id, validation.data);
+      res.json(phase);
+    } catch (error) {
+      console.error("Error updating training phase:", error);
+      res.status(500).json({ error: "Failed to update training phase" });
+    }
+  });
+
+  app.delete("/api/training/phases/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteTrainingPhase(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting training phase:", error);
+      res.status(500).json({ error: "Failed to delete training phase" });
+    }
+  });
+
+  // Training Modules
+  app.get("/api/training/phases/:phaseId/modules", requireAuth, async (req, res) => {
+    try {
+      const modules = await storage.getTrainingModules(req.params.phaseId);
+      res.json(modules);
+    } catch (error) {
+      console.error("Error fetching training modules:", error);
+      res.status(500).json({ error: "Failed to fetch training modules" });
+    }
+  });
+
+  app.get("/api/training/modules/:id", requireAuth, async (req, res) => {
+    try {
+      const mod = await storage.getTrainingModule(req.params.id);
+      if (!mod) return res.status(404).json({ error: "Module not found" });
+      const sections = await storage.getTrainingModuleSections(mod.id);
+      res.json({ ...mod, sections });
+    } catch (error) {
+      console.error("Error fetching training module:", error);
+      res.status(500).json({ error: "Failed to fetch training module" });
+    }
+  });
+
+  app.post("/api/training/modules", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingModuleSchema.safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const mod = await storage.createTrainingModule(validation.data);
+      res.status(201).json(mod);
+    } catch (error) {
+      console.error("Error creating training module:", error);
+      res.status(500).json({ error: "Failed to create training module" });
+    }
+  });
+
+  app.patch("/api/training/modules/:id", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingModuleSchema.partial().safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const mod = await storage.updateTrainingModule(req.params.id, validation.data);
+      res.json(mod);
+    } catch (error) {
+      console.error("Error updating training module:", error);
+      res.status(500).json({ error: "Failed to update training module" });
+    }
+  });
+
+  app.delete("/api/training/modules/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteTrainingModule(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting training module:", error);
+      res.status(500).json({ error: "Failed to delete training module" });
+    }
+  });
+
+  // Training Module Sections
+  app.get("/api/training/modules/:moduleId/sections", requireAuth, async (req, res) => {
+    try {
+      const sections = await storage.getTrainingModuleSections(req.params.moduleId);
+      res.json(sections);
+    } catch (error) {
+      console.error("Error fetching training module sections:", error);
+      res.status(500).json({ error: "Failed to fetch training module sections" });
+    }
+  });
+
+  app.post("/api/training/sections", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingModuleSectionSchema.safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const section = await storage.createTrainingModuleSection(validation.data);
+      res.status(201).json(section);
+    } catch (error) {
+      console.error("Error creating training module section:", error);
+      res.status(500).json({ error: "Failed to create training module section" });
+    }
+  });
+
+  app.patch("/api/training/sections/:id", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingModuleSectionSchema.partial().safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const section = await storage.updateTrainingModuleSection(req.params.id, validation.data);
+      res.json(section);
+    } catch (error) {
+      console.error("Error updating training module section:", error);
+      res.status(500).json({ error: "Failed to update training module section" });
+    }
+  });
+
+  app.delete("/api/training/sections/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteTrainingModuleSection(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting training module section:", error);
+      res.status(500).json({ error: "Failed to delete training module section" });
+    }
+  });
+
+  // Training Enrollments
+  app.get("/api/training/enrollments", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const enrollments = await storage.getTrainingEnrollments(user.id);
+      res.json(enrollments);
+    } catch (error) {
+      console.error("Error fetching training enrollments:", error);
+      res.status(500).json({ error: "Failed to fetch training enrollments" });
+    }
+  });
+
+  app.post("/api/training/enrollments", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const { programId } = req.body;
+      if (!programId) return res.status(400).json({ error: "programId is required" });
+
+      // Check if already enrolled
+      const existing = await storage.getTrainingEnrollmentByUserAndProgram(user.id, programId);
+      if (existing) return res.status(409).json({ error: "Already enrolled in this program" });
+
+      const enrollment = await storage.createTrainingEnrollment({
+        userId: user.id,
+        programId,
+        status: "in_progress",
+        startedAt: new Date(),
+      });
+      res.status(201).json(enrollment);
+    } catch (error) {
+      console.error("Error creating training enrollment:", error);
+      res.status(500).json({ error: "Failed to create training enrollment" });
+    }
+  });
+
+  app.patch("/api/training/enrollments/:id", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingEnrollmentSchema.partial().safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const enrollment = await storage.updateTrainingEnrollment(req.params.id, validation.data);
+      res.json(enrollment);
+    } catch (error) {
+      console.error("Error updating training enrollment:", error);
+      res.status(500).json({ error: "Failed to update training enrollment" });
+    }
+  });
+
+  // Training Module Submissions
+  app.get("/api/training/enrollments/:enrollmentId/submissions", requireAuth, async (req, res) => {
+    try {
+      const submissions = await storage.getTrainingModuleSubmissions(req.params.enrollmentId);
+      res.json(submissions);
+    } catch (error) {
+      console.error("Error fetching training submissions:", error);
+      res.status(500).json({ error: "Failed to fetch training submissions" });
+    }
+  });
+
+  app.get("/api/training/enrollments/:enrollmentId/submissions/:moduleId", requireAuth, async (req, res) => {
+    try {
+      const submission = await storage.getTrainingModuleSubmission(req.params.enrollmentId, req.params.moduleId);
+      res.json(submission || null);
+    } catch (error) {
+      console.error("Error fetching training submission:", error);
+      res.status(500).json({ error: "Failed to fetch training submission" });
+    }
+  });
+
+  app.post("/api/training/submissions", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingModuleSubmissionSchema.safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const submission = await storage.createTrainingModuleSubmission(validation.data);
+      res.status(201).json(submission);
+    } catch (error) {
+      console.error("Error creating training submission:", error);
+      res.status(500).json({ error: "Failed to create training submission" });
+    }
+  });
+
+  app.patch("/api/training/submissions/:id", requireAuth, async (req, res) => {
+    try {
+      const validation = insertTrainingModuleSubmissionSchema.partial().safeParse(req.body);
+      if (!validation.success) return res.status(400).json({ error: "Invalid data", details: validation.error });
+      const submission = await storage.updateTrainingModuleSubmission(req.params.id, validation.data);
+      res.json(submission);
+    } catch (error) {
+      console.error("Error updating training submission:", error);
+      res.status(500).json({ error: "Failed to update training submission" });
+    }
+  });
+
+  // Training Reviews (admin/manager)
+  app.get("/api/training/reviews", requireAuth, async (req, res) => {
+    try {
+      const reviews = await storage.getAllPendingReviews();
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching training reviews:", error);
+      res.status(500).json({ error: "Failed to fetch training reviews" });
+    }
+  });
+
+  app.patch("/api/training/reviews/:submissionId", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const { status, reviewerNotes, reviewerRating } = req.body;
+      const submission = await storage.updateTrainingModuleSubmission(req.params.submissionId, {
+        status,
+        reviewerNotes,
+        reviewerRating,
+        reviewedBy: user.id,
+        reviewedAt: new Date(),
+      });
+      res.json(submission);
+    } catch (error) {
+      console.error("Error reviewing training submission:", error);
+      res.status(500).json({ error: "Failed to review training submission" });
+    }
+  });
+
+  // Training Seed Data endpoint (admin only)
+  app.post("/api/training/seed", requireAuth, async (req, res) => {
+    try {
+      const { program, phases } = req.body;
+      if (!program || !phases) return res.status(400).json({ error: "program and phases are required" });
+
+      const createdProgram = await storage.createTrainingProgram(program);
+
+      for (const phaseData of phases) {
+        const { modules, ...phaseFields } = phaseData;
+        const createdPhase = await storage.createTrainingPhase({
+          ...phaseFields,
+          programId: createdProgram.id,
+        });
+
+        if (modules) {
+          for (const modData of modules) {
+            const { sections, ...modFields } = modData;
+            const createdModule = await storage.createTrainingModule({
+              ...modFields,
+              phaseId: createdPhase.id,
+            });
+
+            if (sections) {
+              for (const sectionData of sections) {
+                await storage.createTrainingModuleSection({
+                  ...sectionData,
+                  moduleId: createdModule.id,
+                });
+              }
+            }
+          }
+        }
+      }
+
+      res.status(201).json({ message: "Training program seeded successfully", programId: createdProgram.id });
+    } catch (error) {
+      console.error("Error seeding training program:", error);
+      res.status(500).json({ error: "Failed to seed training program" });
     }
   });
 

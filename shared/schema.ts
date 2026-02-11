@@ -2437,3 +2437,187 @@ ${UAT_IMPORT_TEMPLATE}
 
 Analyze the provided feature/requirements and generate comprehensive UAT items with detailed test steps.`;
 
+// ==========================================
+// Training / LMS Tables
+// ==========================================
+
+// Training Programs - top-level training programs
+export const trainingPrograms = pgTable("training_programs", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  philosophy: text("philosophy"),
+  prerequisites: text("prerequisites"),
+  estimatedHours: text("estimated_hours"),
+  status: text("status").notNull().default("draft"), // draft, active, archived
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTrainingProgramSchema = createInsertSchema(trainingPrograms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type TrainingProgram = typeof trainingPrograms.$inferSelect;
+export type InsertTrainingProgram = z.infer<typeof insertTrainingProgramSchema>;
+
+// Training Phases - phases within a program
+export const trainingPhases = pgTable("training_phases", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  programId: varchar("program_id")
+    .notNull()
+    .references(() => trainingPrograms.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  estimatedHours: text("estimated_hours"),
+  milestoneReview: text("milestone_review"),
+  passCriteria: text("pass_criteria"),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTrainingPhaseSchema = createInsertSchema(trainingPhases).omit({
+  id: true,
+  createdAt: true,
+});
+export type TrainingPhase = typeof trainingPhases.$inferSelect;
+export type InsertTrainingPhase = z.infer<typeof insertTrainingPhaseSchema>;
+
+// Training Modules - individual modules within a phase
+export const trainingModules = pgTable("training_modules", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  phaseId: varchar("phase_id")
+    .notNull()
+    .references(() => trainingPhases.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  estimatedHours: text("estimated_hours"),
+  clientStory: text("client_story"),
+  assignment: text("assignment"),
+  testingRequirements: text("testing_requirements"),
+  deliverablesAndPresentation: text("deliverables_and_presentation"),
+  beReadyToAnswer: text("be_ready_to_answer"),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTrainingModuleSchema = createInsertSchema(trainingModules).omit({
+  id: true,
+  createdAt: true,
+});
+export type TrainingModule = typeof trainingModules.$inferSelect;
+export type InsertTrainingModule = z.infer<typeof insertTrainingModuleSchema>;
+
+// Training Module Sections - flexible content sections within modules
+export const trainingModuleSections = pgTable("training_module_sections", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  moduleId: varchar("module_id")
+    .notNull()
+    .references(() => trainingModules.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  sectionType: text("section_type").notNull().default("content"), // content, tip, warning, example
+  content: text("content"),
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertTrainingModuleSectionSchema = createInsertSchema(trainingModuleSections).omit({
+  id: true,
+  createdAt: true,
+});
+export type TrainingModuleSection = typeof trainingModuleSections.$inferSelect;
+export type InsertTrainingModuleSection = z.infer<typeof insertTrainingModuleSectionSchema>;
+
+// Training Enrollments - links users to programs with progress tracking
+export const trainingEnrollments = pgTable(
+  "training_enrollments",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    programId: varchar("program_id")
+      .notNull()
+      .references(() => trainingPrograms.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("not_started"), // not_started, in_progress, completed
+    startedAt: timestamp("started_at"),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueEnrollment: unique("unique_enrollment").on(table.userId, table.programId),
+  }),
+);
+
+export const insertTrainingEnrollmentSchema = createInsertSchema(trainingEnrollments).omit({
+  id: true,
+  createdAt: true,
+});
+export type TrainingEnrollment = typeof trainingEnrollments.$inferSelect;
+export type InsertTrainingEnrollment = z.infer<typeof insertTrainingEnrollmentSchema>;
+
+// Training Module Submissions - per-module progress and review
+export const trainingModuleSubmissions = pgTable(
+  "training_module_submissions",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    enrollmentId: varchar("enrollment_id")
+      .notNull()
+      .references(() => trainingEnrollments.id, { onDelete: "cascade" }),
+    moduleId: varchar("module_id")
+      .notNull()
+      .references(() => trainingModules.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("not_started"), // not_started, in_progress, submitted, under_review, passed, needs_revision
+    submissionNotes: text("submission_notes"),
+    reviewerNotes: text("reviewer_notes"),
+    reviewerRating: text("reviewer_rating"), // passed, needs_revision
+    reviewedBy: varchar("reviewed_by").references(() => users.id),
+    submittedAt: timestamp("submitted_at"),
+    reviewedAt: timestamp("reviewed_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueSubmission: unique("unique_submission").on(table.enrollmentId, table.moduleId),
+  }),
+);
+
+export const insertTrainingModuleSubmissionSchema = createInsertSchema(trainingModuleSubmissions).omit({
+  id: true,
+  createdAt: true,
+});
+export type TrainingModuleSubmission = typeof trainingModuleSubmissions.$inferSelect;
+export type InsertTrainingModuleSubmission = z.infer<typeof insertTrainingModuleSubmissionSchema>;
+
+// Composite types for frontend consumption
+export type TrainingPhaseWithModules = TrainingPhase & {
+  modules: TrainingModule[];
+};
+
+export type TrainingProgramWithPhases = TrainingProgram & {
+  phases: TrainingPhaseWithModules[];
+};
+
+export type TrainingModuleWithSections = TrainingModule & {
+  sections: TrainingModuleSection[];
+};
+
+export type TrainingEnrollmentWithProgress = TrainingEnrollment & {
+  program: TrainingProgram;
+  submissions: TrainingModuleSubmission[];
+  totalModules: number;
+  completedModules: number;
+};
+

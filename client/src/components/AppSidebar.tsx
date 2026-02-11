@@ -23,6 +23,8 @@ import {
   FolderOpen,
   Plug,
   Code,
+  GraduationCap,
+  ClipboardCheck,
 } from "lucide-react";
 import patchopsLogo from "@assets/patchops-brandmark-2_1758758915355.jpg";
 import { Link } from "wouter";
@@ -156,6 +158,27 @@ const clientToolsItems = [
   },
 ];
 
+const trainingItems = [
+  {
+    title: "Training",
+    icon: GraduationCap,
+    children: [
+      {
+        title: "My Training",
+        url: "/training",
+      },
+      {
+        title: "Admin",
+        url: "/training/admin",
+      },
+      {
+        title: "Reviews",
+        url: "/training/reviews",
+      },
+    ],
+  },
+];
+
 const systemItems = [
   {
     title: "Users",
@@ -274,6 +297,17 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {clientToolsItems.map((item) => (
+                <MenuItem key={item.title} item={item} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Training</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {trainingItems.map((item) => (
                 <MenuItem key={item.title} item={item} />
               ))}
             </SidebarMenu>

@@ -41,6 +41,11 @@ import UatReview from "@/pages/UatReview";
 import UatPmView from "@/pages/UatPmView";
 import UatPmPortal from "@/pages/UatPmPortal";
 import UatDevPortal from "@/pages/UatDevPortal";
+import Training from "@/pages/Training";
+import TrainingProgram from "@/pages/TrainingProgram";
+import TrainingModule from "@/pages/TrainingModule";
+import TrainingAdmin from "@/pages/TrainingAdmin";
+import TrainingReview from "@/pages/TrainingReview";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -88,6 +93,11 @@ function Router() {
       <Route path="/p/:token" component={UatPmPortal} />
       <Route path="/d/:token" component={UatDevPortal} />
       <Route path="/uat/:id" component={() => <Layout><UatSessionDetail /></Layout>} />
+      <Route path="/training" component={() => <Layout><Training /></Layout>} />
+      <Route path="/training/programs/:id" component={() => <Layout><TrainingProgram /></Layout>} />
+      <Route path="/training/modules/:id" component={() => <Layout><TrainingModule /></Layout>} />
+      <Route path="/training/admin" component={() => <Layout><TrainingAdmin /></Layout>} />
+      <Route path="/training/reviews" component={() => <Layout><TrainingReview /></Layout>} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/design-preview" component={DesignPreview} />
       <Route component={NotFound} />
