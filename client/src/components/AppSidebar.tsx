@@ -15,6 +15,7 @@ import {
   Code,
   GraduationCap,
   LogOut,
+  FlaskConical,
 } from "lucide-react";
 import patchopsLogo from "@assets/patchops-brandmark-2_1758758915355.jpg";
 import { Link, useLocation } from "wouter";
@@ -98,22 +99,14 @@ const operationsItems = [
     icon: TrendingUp,
   },
   {
-    title: "Proposals",
+    title: "Knowledge Base",
+    url: "/knowledge-base",
     icon: FileText,
-    children: [
-      {
-        title: "Proposals",
-        url: "/proposals",
-      },
-      {
-        title: "Knowledge Base",
-        url: "/knowledge-base",
-      },
-      {
-        title: "Guidance Settings",
-        url: "/guidance-settings",
-      },
-    ],
+  },
+  {
+    title: "Guidance Settings",
+    url: "/guidance-settings",
+    icon: FileText,
   },
 ];
 
@@ -130,11 +123,20 @@ const integrationsItems = [
   },
 ];
 
-const clientToolsItems = [
+const experimentsItems = [
   {
-    title: "UAT Sessions",
-    url: "/uat",
-    icon: CheckSquare,
+    title: "Experiments",
+    icon: FlaskConical,
+    children: [
+      {
+        title: "UAT Sessions",
+        url: "/uat",
+      },
+      {
+        title: "Proposals",
+        url: "/proposals",
+      },
+    ],
   },
 ];
 
@@ -274,7 +276,18 @@ export function AppSidebar() {
           <SidebarGroupLabel>Delivery</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {[...deliveryItems, ...clientToolsItems].map((item) => (
+              {deliveryItems.map((item) => (
+                <MenuItem key={item.title} item={item} currentPath={currentPath} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Experiments</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {experimentsItems.map((item) => (
                 <MenuItem key={item.title} item={item} currentPath={currentPath} />
               ))}
             </SidebarMenu>

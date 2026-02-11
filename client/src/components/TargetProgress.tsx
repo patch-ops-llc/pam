@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -165,13 +164,6 @@ export function TargetProgress() {
     return { expected, difference, isPacing };
   };
 
-  const getProgressIndicatorClass = (pacing: 'ahead' | 'behind' | 'on-pace') => {
-    switch (pacing) {
-      case 'ahead': return '[&>div]:bg-emerald-500';
-      case 'behind': return '[&>div]:bg-red-500';
-      default: return '';
-    }
-  };
 
   // Load saved selections from localStorage
   useEffect(() => {
@@ -365,15 +357,15 @@ export function TargetProgress() {
           </Popover>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 py-3">
         {filteredProgress.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-6 text-muted-foreground">
             No agencies selected. Use the filter above to select agencies.
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Headline: single monthly hours progress */}
-            <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
               <div className="flex items-baseline justify-between gap-4">
                 <span className="text-2xl font-bold">
                   {Math.round(totals.totalBillable)}h <span className="text-muted-foreground font-normal">/ {Math.round(totals.totalTarget)}h</span>
@@ -386,13 +378,8 @@ export function TargetProgress() {
               </div>
               {totals.totalTarget > 0 && (
                 <>
-                  <Progress value={headlineProgressPercent} className={cn("h-4", getProgressIndicatorClass(monthlyPacingHeadline.isPacing))} />
-                  <div className={cn(
-                    "flex items-center gap-1 text-sm",
-                    monthlyPacingHeadline.isPacing === 'ahead' ? 'text-emerald-600 dark:text-emerald-500' :
-                    monthlyPacingHeadline.isPacing === 'behind' ? 'text-red-600 dark:text-red-500' :
-                    'text-muted-foreground'
-                  )}>
+                  <Progress value={headlineProgressPercent} className="h-3" />
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     {monthlyPacingHeadline.isPacing === 'ahead' && <TrendingUp className="h-4 w-4" />}
                     {monthlyPacingHeadline.isPacing === 'behind' && <TrendingDown className="h-4 w-4" />}
                     <span>
@@ -407,26 +394,19 @@ export function TargetProgress() {
             </div>
 
             {/* Subsection: By Agency */}
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-4">By Agency</h3>
-              <div className="space-y-6">
+            <Collapsible defaultOpen={false} className="group">
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer py-1 -m-1">
+                  <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
+                  By Agency
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+              <div className="space-y-3 mt-3">
             {filteredProgress.map((progress: any) => {
-              // Ensure numeric values for all calculations
-              const weeklyBillable = Number(progress.weeklyBillable) || 0;
-              const weeklyTarget = Number(progress.weeklyTarget) || 0;
               const monthlyBillable = Number(progress.monthlyBillable) || 0;
               const monthlyTarget = Number(progress.monthlyTarget) || 0;
-              
-              const weeklyPacing = calculatePacing(
-                weeklyBillable,
-                weeklyTarget,
-                pacingData.weekProgress
-              );
-              const monthlyPacing = calculatePacing(
-                monthlyBillable,
-                monthlyTarget,
-                pacingData.monthProgress
-              );
+              const monthlyPercent = monthlyTarget > 0 ? Math.min((monthlyBillable / monthlyTarget) * 100, 100) : 0;
 
               const agencyAccounts = accountsByAgency[progress.agency.id] || [];
               const hasAccounts = agencyAccounts.length > 0;
@@ -434,9 +414,9 @@ export function TargetProgress() {
 
               return (
                 <Collapsible key={progress.agency.id} open={isExpanded} onOpenChange={() => hasAccounts && toggleAgencyExpanded(progress.agency.id)}>
-                  <div className="space-y-3" data-testid={`target-agency-${progress.agency.id}`}>
+                  <div className="space-y-2 py-2 border-b border-muted/50 last:border-0" data-testid={`target-agency-${progress.agency.id}`}>
                     <CollapsibleTrigger asChild disabled={!hasAccounts}>
-                      <div className={cn("flex items-center justify-between", hasAccounts && "cursor-pointer hover-elevate rounded-md p-1 -m-1")}>
+                      <div className={cn("flex items-center justify-between", hasAccounts && "cursor-pointer hover:bg-muted/50 rounded-md px-2 py-1 -mx-2 -my-1")}>
                         <div className="flex items-center gap-2">
                           {hasAccounts ? (
                             isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
@@ -445,122 +425,25 @@ export function TargetProgress() {
                           )}
                           <span className="font-medium">{progress.agency.name}</span>
                         </div>
-                        <div className="flex gap-4">
-                          <Badge variant="outline">
-                            Weekly: {Math.round(weeklyBillable)}h / <span className="text-gold">{weeklyTarget || 0}h</span>
-                          </Badge>
-                          <Badge variant="outline">
-                            Monthly: {Math.round(monthlyBillable)}h / <span className="text-gold">{monthlyTarget || 0}h</span>
-                          </Badge>
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-muted-foreground">
+                            {Math.round(monthlyBillable)}h / {Math.round(monthlyTarget)}h
+                          </span>
+                          <span className="text-sm font-medium">{monthlyPercent.toFixed(0)}%</span>
                         </div>
                       </div>
                     </CollapsibleTrigger>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <div>
-                          <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                            <span>Weekly Progress</span>
-                            <span>{weeklyTarget > 0 ? ((weeklyBillable / weeklyTarget) * 100).toFixed(0) : 0}%</span>
-                          </div>
-                          <Progress value={Math.min(weeklyTarget > 0 ? (weeklyBillable / weeklyTarget) * 100 : 0, 100)} className={cn("h-3", weeklyTarget > 0 && getProgressIndicatorClass(weeklyPacing.isPacing))} />
-                          {weeklyTarget > 0 && (
-                            <div className={cn(
-                              "flex items-center gap-1 text-xs mt-1",
-                              weeklyPacing.isPacing === 'ahead' ? 'text-emerald-500' : 
-                              weeklyPacing.isPacing === 'behind' ? 'text-red-500' : 
-                              'text-muted-foreground'
-                            )}>
-                              {weeklyPacing.isPacing === 'ahead' && <TrendingUp className="h-3 w-3" />}
-                              {weeklyPacing.isPacing === 'behind' && <TrendingDown className="h-3 w-3" />}
-                              <span>
-                                {weeklyPacing.isPacing === 'on-pace' ? 'On pace' :
-                                 weeklyPacing.isPacing === 'ahead' ? 
-                                 `${Math.round(Math.abs(weeklyPacing.difference))}h ahead of pace` :
-                                 `${Math.round(Math.abs(weeklyPacing.difference))}h behind pace`}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        {progress.showBillable && (
-                          <div>
-                            <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                              <span>Weekly Billable</span>
-                              <span>{Math.round(weeklyBillable)}h</span>
-                            </div>
-                            <Progress value={Math.min(weeklyTarget > 0 ? (weeklyBillable / weeklyTarget) * 100 : 0, 100)} className="h-3 bg-blue-100 dark:bg-blue-950" />
-                          </div>
-                        )}
-                        {progress.showPreBilled && (
-                          <div>
-                            <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                              <span>Weekly Pre-billed</span>
-                              <span>{Math.round(Number(progress.weeklyPreBilled) || 0)}h</span>
-                            </div>
-                            <Progress value={Math.min(weeklyTarget > 0 ? ((Number(progress.weeklyPreBilled) || 0) / weeklyTarget) * 100 : 0, 100)} className="h-3 bg-amber-100 dark:bg-amber-950 [&>div]:bg-amber-500 dark:[&>div]:bg-amber-600" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="space-y-3">
-                        <div>
-                          <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                            <span>Monthly Progress</span>
-                            <span>{monthlyTarget > 0 ? ((monthlyBillable / monthlyTarget) * 100).toFixed(0) : 0}%</span>
-                          </div>
-                          <Progress value={Math.min(monthlyTarget > 0 ? (monthlyBillable / monthlyTarget) * 100 : 0, 100)} className={cn("h-3", monthlyTarget > 0 && getProgressIndicatorClass(monthlyPacing.isPacing))} />
-                          {monthlyTarget > 0 && (
-                            <div className={cn(
-                              "flex items-center gap-1 text-xs mt-1",
-                              monthlyPacing.isPacing === 'ahead' ? 'text-emerald-500' : 
-                              monthlyPacing.isPacing === 'behind' ? 'text-red-500' : 
-                              'text-muted-foreground'
-                            )}>
-                              {monthlyPacing.isPacing === 'ahead' && <TrendingUp className="h-3 w-3" />}
-                              {monthlyPacing.isPacing === 'behind' && <TrendingDown className="h-3 w-3" />}
-                              <span>
-                                {monthlyPacing.isPacing === 'on-pace' ? 'On pace' :
-                                 monthlyPacing.isPacing === 'ahead' ? 
-                                 `${Math.round(Math.abs(monthlyPacing.difference))}h ahead of pace` :
-                                 `${Math.round(Math.abs(monthlyPacing.difference))}h behind pace`}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        {progress.showBillable && (
-                          <div>
-                            <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                              <span>Monthly Billable</span>
-                              <span>{Math.round(monthlyBillable)}h</span>
-                            </div>
-                            <Progress value={Math.min(monthlyTarget > 0 ? (monthlyBillable / monthlyTarget) * 100 : 0, 100)} className="h-3 bg-blue-100 dark:bg-blue-950" />
-                          </div>
-                        )}
-                        {progress.showPreBilled && (
-                          <div>
-                            <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                              <span>Monthly Pre-billed</span>
-                              <span>{Math.round(Number(progress.monthlyPreBilled) || 0)}h</span>
-                            </div>
-                            <Progress value={Math.min(monthlyTarget > 0 ? ((Number(progress.monthlyPreBilled) || 0) / monthlyTarget) * 100 : 0, 100)} className="h-3 bg-amber-100 dark:bg-amber-950 [&>div]:bg-amber-500 dark:[&>div]:bg-amber-600" />
-                          </div>
-                        )}
-                      </div>
+                    <div className="min-w-0">
+                      <Progress value={monthlyPercent} className="h-2" />
                     </div>
                     
                     <CollapsibleContent>
                       {hasAccounts && (
-                        <div className="ml-6 mt-3 border-l-2 border-muted pl-4 space-y-2">
-                          <div className="text-sm font-medium text-muted-foreground">Accounts</div>
+                        <div className="ml-6 mt-2 border-l-2 border-muted pl-3 space-y-1.5">
                           {agencyAccounts.map((account) => (
-                            <div key={account.account.id} className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-md" data-testid={`account-${account.account.id}`}>
-                              <span className="text-sm">{account.account.name}</span>
-                              <div className="flex gap-3 text-sm">
-                                <span className="text-muted-foreground">
-                                  Weekly: <span className="font-medium text-foreground">{Math.round(account.weeklyBilled || 0)}h</span>
-                                </span>
-                                <span className="text-muted-foreground">
-                                  Monthly: <span className="font-medium text-foreground">{Math.round(account.monthlyBilled || 0)}h</span>
-                                </span>
-                              </div>
+                            <div key={account.account.id} className="flex items-center justify-between py-1.5 px-2 bg-muted/30 rounded text-sm" data-testid={`account-${account.account.id}`}>
+                              <span>{account.account.name}</span>
+                              <span className="text-muted-foreground">{Math.round(account.monthlyBilled || 0)}h</span>
                             </div>
                           ))}
                         </div>
@@ -571,7 +454,8 @@ export function TargetProgress() {
               );
             })}
               </div>
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         )}
       </CardContent>

@@ -1,12 +1,8 @@
 import { TargetProgress } from "@/components/TargetProgress";
-import { BonusScorecard } from "@/components/BonusScorecard";
 import { PenguinHoursTracker } from "@/components/PenguinHoursTracker";
 import { CustomPeriodClientTracker } from "@/components/CustomPeriodClientTracker";
 import { ResourceQuotaTracker } from "@/components/ResourceQuotaTracker";
 import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent } from "@/components/ui/card";
-import { Clock, CalendarDays, TrendingUp } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { PageHeader } from "@/components/PageHeader";
 
 function getGreeting(): string {
@@ -25,75 +21,22 @@ function formatDate(): string {
   });
 }
 
-type QuickStats = {
-  todayHours: number;
-  weekHours: number;
-  monthHours: number;
-};
-
 export default function Dashboard() {
   const { user } = useAuth();
   const firstName = user?.firstName || user?.username || "there";
 
-  const { data: quickStats } = useQuery<QuickStats>({
-    queryKey: ["/api/analytics/quick-stats"],
-    retry: false,
-  });
-
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageHeader
         title={`${getGreeting()}, ${firstName}`}
         description={formatDate()}
       />
 
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Clock className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Today</p>
-              <p className="text-xl font-bold">{quickStats?.todayHours?.toFixed(1) ?? "0.0"}h</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <CalendarDays className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">This Week</p>
-              <p className="text-xl font-bold">{quickStats?.weekHours?.toFixed(1) ?? "0.0"}h</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <TrendingUp className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">This Month</p>
-              <p className="text-xl font-bold">{quickStats?.monthHours?.toFixed(1) ?? "0.0"}h</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Primary Card - Full Width */}
       <TargetProgress />
-      
+
       <ResourceQuotaTracker />
 
-      {/* Secondary Cards - 2-Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <BonusScorecard />
-        <PenguinHoursTracker />
-      </div>
+      <PenguinHoursTracker />
 
       <CustomPeriodClientTracker />
     </div>
