@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users } from "lucide-react";
 import { format, addMonths, startOfMonth, subMonths, subQuarters, startOfQuarter } from "date-fns";
+import { cn } from "@/lib/utils";
 
 type ResourceQuotaData = {
   user: {
@@ -81,6 +82,20 @@ export function ResourceQuotaTracker() {
     return `${sign}${hours.toFixed(1)}h`;
   };
 
+  const getPacingStatus = (pacingHours: number) => {
+    if (pacingHours >= 0) return 'ahead' as const;
+    if (pacingHours >= -10) return 'on-pace' as const;
+    return 'behind' as const;
+  };
+
+  const getProgressIndicatorClass = (pacing: 'ahead' | 'behind' | 'on-pace') => {
+    switch (pacing) {
+      case 'ahead': return '[&>div]:bg-emerald-500';
+      case 'behind': return '[&>div]:bg-red-500';
+      default: return '';
+    }
+  };
+
   const selectedMonthLabel = monthOptions.find(m => m.value === selectedMonth)?.label || selectedMonth;
 
   // Aggregate totals for summary
@@ -96,6 +111,9 @@ export function ResourceQuotaTracker() {
     { target: 0, billed: 0, prebilled: 0, total: 0 }
   );
   const aggregatePercent = totals.target > 0 ? Math.min((totals.total / totals.target) * 100, 100) : 0;
+  const expectedHours = resourceQuotaData.reduce((sum, i) => sum + i.expectedHours, 0);
+  const aggregatePacing = totals.total - expectedHours;
+  const aggregatePacingStatus = getPacingStatus(aggregatePacing);
 
   if (isLoading) {
     return (
@@ -170,7 +188,7 @@ export function ResourceQuotaTracker() {
             </span>
             <span className="text-sm text-muted-foreground">{aggregatePercent.toFixed(0)}%</span>
           </div>
-          <Progress value={aggregatePercent} className="h-2" />
+          <Progress value={aggregatePercent} className={cn("h-2", getProgressIndicatorClass(aggregatePacingStatus))} />
           <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
             <span>Billed: {totals.billed.toFixed(1)}h</span>
             <span>Prebilled: {totals.prebilled.toFixed(1)}h</span>
@@ -184,6 +202,7 @@ export function ResourceQuotaTracker() {
             const totalHours = item.billedHours + item.prebilledHours;
             const remaining = item.adjustedTarget - totalHours;
             const pacingHours = totalHours - item.expectedHours;
+            const pacingStatus = getPacingStatus(pacingHours);
             const percent = item.adjustedTarget > 0 ? Math.min((totalHours / item.adjustedTarget) * 100, 100) : 0;
             return (
               <div
@@ -191,11 +210,11 @@ export function ResourceQuotaTracker() {
                 className="space-y-1.5"
                 data-testid={`dashboard-resource-quota-${item.user.id}`}
               >
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">
+                <div className="flex items-center justify-between gap-2 text-sm min-w-0">
+                  <span className="font-medium truncate">
                     {item.user.firstName} {item.user.lastName}
                   </span>
-                  <span className="text-muted-foreground">
+                  <span className="text-muted-foreground shrink-0">
                     {totalHours.toFixed(1)}h / {item.adjustedTarget.toFixed(1)}h
                     {remaining !== 0 && (
                       <span className="ml-2">
@@ -204,7 +223,7 @@ export function ResourceQuotaTracker() {
                     )}
                   </span>
                 </div>
-                <Progress value={percent} className="h-2" />
+                <Progress value={percent} className={cn("h-2", getProgressIndicatorClass(pacingStatus))} />
                 <div className="flex gap-3 text-xs text-muted-foreground">
                   <span>Billed: {item.billedHours.toFixed(1)}h</span>
                   <span>Prebilled: {item.prebilledHours.toFixed(1)}h</span>

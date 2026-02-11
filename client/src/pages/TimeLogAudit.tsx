@@ -711,9 +711,9 @@ export default function TimeLogAudit() {
       )}
 
       {accountMetrics && accountMetrics.length > 0 && (
-        <div className="border rounded-lg p-4 bg-card" data-testid="account-hours-breakdown">
+        <div className="border rounded-lg p-4 bg-card min-w-0 overflow-hidden" data-testid="account-hours-breakdown">
           <p className="text-sm font-medium text-muted-foreground mb-3">Hours by Account</p>
-          <div className="space-y-3">
+          <div className="space-y-3 min-w-0">
             {(() => {
               const grouped = accountMetrics.reduce((acc, am) => {
                 const key = am.agencyName;
@@ -722,14 +722,16 @@ export default function TimeLogAudit() {
                 return acc;
               }, {} as Record<string, AccountMetric[]>);
               return Object.entries(grouped).map(([agencyName, accounts]) => (
-                <div key={agencyName} className="space-y-1">
-                  <p className="text-sm font-semibold">{agencyName}</p>
-                  {accounts.map(am => (
-                    <div key={am.accountId} className="flex justify-between text-sm pl-3">
-                      <span>{am.accountName}</span>
-                      <span className="font-medium">{am.totalActual.toFixed(1)} actual / {am.totalBilled.toFixed(1)} billed</span>
-                    </div>
-                  ))}
+                <div key={agencyName} className="space-y-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">{agencyName}</p>
+                  <div className="space-y-1">
+                    {accounts.map(am => (
+                      <div key={am.accountId} className="flex justify-between gap-4 min-w-0">
+                        <span className="truncate">{am.accountName}</span>
+                        <span className="font-medium shrink-0">{am.totalActual.toFixed(1)} actual / {am.totalBilled.toFixed(1)} billed</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ));
             })()}

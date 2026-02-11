@@ -159,10 +159,12 @@ export default function TimeLogging() {
   const hierarchicalData = useMemo(() => {
     return agencies
       .filter(agency => agency.isActive)
+      .sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
       .map(agency => ({
         agency,
         accounts: accounts
           .filter(account => account.agencyId === agency.id && account.isActive)
+          .sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
           .map(account => ({
             account,
             projects: projects

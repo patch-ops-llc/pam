@@ -164,6 +164,13 @@ export function TargetProgress() {
     return { expected, difference, isPacing };
   };
 
+  const getProgressIndicatorClass = (pacing: 'ahead' | 'behind' | 'on-pace') => {
+    switch (pacing) {
+      case 'ahead': return '[&>div]:bg-emerald-500';
+      case 'behind': return '[&>div]:bg-red-500';
+      default: return '';
+    }
+  };
 
   // Load saved selections from localStorage
   useEffect(() => {
@@ -378,8 +385,13 @@ export function TargetProgress() {
               </div>
               {totals.totalTarget > 0 && (
                 <>
-                  <Progress value={headlineProgressPercent} className="h-3" />
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <Progress value={headlineProgressPercent} className={cn("h-3", getProgressIndicatorClass(monthlyPacingHeadline.isPacing))} />
+                  <div className={cn(
+                    "flex items-center gap-1 text-sm",
+                    monthlyPacingHeadline.isPacing === 'ahead' ? 'text-emerald-600 dark:text-emerald-500' :
+                    monthlyPacingHeadline.isPacing === 'behind' ? 'text-red-600 dark:text-red-500' :
+                    'text-muted-foreground'
+                  )}>
                     {monthlyPacingHeadline.isPacing === 'ahead' && <TrendingUp className="h-4 w-4" />}
                     {monthlyPacingHeadline.isPacing === 'behind' && <TrendingDown className="h-4 w-4" />}
                     <span>

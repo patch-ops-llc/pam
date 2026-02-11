@@ -98,16 +98,6 @@ const operationsItems = [
     url: "/forecasting",
     icon: TrendingUp,
   },
-  {
-    title: "Knowledge Base",
-    url: "/knowledge-base",
-    icon: FileText,
-  },
-  {
-    title: "Guidance Settings",
-    url: "/guidance-settings",
-    icon: FileText,
-  },
 ];
 
 const integrationsItems = [
@@ -134,7 +124,11 @@ const experimentsItems = [
       },
       {
         title: "Proposals",
-        url: "/proposals",
+        children: [
+          { title: "Proposals", url: "/proposals" },
+          { title: "Knowledge Base", url: "/knowledge-base" },
+          { title: "Guidance Settings", url: "/guidance-settings" },
+        ],
       },
     ],
   },
@@ -183,9 +177,15 @@ function isRouteActive(currentPath: string, itemUrl: string): boolean {
   return currentPath === itemUrl || currentPath.startsWith(itemUrl + "/");
 }
 
+function childHasActiveRoute(child: any, currentPath: string): boolean {
+  if (child.url) return isRouteActive(currentPath, child.url);
+  if (child.children) return child.children.some((c: any) => childHasActiveRoute(c, currentPath));
+  return false;
+}
+
 function MenuItem({ item, currentPath }: { item: any; currentPath: string }) {
   if (item.children) {
-    const hasActiveChild = item.children.some((child: any) => isRouteActive(currentPath, child.url));
+    const hasActiveChild = item.children.some((child: any) => childHasActiveRoute(child, currentPath));
     return (
       <Collapsible defaultOpen={hasActiveChild} className="group/collapsible">
         <SidebarMenuItem>
@@ -201,19 +201,52 @@ function MenuItem({ item, currentPath }: { item: any; currentPath: string }) {
           </CollapsibleTrigger>
           <CollapsibleContent>
             <SidebarMenuSub>
-              {item.children.map((child: any) => (
-                <SidebarMenuSubItem key={child.title}>
-                  <SidebarMenuSubButton
-                    asChild
-                    isActive={isRouteActive(currentPath, child.url)}
-                    data-testid={`link-${child.title.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    <Link href={child.url}>
-                      <span>{child.title}</span>
-                    </Link>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              ))}
+              {item.children.map((child: any) => {
+                if (child.children) {
+                  const hasActiveGrandchild = child.children.some((c: any) => childHasActiveRoute(c, currentPath));
+                  return (
+                    <SidebarMenuSubItem key={child.title}>
+                      <Collapsible defaultOpen={hasActiveGrandchild} className="group/nested">
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuSubButton
+                            isActive={hasActiveGrandchild}
+                            className="pl-8"
+                          >
+                            <span>{child.title}</span>
+                            <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/nested:rotate-180" />
+                          </SidebarMenuSubButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {child.children.map((sub: any) => (
+                              <SidebarMenuSubItem key={sub.title}>
+                                <SidebarMenuSubButton asChild isActive={isRouteActive(currentPath, sub.url)}>
+                                  <Link href={sub.url}>
+                                    <span>{sub.title}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </SidebarMenuSubItem>
+                  );
+                }
+                return (
+                  <SidebarMenuSubItem key={child.title}>
+                    <SidebarMenuSubButton
+                      asChild
+                      isActive={isRouteActive(currentPath, child.url)}
+                      data-testid={`link-${child.title.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <Link href={child.url}>
+                        <span>{child.title}</span>
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                );
+              })}
             </SidebarMenuSub>
           </CollapsibleContent>
         </SidebarMenuItem>
