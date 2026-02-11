@@ -165,6 +165,14 @@ export function TargetProgress() {
     return { expected, difference, isPacing };
   };
 
+  const getProgressIndicatorClass = (pacing: 'ahead' | 'behind' | 'on-pace') => {
+    switch (pacing) {
+      case 'ahead': return '[&>div]:bg-emerald-500';
+      case 'behind': return '[&>div]:bg-red-500';
+      default: return '';
+    }
+  };
+
   // Load saved selections from localStorage
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -395,12 +403,12 @@ export function TargetProgress() {
                             <span>Weekly Progress</span>
                             <span>{weeklyTarget > 0 ? ((weeklyBillable / weeklyTarget) * 100).toFixed(0) : 0}%</span>
                           </div>
-                          <Progress value={Math.min(weeklyTarget > 0 ? (weeklyBillable / weeklyTarget) * 100 : 0, 100)} className="h-3" />
+                          <Progress value={Math.min(weeklyTarget > 0 ? (weeklyBillable / weeklyTarget) * 100 : 0, 100)} className={cn("h-3", weeklyTarget > 0 && getProgressIndicatorClass(weeklyPacing.isPacing))} />
                           {weeklyTarget > 0 && (
                             <div className={cn(
                               "flex items-center gap-1 text-xs mt-1",
-                              weeklyPacing.isPacing === 'ahead' ? 'text-green-600' : 
-                              weeklyPacing.isPacing === 'behind' ? 'text-red-600' : 
+                              weeklyPacing.isPacing === 'ahead' ? 'text-emerald-500' : 
+                              weeklyPacing.isPacing === 'behind' ? 'text-red-500' : 
                               'text-muted-foreground'
                             )}>
                               {weeklyPacing.isPacing === 'ahead' && <TrendingUp className="h-3 w-3" />}
@@ -439,12 +447,12 @@ export function TargetProgress() {
                             <span>Monthly Progress</span>
                             <span>{monthlyTarget > 0 ? ((monthlyBillable / monthlyTarget) * 100).toFixed(0) : 0}%</span>
                           </div>
-                          <Progress value={Math.min(monthlyTarget > 0 ? (monthlyBillable / monthlyTarget) * 100 : 0, 100)} className="h-3" />
+                          <Progress value={Math.min(monthlyTarget > 0 ? (monthlyBillable / monthlyTarget) * 100 : 0, 100)} className={cn("h-3", monthlyTarget > 0 && getProgressIndicatorClass(monthlyPacing.isPacing))} />
                           {monthlyTarget > 0 && (
                             <div className={cn(
                               "flex items-center gap-1 text-xs mt-1",
-                              monthlyPacing.isPacing === 'ahead' ? 'text-green-600' : 
-                              monthlyPacing.isPacing === 'behind' ? 'text-red-600' : 
+                              monthlyPacing.isPacing === 'ahead' ? 'text-emerald-500' : 
+                              monthlyPacing.isPacing === 'behind' ? 'text-red-500' : 
                               'text-muted-foreground'
                             )}>
                               {monthlyPacing.isPacing === 'ahead' && <TrendingUp className="h-3 w-3" />}

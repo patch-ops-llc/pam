@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, Circle, XCircle, CircleDot, Loader2 } from "lucide-react";
 
 interface StatusBadgeProps {
   status: string;
@@ -25,15 +26,32 @@ export function StatusBadge({ status, className = "" }: StatusBadgeProps) {
     }
   };
 
+  const getStatusIcon = () => {
+    switch (normalizedStatus) {
+      case "completed":
+        return <CheckCircle2 className="h-3 w-3" />;
+      case "in-progress":
+      case "active":
+        return <Loader2 className="h-3 w-3" />;
+      case "cancelled":
+        return <XCircle className="h-3 w-3" />;
+      case "todo":
+        return <CircleDot className="h-3 w-3" />;
+      default:
+        return <Circle className="h-3 w-3" />;
+    }
+  };
+
   const formatStatus = (status: string) => {
     return status.charAt(0).toUpperCase() + status.slice(1).replace(/-/g, ' ');
   };
 
   return (
     <Badge 
-      className={`${getStatusClasses()} ${className}`}
+      className={`${getStatusClasses()} inline-flex items-center gap-1 ${className}`}
       data-testid={`badge-status-${normalizedStatus}`}
     >
+      {getStatusIcon()}
       {formatStatus(status)}
     </Badge>
   );

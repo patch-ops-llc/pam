@@ -1,3 +1,4 @@
+import { useState, useEffect, useCallback } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -6,6 +7,16 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AnimatePresence, motion } from "framer-motion";
+import { Search } from "lucide-react";
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import Dashboard from "@/pages/Dashboard";
 import DesignPreview from "@/pages/DesignPreview";
 import TimeLogging from "@/pages/TimeLogging";
@@ -51,6 +62,82 @@ import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { UserMenu } from "@/components/UserMenu";
 import { useLocation, Redirect } from "wouter";
+
+// Route-to-breadcrumb mapping
+const routeTitles: Record<string, string> = {
+  "/": "Dashboard",
+  "/time-logging": "Time Logging",
+  "/time-log-audit": "Time Log Audit",
+  "/reports": "Reports",
+  "/calendar": "Calendar",
+  "/clients": "Clients",
+  "/accounts": "Accounts",
+  "/capacity": "Capacity",
+  "/users": "Users",
+  "/tasks": "Tasks",
+  "/settings": "Settings",
+  "/slack-configuration": "Slack Configuration",
+  "/quota-settings": "Quota Settings",
+  "/forecasting": "Forecasting",
+  "/team-resources": "Team Resources",
+  "/holidays": "Holidays",
+  "/proposals": "Proposals",
+  "/proposals/create": "New Proposal",
+  "/proposals/create/transcript": "Transcript Proposal",
+  "/proposals/create/document": "Document Proposal",
+  "/proposals/create/visual": "Visual Proposal",
+  "/knowledge-base": "Knowledge Base",
+  "/guidance-settings": "Guidance Settings",
+  "/pipeline": "Pipeline",
+  "/archive": "Archive",
+  "/crm": "CRM",
+  "/api-docs": "API Documentation",
+  "/uat": "UAT Sessions",
+  "/uat/pm": "PM Overview",
+  "/training": "Training",
+  "/training/admin": "Training Admin",
+  "/training/reviews": "Training Reviews",
+  "/design-preview": "Design Preview",
+};
+
+// Searchable nav items for Cmd+K palette
+const searchableRoutes = [
+  { label: "Dashboard", path: "/", group: "Main" },
+  { label: "Time Logging", path: "/time-logging", group: "Main" },
+  { label: "Tasks", path: "/tasks", group: "Main" },
+  { label: "Accounts", path: "/accounts", group: "Delivery" },
+  { label: "Time Log Audit", path: "/time-log-audit", group: "Delivery" },
+  { label: "Reports", path: "/reports", group: "Delivery" },
+  { label: "Archive", path: "/archive", group: "Delivery" },
+  { label: "Clients", path: "/clients", group: "Delivery" },
+  { label: "Capacity", path: "/capacity", group: "Delivery" },
+  { label: "UAT Sessions", path: "/uat", group: "Delivery" },
+  { label: "Forecasting", path: "/forecasting", group: "Operations" },
+  { label: "Proposals", path: "/proposals", group: "Operations" },
+  { label: "Knowledge Base", path: "/knowledge-base", group: "Operations" },
+  { label: "Guidance Settings", path: "/guidance-settings", group: "Operations" },
+  { label: "Training", path: "/training", group: "Training" },
+  { label: "Training Admin", path: "/training/admin", group: "Training" },
+  { label: "Training Reviews", path: "/training/reviews", group: "Training" },
+  { label: "Slack Integration", path: "/slack-configuration", group: "Integrations" },
+  { label: "API Documentation", path: "/api-docs", group: "Integrations" },
+  { label: "Users", path: "/users", group: "System" },
+  { label: "Settings", path: "/settings", group: "System" },
+  { label: "Calendar", path: "/calendar", group: "Main" },
+  { label: "Pipeline", path: "/pipeline", group: "Operations" },
+  { label: "CRM", path: "/crm", group: "Operations" },
+];
+
+function getPageTitle(path: string): string {
+  if (routeTitles[path]) return routeTitles[path];
+  // Handle dynamic routes
+  if (path.startsWith("/proposals/edit/")) return "Edit Proposal";
+  if (path.startsWith("/proposals/visual/edit/")) return "Edit Visual Proposal";
+  if (path.startsWith("/training/programs/")) return "Training Program";
+  if (path.startsWith("/training/modules/")) return "Training Module";
+  if (path.startsWith("/uat/") && path !== "/uat/pm") return "UAT Session";
+  return "Page";
+}
 
 function Router() {
   return (
@@ -107,10 +194,38 @@ function Router() {
 
 function Layout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
+  const [currentPath] = useLocation();
+  const [, setLocation] = useLocation();
+  const [cmdOpen, setCmdOpen] = useState(false);
   const style = {
     "--sidebar-width": "20rem",
     "--sidebar-width-icon": "4rem",
   };
+
+  const pageTitle = getPageTitle(currentPath);
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setCmdOpen((prev) => !prev);
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
+
+  const handleSelect = useCallback((path: string) => {
+    setCmdOpen(false);
+    setLocation(path);
+  }, [setLocation]);
+
+  // Group routes by their group
+  const groups = searchableRoutes.reduce<Record<string, typeof searchableRoutes>>((acc, route) => {
+    if (!acc[route.group]) acc[route.group] = [];
+    acc[route.group].push(route);
+    return acc;
+  }, {});
 
   if (isLoading) {
     return (
@@ -129,15 +244,64 @@ function Layout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full">
         <AppSidebar />
         <div className="flex flex-col flex-1">
-          <header className="flex items-center justify-between gap-2 p-4 border-b">
-            <SidebarTrigger data-testid="button-sidebar-toggle" />
-            <UserMenu />
+          <header className="flex items-center justify-between gap-2 px-4 py-3 border-b">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <div className="hidden sm:block h-5 w-px bg-border" />
+              <span className="hidden sm:block text-sm font-medium text-foreground">
+                {pageTitle}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCmdOpen(true)}
+                className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                data-testid="button-command-palette"
+              >
+                <Search className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Search...</span>
+                <kbd className="hidden md:inline-flex pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </button>
+              <UserMenu />
+            </div>
           </header>
           <main className="flex-1 overflow-auto p-8">
-            {children}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentPath}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </main>
         </div>
       </div>
+      {/* Command Palette Dialog */}
+      <CommandDialog open={cmdOpen} onOpenChange={setCmdOpen}>
+        <CommandInput placeholder="Search pages..." />
+        <CommandList>
+          <CommandEmpty>No pages found.</CommandEmpty>
+          {Object.entries(groups).map(([group, routes]) => (
+            <CommandGroup key={group} heading={group}>
+              {routes.map((route) => (
+                <CommandItem
+                  key={route.path}
+                  onSelect={() => handleSelect(route.path)}
+                  className="cursor-pointer"
+                >
+                  {route.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
+        </CommandList>
+      </CommandDialog>
     </SidebarProvider>
   );
 }

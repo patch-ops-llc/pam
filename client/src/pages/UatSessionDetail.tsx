@@ -486,7 +486,7 @@ export default function UatSessionDetail() {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{session.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{session.name}</h1>
             {getStatusBadge(session.status)}
           </div>
           {session.description && (

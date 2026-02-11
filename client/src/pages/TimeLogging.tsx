@@ -489,7 +489,7 @@ export default function TimeLogging() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-semibold">Time Logging</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Time Logging</h1>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -592,7 +592,7 @@ export default function TimeLogging() {
                             <span className="font-semibold">{agency.name}</span>
                             {(agencyActualTotal > 0 || agencyBilledTotal > 0) && (
                               <span className="text-xs text-muted-foreground">
-                                (A: {agencyActualTotal.toFixed(2)}h / B: {agencyBilledTotal.toFixed(2)}h)
+                                ({agencyActualTotal.toFixed(1)}h actual / {agencyBilledTotal.toFixed(1)}h billed)
                               </span>
                             )}
                           </div>
@@ -610,12 +610,12 @@ export default function TimeLogging() {
                             return (
                             <Accordion key={account.id} type="multiple" className="w-full">
                               <AccordionItem value={account.id} className="border-none">
-                                <AccordionTrigger chevronPosition="left" className="px-8 py-2 hover:no-underline hover-elevate bg-muted/20" data-testid={`accordion-account-${account.id}`}>
+                                <AccordionTrigger chevronPosition="left" className="px-8 py-2 hover:no-underline hover-elevate bg-muted/20 border-l-2 border-primary/20 ml-4" data-testid={`accordion-account-${account.id}`}>
                                   <div className="flex items-center gap-2">
                                     <span className="font-medium">{account.name}</span>
                                     {(accountActualTotal > 0 || accountBilledTotal > 0) && (
                                       <span className="text-xs text-muted-foreground">
-                                        (A: {accountActualTotal.toFixed(2)}h / B: {accountBilledTotal.toFixed(2)}h)
+                                        ({accountActualTotal.toFixed(1)}h actual / {accountBilledTotal.toFixed(1)}h billed)
                                       </span>
                                     )}
                                   </div>
@@ -630,12 +630,12 @@ export default function TimeLogging() {
                                     return (
                                     <Accordion key={project.id} type="multiple" className="w-full">
                                       <AccordionItem value={project.id} className="border-none">
-                                        <AccordionTrigger chevronPosition="left" className="px-12 py-2 hover:no-underline hover-elevate bg-muted/10" data-testid={`accordion-project-${project.id}`}>
+                                        <AccordionTrigger chevronPosition="left" className="px-12 py-2 hover:no-underline hover-elevate bg-muted/10 border-l-2 border-primary/10 ml-8" data-testid={`accordion-project-${project.id}`}>
                                           <div className="flex items-center gap-2">
                                             <span>{project.name}</span>
                                             {(projectActualTotal > 0 || projectBilledTotal > 0) && (
                                               <span className="text-xs text-muted-foreground">
-                                                (A: {projectActualTotal.toFixed(2)}h / B: {projectBilledTotal.toFixed(2)}h)
+                                                ({projectActualTotal.toFixed(1)}h actual / {projectBilledTotal.toFixed(1)}h billed)
                                               </span>
                                             )}
                                           </div>
@@ -643,7 +643,7 @@ export default function TimeLogging() {
                                         <AccordionContent className="pb-0">
                                           <table className="w-full">
                                             <tbody>
-                                              {TASK_TYPES.map(taskType => {
+                                              {TASK_TYPES.map((taskType, taskIndex) => {
                                                 const taskActualTotal = weekDays.reduce((sum, day) => {
                                                   const logs = getTimeLogs(project.id, taskType, day);
                                                   return sum + logs.reduce((s, log) => s + Number(log.actualHours || 0), 0);
@@ -655,8 +655,8 @@ export default function TimeLogging() {
                                                 }, 0);
 
                                                 return (
-                                                  <tr key={taskType} className="border-t">
-                                                    <td className="p-4 pl-16 min-w-[300px]">
+                                                  <tr key={taskType} className={cn("border-t", taskIndex % 2 === 1 && "bg-muted/5")}>
+                                                    <td className="p-4 pl-16 min-w-[300px] sticky left-0 bg-inherit z-[1]">
                                                       <span className="text-sm">{taskType}</span>
                                                     </td>
                                                     {weekDays.map(day => {
@@ -671,11 +671,12 @@ export default function TimeLogging() {
                                                             <Button
                                                               variant="ghost"
                                                               size="icon"
-                                                              className="w-full hover-elevate"
+                                                              className="w-full hover-elevate border border-dashed border-transparent hover:border-muted-foreground/20"
                                                               onClick={() => handleOpenTimeLogModal(agency, account, project, taskType, day)}
+                                                              title="Add time entry"
                                                               data-testid={`button-add-${project.id}-${taskType}-${format(day, 'yyyy-MM-dd')}`}
                                                             >
-                                                              <span className="text-muted-foreground text-xl">+</span>
+                                                              <span className="text-muted-foreground text-lg">+</span>
                                                             </Button>
                                                             {logs.length > 0 && (
                                                               <Popover>
@@ -692,10 +693,10 @@ export default function TimeLogging() {
                                                                       )}
                                                                     </div>
                                                                     <div className="text-muted-foreground">
-                                                                      A: {logs.reduce((sum, log) => sum + Number(log.actualHours || 0), 0).toFixed(2)}
+                                                                      {logs.reduce((sum, log) => sum + Number(log.actualHours || 0), 0).toFixed(1)}h actual
                                                                     </div>
                                                                     <div className="font-medium">
-                                                                      B: {logs.reduce((sum, log) => sum + Number(log.billedHours || 0), 0).toFixed(2)}
+                                                                      {logs.reduce((sum, log) => sum + Number(log.billedHours || 0), 0).toFixed(1)}h billed
                                                                     </div>
                                                                   </div>
                                                                 </PopoverTrigger>
@@ -720,8 +721,8 @@ export default function TimeLogging() {
                                                                           <div className="flex items-center justify-between gap-2">
                                                                             <div className="font-medium">{userName}</div>
                                                                             <div className="flex gap-2 text-muted-foreground">
-                                                                              <span>A: {actualHours.toFixed(2)}</span>
-                                                                              <span>B: {billedHours.toFixed(2)}</span>
+                                                                              <span>{actualHours.toFixed(1)}h actual</span>
+                                                                              <span>{billedHours.toFixed(1)}h billed</span>
                                                                             </div>
                                                                           </div>
                                                                           {log.description && (
@@ -744,13 +745,15 @@ export default function TimeLogging() {
                                                       {(taskActualTotal > 0 || taskBilledTotal > 0) ? (
                                                         <div className="flex flex-col gap-0.5">
                                                           <div className="text-xs text-muted-foreground">
-                                                            A: {taskActualTotal.toFixed(2)}h
+                                                            {taskActualTotal.toFixed(1)}h actual
                                                           </div>
-                                                          <div className="font-medium">
-                                                            B: {taskBilledTotal.toFixed(2)}h
+                                                          <div className="font-semibold">
+                                                            {taskBilledTotal.toFixed(1)}h billed
                                                           </div>
                                                         </div>
-                                                      ) : "-"}
+                                                      ) : (
+                                                        <span className="text-muted-foreground/50">-</span>
+                                                      )}
                                                     </td>
                                                   </tr>
                                                 );

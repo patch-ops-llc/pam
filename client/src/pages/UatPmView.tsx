@@ -123,7 +123,7 @@ export default function UatPmView() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">PM Overview</h1>
+          <h1 className="text-3xl font-bold tracking-tight">PM Overview</h1>
           <p className="text-muted-foreground">Review and manage all UAT sessions</p>
         </div>
         <Button variant="outline" onClick={() => navigate("/uat")}>

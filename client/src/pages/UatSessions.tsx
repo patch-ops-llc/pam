@@ -213,7 +213,7 @@ export default function UatSessions() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">UAT Sessions</h1>
+          <h1 className="text-3xl font-bold tracking-tight">UAT Sessions</h1>
           <p className="text-muted-foreground">Manage user acceptance testing with external reviewers</p>
         </div>
         <div className="flex gap-2">

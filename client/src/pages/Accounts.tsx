@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -41,7 +42,15 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Search, Plus, ChevronDown, ChevronRight, Building2, Users, FolderOpen, Clock, CheckSquare, Edit, Trash2, UserPlus, X } from "lucide-react";
+import { Search, Plus, ChevronDown, ChevronRight, Building2, Users, FolderOpen, Clock, CheckSquare, Edit, Trash2, UserPlus, X, Inbox, MoreHorizontal, Power } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -617,8 +626,30 @@ export default function Accounts() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Accounts</h1>
-            <p className="text-muted-foreground">Loading accounts...</p>
+            <p className="text-muted-foreground">
+              Manage client accounts with efficiency and activity insights
+            </p>
           </div>
+          <Skeleton className="h-9 w-32" />
+        </div>
+        <div className="flex gap-4 items-center">
+          <Skeleton className="h-9 flex-1" />
+          <Skeleton className="h-9 w-[160px]" />
+        </div>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
@@ -668,10 +699,17 @@ export default function Accounts() {
       <div className="space-y-4">
         {hierarchicalData.length === 0 ? (
           <Card>
-            <CardContent className="flex items-center justify-center h-32">
-              <p className="text-muted-foreground">
-                {searchQuery ? "No accounts found matching your search." : "No accounts available."}
-              </p>
+            <CardContent>
+              <EmptyState
+                icon={searchQuery ? Search : Inbox}
+                title={searchQuery ? "No results found" : "No accounts yet"}
+                description={searchQuery 
+                  ? "Try adjusting your search terms or filters."
+                  : "Create your first account to start tracking time and managing projects."
+                }
+                actionLabel={searchQuery ? undefined : "Create Account"}
+                onAction={searchQuery ? undefined : () => setIsCreateAccountDialogOpen(true)}
+              />
             </CardContent>
           </Card>
         ) : (
@@ -707,7 +745,7 @@ export default function Accounts() {
                           const isAccountExpanded = expandedAccounts.has(account.id);
 
                           return (
-                            <div key={account.id} className="pl-6 border-l-2 border-muted" data-testid={`account-section-${account.id}`}>
+                            <div key={account.id} className="pl-6 border-l-2 border-primary/15" data-testid={`account-section-${account.id}`}>
                               <Collapsible open={isAccountExpanded} onOpenChange={() => toggleAccount(account.id)}>
                                 <CollapsibleTrigger asChild>
                                   <div className="p-4 rounded-lg bg-muted/50 hover-elevate cursor-pointer">
@@ -727,45 +765,55 @@ export default function Accounts() {
                                           {account.projects.length} project{account.projects.length !== 1 ? 's' : ''}
                                         </Badge>
                                       </div>
-                                      <div className="flex items-center gap-4">
-                                        {/* Weekly Hours */}
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs text-muted-foreground">Week:</span>
-                                          <span className={`text-sm font-medium ${account.metrics.weeklyColor}`}>
-                                            {account.metrics.weeklyHours}h
+                                      <div className="flex items-center gap-3">
+                                        {/* Compact metrics */}
+                                        <div className="hidden sm:flex items-center gap-3 text-sm">
+                                          <span className={`font-medium ${account.metrics.weeklyColor}`}>
+                                            {account.metrics.weeklyHours}h <span className="text-xs text-muted-foreground font-normal">wk</span>
+                                          </span>
+                                          <span className="text-muted-foreground/30">|</span>
+                                          <span className={`font-medium ${account.metrics.monthlyColor}`}>
+                                            {account.metrics.monthlyHours}h <span className="text-xs text-muted-foreground font-normal">mo</span>
                                           </span>
                                         </div>
-                                        {/* Monthly Hours */}
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs text-muted-foreground">Month:</span>
-                                          <span className={`text-sm font-medium ${account.metrics.monthlyColor}`}>
-                                            {account.metrics.monthlyHours}h
-                                          </span>
-                                        </div>
-                                        {/* Active/Inactive Toggle */}
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs text-muted-foreground">Active:</span>
-                                          <Switch
-                                            checked={account.isActive}
-                                            onCheckedChange={(checked) => {
-                                              toggleAccountStatus(account);
-                                            }}
-                                            onClick={(e) => e.stopPropagation()}
-                                            data-testid={`switch-account-active-${account.id}`}
-                                          />
-                                        </div>
-                                        {/* Delete Account Button */}
-                                        <Button
-                                          variant="ghost"
-                                          size="icon"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            confirmDeleteAccount(account);
-                                          }}
-                                          data-testid={`button-delete-account-${account.id}`}
-                                        >
-                                          <Trash2 className="h-4 w-4 text-destructive" />
-                                        </Button>
+                                        {/* Actions menu */}
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-8 w-8"
+                                              onClick={(e) => e.stopPropagation()}
+                                              data-testid={`button-account-menu-${account.id}`}
+                                            >
+                                              <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="end">
+                                            <DropdownMenuItem
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleAccountStatus(account);
+                                              }}
+                                              data-testid={`menu-toggle-active-${account.id}`}
+                                            >
+                                              <Power className="h-4 w-4 mr-2" />
+                                              {account.isActive ? "Deactivate" : "Activate"}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                confirmDeleteAccount(account);
+                                              }}
+                                              className="text-destructive focus:text-destructive"
+                                              data-testid={`menu-delete-account-${account.id}`}
+                                            >
+                                              <Trash2 className="h-4 w-4 mr-2" />
+                                              Delete Account
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
                                       </div>
                                     </div>
                                   </div>

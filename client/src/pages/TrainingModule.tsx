@@ -222,7 +222,7 @@ export default function TrainingModule() {
         </Link>
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">{module.title}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{module.title}</h1>
           </div>
           <div className="flex items-center gap-2">
             {submission && <StatusBadge status={submission.status} />}
