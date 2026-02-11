@@ -26,6 +26,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Link, useParams } from "wouter";
+import { formatProseWithBullets } from "@/lib/trainingUtils";
 
 function getModuleStatusBadge(submission?: TrainingModuleSubmission) {
   if (!submission || submission.status === "not_started") {
@@ -88,7 +89,7 @@ export default function TrainingProgram() {
   const progressPct = totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 training-ui">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
@@ -103,7 +104,7 @@ export default function TrainingProgram() {
             {program.title}
           </h1>
           {program.description && (
-            <p className="text-muted-foreground max-w-3xl">{program.description}</p>
+            <p className="text-muted-foreground max-w-3xl text-base">{program.description}</p>
           )}
         </div>
       </div>
@@ -115,7 +116,7 @@ export default function TrainingProgram() {
             <div className="flex items-center gap-3">
               <BookOpen className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">Modules</p>
+                <p className="text-base text-muted-foreground">Modules</p>
                 <p className="text-2xl font-bold">{totalModules}</p>
               </div>
             </div>
@@ -124,12 +125,12 @@ export default function TrainingProgram() {
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-base">
                 <span className="text-muted-foreground">Progress</span>
                 <span className="font-medium">{completedModules}/{totalModules}</span>
               </div>
               <Progress value={progressPct} className="h-2" />
-              <p className="text-xs text-muted-foreground text-right">{progressPct}% complete</p>
+              <p className="text-sm text-muted-foreground text-right">{progressPct}% complete</p>
             </div>
           </CardContent>
         </Card>
@@ -142,13 +143,13 @@ export default function TrainingProgram() {
             {program.philosophy && (
               <div>
                 <h3 className="font-semibold mb-1">Philosophy</h3>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{program.philosophy}</p>
+                <p className="text-base text-muted-foreground whitespace-pre-wrap">{formatProseWithBullets(program.philosophy)}</p>
               </div>
             )}
             {program.prerequisites && (
               <div>
                 <h3 className="font-semibold mb-1">Prerequisites</h3>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{program.prerequisites}</p>
+                <p className="text-base text-muted-foreground whitespace-pre-wrap">{program.prerequisites}</p>
               </div>
             )}
           </CardContent>
@@ -181,7 +182,7 @@ export default function TrainingProgram() {
                         <span className="font-semibold">{phase.title}</span>
                         {phaseCompleted && <CheckCircle2 className="h-4 w-4 text-green-600" />}
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground mt-0.5">
                         <span>{phaseModulesCompleted}/{phase.modules.length} modules</span>
                       </div>
                     </div>
@@ -190,7 +191,7 @@ export default function TrainingProgram() {
                 <AccordionContent>
                   <div className="space-y-2 pb-2">
                     {phase.description && (
-                      <p className="text-sm text-muted-foreground mb-3">{phase.description}</p>
+                      <p className="text-base text-muted-foreground mb-3">{phase.description}</p>
                     )}
                     {phase.modules.map((mod, modIdx) => {
                       const submission = submissionsByModule.get(mod.id);
@@ -201,7 +202,7 @@ export default function TrainingProgram() {
                               {modIdx + 1}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">{mod.title}</p>
+                              <p className="font-medium text-base truncate">{mod.title}</p>
                             </div>
                             {getModuleStatusBadge(submission)}
                           </div>
@@ -212,16 +213,16 @@ export default function TrainingProgram() {
                     {phase.milestoneReview && (
                       <Card className="mt-3 border-dashed">
                         <CardContent className="pt-4">
-                          <h4 className="text-sm font-semibold mb-1">Milestone Review</h4>
-                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{phase.milestoneReview}</p>
+                          <h4 className="text-base font-semibold mb-1">Milestone Review</h4>
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{formatProseWithBullets(phase.milestoneReview)}</p>
                         </CardContent>
                       </Card>
                     )}
                     {phase.passCriteria && (
                       <Card className="border-dashed">
                         <CardContent className="pt-4">
-                          <h4 className="text-sm font-semibold mb-1">Pass Criteria</h4>
-                          <p className="text-xs text-muted-foreground whitespace-pre-wrap">{phase.passCriteria}</p>
+                          <h4 className="text-base font-semibold mb-1">Pass Criteria</h4>
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{formatProseWithBullets(phase.passCriteria)}</p>
                         </CardContent>
                       </Card>
                     )}

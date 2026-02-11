@@ -38,7 +38,9 @@ import {
   Settings2,
   Layers,
   Upload,
+  Users,
 } from "lucide-react";
+import { Link } from "wouter";
 
 type EditMode = "program" | "phase" | "module" | null;
 
@@ -310,16 +312,22 @@ export default function TrainingAdmin() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 training-ui">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
             <Settings2 className="h-8 w-8" />
             Training Admin
           </h1>
-          <p className="text-muted-foreground mt-1">Manage training programs, phases, and modules</p>
+          <p className="text-muted-foreground mt-1 text-base">Manage training programs, phases, and modules</p>
         </div>
         <div className="flex gap-2">
+          <Link href="/training/admin/enrollments">
+            <Button variant="outline">
+              <Users className="h-4 w-4 mr-2" />
+              Enrollments
+            </Button>
+          </Link>
           <Button variant="outline" onClick={() => setSeedDialogOpen(true)}>
             <Upload className="h-4 w-4 mr-2" />
             Import Seed Data
@@ -426,7 +434,7 @@ export default function TrainingAdmin() {
                                 {phase.modules.map((mod, modIdx) => (
                                   <div key={mod.id} className="flex items-center gap-2 p-2 rounded border bg-muted/30">
                                     <span className="text-xs font-medium text-muted-foreground w-6 text-center">{modIdx + 1}</span>
-                                    <span className="flex-1 text-sm">{mod.title}</span>
+                                    <span className="flex-1 text-base">{mod.title}</span>
                                     {mod.estimatedHours && (
                                       <span className="text-xs text-muted-foreground">{mod.estimatedHours}h</span>
                                     )}

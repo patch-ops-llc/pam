@@ -2270,9 +2270,9 @@ export type ProjectWithAccountAndAgency = Project & {
   agency: Agency;
 };
 export type TaskWithRelations = Task & {
-  account: Account;
-  agency: Agency;
-  project?: Project;
+  account: Account | null;
+  agency: Agency | null;
+  project?: Project | null;
   assignedToUser?: User;
   labels?: TaskLabel[];
   collaborators?: User[];

@@ -2,87 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
-/* PATCHOPS COBALT THEME - Single unified design */
+/* SLATE & COBALT + AMBER THEME */
 :root {
-  --button-outline: rgba(100,150,255, .15);
-  --badge-outline: rgba(100,150,255, .10);
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .06);
 
   /* Automatic computation of border around primary / danger buttons */
   --opaque-button-border-intensity: 12; /* In terms of percentages */
 
-  /* Backgrounds applied on top of other backgrounds when hovered/active */
-  --elevate-1: rgba(100,160,255, .06);
-  --elevate-2: rgba(100,160,255, .12);
+  /* Neutral white-based elevation overlays */
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .07);
 
-  /* Deep midnight blue base - inspired by logo background */
-  --background: 222 47% 5%;
+  /* Near-black slate base */
+  --background: 225 12% 4%;
 
-  --foreground: 215 40% 92%;
+  --foreground: 210 12% 93%;
 
-  --border: 222 50% 18%;
+  --border: 220 10% 15%;
 
-  /* Cards: Rich navy blue, distinct from background */
-  --card: 222 55% 9%;
+  /* Cards: Dark gray, subtle blue undertone */
+  --card: 224 12% 9%;
 
-  --card-foreground: 215 40% 92%;
+  --card-foreground: 210 12% 93%;
 
-  --card-border: 222 55% 20%;
+  --card-border: 220 10% 17%;
 
-  /* Sidebar: Deeper blue-black with richer saturation */
-  --sidebar: 222 60% 7%;
+  /* Sidebar: Slightly more blue for brand depth */
+  --sidebar: 225 15% 7%;
 
-  --sidebar-foreground: 215 45% 90%;
+  --sidebar-foreground: 210 12% 91%;
 
-  --sidebar-border: 222 55% 16%;
+  --sidebar-border: 220 12% 14%;
 
   /* Sidebar primary: Bright logo cobalt blue */
   --sidebar-primary: 222 90% 58%;
 
-  --sidebar-primary-foreground: 222 90% 98%;
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  /* Sidebar accent: Medium blue for selected states */
-  --sidebar-accent: 222 65% 22%;
+  /* Sidebar accent: Desaturated blue for selected states */
+  --sidebar-accent: 222 25% 16%;
 
-  --sidebar-accent-foreground: 215 50% 92%;
+  --sidebar-accent-foreground: 210 12% 92%;
 
   --sidebar-ring: 222 90% 58%;
 
-  /* Popover: Slightly elevated blue surface */
-  --popover: 222 55% 11%;
+  /* Popover: Slightly elevated surface */
+  --popover: 224 12% 11%;
 
-  --popover-foreground: 215 40% 92%;
+  --popover-foreground: 210 12% 93%;
 
-  --popover-border: 222 55% 22%;
+  --popover-border: 220 10% 19%;
 
-  /* Primary: The exact cobalt blue from the PatchOps logo */
-  --primary: 222 90% 56%;
+  /* Primary: Cobalt blue from the PatchOps logo */
+  --primary: 222 85% 56%;
 
-  --primary-foreground: 222 90% 98%;
+  --primary-foreground: 0 0% 100%;
 
-  /* Secondary: Muted mid-blue for less emphasis */
-  --secondary: 222 50% 20%;
+  /* Secondary: Neutral mid-gray */
+  --secondary: 220 12% 18%;
 
-  --secondary-foreground: 215 45% 88%;
+  --secondary-foreground: 210 12% 88%;
 
-  /* Muted: Desaturated blue-gray */
-  --muted: 222 35% 14%;
+  /* Muted: Neutral dark gray */
+  --muted: 220 10% 14%;
 
-  --muted-foreground: 218 25% 55%;
+  --muted-foreground: 215 10% 50%;
 
-  /* Accent: Brighter blue for highlights */
-  --accent: 222 70% 28%;
+  /* Accent: Desaturated blue for highlights */
+  --accent: 222 40% 22%;
 
-  --accent-foreground: 215 50% 92%;
+  --accent-foreground: 210 12% 93%;
 
-  /* Destructive stays red but harmonized */
+  /* Destructive stays red */
   --destructive: 0 72% 52%;
 
   --destructive-foreground: 0 0% 100%;
 
-  /* Input fields with blue tint */
-  --input: 222 45% 22%;
+  /* Input fields: neutral gray */
+  --input: 220 14% 18%;
   --ring: 222 90% 58%;
-  
+
   /* Semantic status colors */
   --success: 142 76% 36%;
   --success-foreground: 0 0% 100%;
@@ -91,12 +91,16 @@
   --info: 200 85% 50%;
   --info-foreground: 0 0% 100%;
 
-  /* Charts: Blue-dominant palette */
-  --chart-1: 222 90% 56%;
-  --chart-2: 200 85% 50%;
-  --chart-3: 180 70% 45%;
-  --chart-4: 245 70% 60%;
-  --chart-5: 260 65% 55%;
+  /* Amber/gold accent for financial & attention elements */
+  --gold: 40 90% 52%;
+  --gold-foreground: 40 20% 10%;
+
+  /* Charts: Diverse palette on neutral base */
+  --chart-1: 222 85% 56%;
+  --chart-2: 40 90% 52%;
+  --chart-3: 160 70% 45%;
+  --chart-4: 270 65% 58%;
+  --chart-5: 340 75% 55%;
 
   --font-sans: Inter, sans-serif;
   --font-serif: Georgia, serif;
@@ -144,7 +148,7 @@
   --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
-/* Light mode disabled - single cohesive blue theme */
+/* Light mode disabled - single cohesive dark theme */
 
 @layer base {
   * {
@@ -154,6 +158,18 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+
+  /* Training UI: larger base font */
+  .training-ui {
+    font-size: 1.0625rem; /* 17px base */
+  }
+  .training-ui .text-xs { font-size: 0.875rem; }
+  .training-ui .text-sm { font-size: 1rem; }
+  .training-ui .text-base { font-size: 1.125rem; }
+  .training-ui .text-lg { font-size: 1.25rem; }
+  .training-ui .text-xl { font-size: 1.375rem; }
+  .training-ui .text-2xl { font-size: 1.5rem; }
+  .training-ui .text-3xl { font-size: 1.75rem; }
 }
 
 /**

@@ -78,13 +78,13 @@ export function BonusScorecard() {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate">{item.agency.name}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Monthly target: {item.monthlyTarget}h
+                    Monthly target: <span className="text-gold font-medium">{item.monthlyTarget}h</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge
                     variant={item.eligibleForBonus ? "default" : "secondary"}
-                    className="gap-1"
+                    className={cn("gap-1", item.eligibleForBonus && "bg-gold text-gold-foreground hover:bg-gold/90")}
                   >
                     {item.eligibleForBonus ? (
                       <>

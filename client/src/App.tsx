@@ -56,6 +56,7 @@ import Training from "@/pages/Training";
 import TrainingProgram from "@/pages/TrainingProgram";
 import TrainingModule from "@/pages/TrainingModule";
 import TrainingAdmin from "@/pages/TrainingAdmin";
+import TrainingEnrollments from "@/pages/TrainingEnrollments";
 import TrainingReview from "@/pages/TrainingReview";
 import AuthPage from "@/pages/auth-page";
 import NotFound from "@/pages/not-found";
@@ -118,6 +119,7 @@ const searchableRoutes = [
   { label: "Guidance Settings", path: "/guidance-settings", group: "Operations" },
   { label: "Training", path: "/training", group: "Training" },
   { label: "Training Admin", path: "/training/admin", group: "Training" },
+  { label: "Training Enrollments", path: "/training/admin/enrollments", group: "Training" },
   { label: "Training Reviews", path: "/training/reviews", group: "Training" },
   { label: "Slack Integration", path: "/slack-configuration", group: "Integrations" },
   { label: "API Documentation", path: "/api-docs", group: "Integrations" },
@@ -183,6 +185,7 @@ function Router() {
       <Route path="/training" component={() => <Layout><Training /></Layout>} />
       <Route path="/training/programs/:id" component={() => <Layout><TrainingProgram /></Layout>} />
       <Route path="/training/modules/:id" component={() => <Layout><TrainingModule /></Layout>} />
+      <Route path="/training/admin/enrollments" component={() => <Layout><TrainingEnrollments /></Layout>} />
       <Route path="/training/admin" component={() => <Layout><TrainingAdmin /></Layout>} />
       <Route path="/training/reviews" component={() => <Layout><TrainingReview /></Layout>} />
       <Route path="/auth" component={AuthPage} />
@@ -198,7 +201,7 @@ function Layout({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
   const [cmdOpen, setCmdOpen] = useState(false);
   const style = {
-    "--sidebar-width": "20rem",
+    "--sidebar-width": "16rem",
     "--sidebar-width-icon": "4rem",
   };
 
@@ -267,7 +270,7 @@ function Layout({ children }: { children: React.ReactNode }) {
               <UserMenu />
             </div>
           </header>
-          <main className="flex-1 overflow-auto p-8">
+          <main className="flex-1 overflow-auto p-6">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentPath}

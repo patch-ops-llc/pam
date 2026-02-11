@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/popover";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { getDay, startOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, parseISO, isWeekend } from "date-fns";
+import { startOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, parseISO, isWeekend } from "date-fns";
 
 type Holiday = {
   id: string;
@@ -280,11 +280,29 @@ export function TargetProgress() {
   const selectedCount = selectedAgencies.length;
   const totalCount = targetProgress.length;
 
+  // Aggregate totals for headline: single monthly quota (sum of agency targets) and progress to it
+  const totals = useMemo(() => {
+    let totalBillable = 0;
+    let totalTarget = 0;
+    filteredProgress.forEach((p: TargetProgressData) => {
+      if (!p.noQuota) {
+        totalBillable += Number(p.monthlyBillable) || 0;
+        totalTarget += Number(p.monthlyTarget) || 0;
+      }
+    });
+    return { totalBillable, totalTarget };
+  }, [filteredProgress]);
+
+  const monthlyPacingHeadline = calculatePacing(totals.totalBillable, totals.totalTarget, pacingData.monthProgress);
+  const headlineProgressPercent = totals.totalTarget > 0
+    ? Math.min((totals.totalBillable / totals.totalTarget) * 100, 100)
+    : 0;
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
-          <CardTitle>Target Progress by Agency</CardTitle>
+          <CardTitle>Monthly Target Progress</CardTitle>
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -351,6 +369,44 @@ export function TargetProgress() {
           </div>
         ) : (
           <div className="space-y-6">
+            {/* Headline: single monthly hours progress */}
+            <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="text-2xl font-bold">
+                  {Math.round(totals.totalBillable)}h <span className="text-muted-foreground font-normal">/ {Math.round(totals.totalTarget)}h</span>
+                </span>
+                {totals.totalTarget > 0 && (
+                  <span className="text-lg font-medium text-muted-foreground">
+                    {headlineProgressPercent.toFixed(0)}%
+                  </span>
+                )}
+              </div>
+              {totals.totalTarget > 0 && (
+                <>
+                  <Progress value={headlineProgressPercent} className={cn("h-4", getProgressIndicatorClass(monthlyPacingHeadline.isPacing))} />
+                  <div className={cn(
+                    "flex items-center gap-1 text-sm",
+                    monthlyPacingHeadline.isPacing === 'ahead' ? 'text-emerald-600 dark:text-emerald-500' :
+                    monthlyPacingHeadline.isPacing === 'behind' ? 'text-red-600 dark:text-red-500' :
+                    'text-muted-foreground'
+                  )}>
+                    {monthlyPacingHeadline.isPacing === 'ahead' && <TrendingUp className="h-4 w-4" />}
+                    {monthlyPacingHeadline.isPacing === 'behind' && <TrendingDown className="h-4 w-4" />}
+                    <span>
+                      {monthlyPacingHeadline.isPacing === 'on-pace' ? 'On pace' :
+                       monthlyPacingHeadline.isPacing === 'ahead' ?
+                       `${Math.round(Math.abs(monthlyPacingHeadline.difference))}h ahead of pace` :
+                       `${Math.round(Math.abs(monthlyPacingHeadline.difference))}h behind pace`}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Subsection: By Agency */}
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-4">By Agency</h3>
+              <div className="space-y-6">
             {filteredProgress.map((progress: any) => {
               // Ensure numeric values for all calculations
               const weeklyBillable = Number(progress.weeklyBillable) || 0;
@@ -388,10 +444,10 @@ export function TargetProgress() {
                         </div>
                         <div className="flex gap-4">
                           <Badge variant="outline">
-                            Weekly: {Math.round(weeklyBillable)}h / {weeklyTarget || 0}h
+                            Weekly: {Math.round(weeklyBillable)}h / <span className="text-gold">{weeklyTarget || 0}h</span>
                           </Badge>
                           <Badge variant="outline">
-                            Monthly: {Math.round(monthlyBillable)}h / {monthlyTarget || 0}h
+                            Monthly: {Math.round(monthlyBillable)}h / <span className="text-gold">{monthlyTarget || 0}h</span>
                           </Badge>
                         </div>
                       </div>
@@ -511,6 +567,8 @@ export function TargetProgress() {
                 </Collapsible>
               );
             })}
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

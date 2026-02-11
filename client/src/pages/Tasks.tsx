@@ -62,6 +62,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PageHeader } from "@/components/PageHeader";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
@@ -108,6 +109,11 @@ export default function Tasks() {
   const [newLabelColor, setNewLabelColor] = useState("#3b82f6");
   const [addingTaskToColumn, setAddingTaskToColumn] = useState<string | null>(null);
   const [inlineTaskName, setInlineTaskName] = useState("");
+  const [inlineTaskDescription, setInlineTaskDescription] = useState("");
+  const [inlineTaskPriority, setInlineTaskPriority] = useState("medium");
+  const [inlineTaskDueDate, setInlineTaskDueDate] = useState<Date | undefined>(undefined);
+  const [createDueDateOpen, setCreateDueDateOpen] = useState(false);
+  const [editDueDateOpen, setEditDueDateOpen] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
@@ -133,7 +139,7 @@ export default function Tasks() {
 
   // Mutation for updating task status
   const updateTaskMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { status?: string; size?: string; name?: string; description?: string | null; priority?: string; estimatedHours?: number | null } }) => {
+    mutationFn: async ({ id, data }: { id: string; data: { status?: string; size?: string; name?: string; description?: string | null; priority?: string; estimatedHours?: number | null; dueDate?: string | null } }) => {
       return await apiRequest(`/api/tasks/${id}`, "PATCH", data);
     },
     onSuccess: () => {
@@ -498,6 +504,7 @@ export default function Tasks() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setIsCreateDialogOpen(false);
+      setCreateDueDateOpen(false);
       form.reset();
       toast({
         title: "Success",
@@ -537,13 +544,18 @@ export default function Tasks() {
     
     createTaskMutation.mutate({
       name: inlineTaskName,
+      description: inlineTaskDescription.trim() || undefined,
       size,
       status: "todo",
-      priority: "medium",
+      priority: inlineTaskPriority,
+      dueDate: inlineTaskDueDate ? format(inlineTaskDueDate, "yyyy-MM-dd") : undefined,
       isActive: true,
     });
     
     setInlineTaskName("");
+    setInlineTaskDescription("");
+    setInlineTaskPriority("medium");
+    setInlineTaskDueDate(undefined);
     setAddingTaskToColumn(null);
   };
 
@@ -596,6 +608,7 @@ export default function Tasks() {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       setIsEditSheetOpen(false);
       setEditingTask(null);
+      setEditDueDateOpen(false);
       editForm.reset();
       toast({
         title: "Success",
@@ -828,10 +841,12 @@ export default function Tasks() {
               <Textarea
                 placeholder="Description (optional)"
                 className="text-sm min-h-[60px] resize-none"
+                value={inlineTaskDescription}
+                onChange={(e) => setInlineTaskDescription(e.target.value)}
                 data-testid={`textarea-inline-task-description-${status}`}
               />
               <div className="flex flex-wrap gap-2">
-                <Select defaultValue="medium">
+                <Select value={inlineTaskPriority} onValueChange={setInlineTaskPriority}>
                   <SelectTrigger className="h-8 w-[110px]" data-testid={`select-inline-priority-${status}`}>
                     <SelectValue placeholder="Priority" />
                   </SelectTrigger>
@@ -846,11 +861,15 @@ export default function Tasks() {
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8">
                       <CalendarIcon className="h-3 w-3 mr-2" />
-                      Deadline
+                      {inlineTaskDueDate ? format(inlineTaskDueDate, "MMM d, yyyy") : "Deadline"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" />
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={inlineTaskDueDate}
+                      onSelect={(date) => setInlineTaskDueDate(date)}
+                    />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -869,6 +888,9 @@ export default function Tasks() {
                   onClick={() => {
                     setAddingTaskToColumn(null);
                     setInlineTaskName("");
+                    setInlineTaskDescription("");
+                    setInlineTaskPriority("medium");
+                    setInlineTaskDueDate(undefined);
                   }}
                   data-testid={`button-inline-task-cancel-${status}`}
                 >
@@ -1226,10 +1248,10 @@ export default function Tasks() {
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         task.account?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         task.agency?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         task.account?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         task.agency?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         task.project?.name.toLowerCase().includes(searchQuery.toLowerCase());
+                         task.project?.name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || task.status === statusFilter;
     const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
     const matchesAgency = agencyFilter === "all" || task.agencyId === agencyFilter;
@@ -1270,33 +1292,25 @@ export default function Tasks() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
-            <p className="text-muted-foreground">Loading tasks...</p>
-          </div>
-        </div>
+      <div className="space-y-6">
+        <PageHeader title="Tasks" description="Loading tasks..." />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
-          <p className="text-muted-foreground">
-            Manage and track individual tasks across projects
-          </p>
-        </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-new-task">
-              <Plus className="h-4 w-4 mr-2" />
-              New Task
-            </Button>
-          </DialogTrigger>
+    <div className="space-y-6">
+      <PageHeader
+        title="Tasks"
+        description="Manage and track individual tasks across projects"
+        actions={
+          <Button onClick={() => setIsCreateDialogOpen(true)} data-testid="button-new-task">
+            <Plus className="h-4 w-4 mr-2" />
+            New Task
+          </Button>
+        }
+      />
+      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => { setIsCreateDialogOpen(open); if (!open) setCreateDueDateOpen(false); }}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Create New Task</DialogTitle>
@@ -1474,7 +1488,7 @@ export default function Tasks() {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Due Date (Optional)</FormLabel>
-                      <Popover>
+                      <Popover open={createDueDateOpen} onOpenChange={setCreateDueDateOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -1496,7 +1510,10 @@ export default function Tasks() {
                           <Calendar
                             mode="single"
                             selected={field.value ? new Date(field.value) : undefined}
-                            onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : undefined)}
+                            onSelect={(date) => {
+                              field.onChange(date ? format(date, "yyyy-MM-dd") : undefined);
+                              setCreateDueDateOpen(false);
+                            }}
                             initialFocus
                           />
                         </PopoverContent>
@@ -1594,8 +1611,7 @@ export default function Tasks() {
               </form>
             </Form>
           </DialogContent>
-        </Dialog>
-      </div>
+      </Dialog>
 
       {/* Quick Date Filters */}
       <div className="flex gap-2 mb-4">
@@ -2219,7 +2235,7 @@ export default function Tasks() {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Due Date (Optional)</FormLabel>
-                      <Popover>
+                      <Popover open={editDueDateOpen} onOpenChange={setEditDueDateOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
@@ -2241,7 +2257,10 @@ export default function Tasks() {
                           <Calendar
                             mode="single"
                             selected={field.value ? new Date(field.value) : undefined}
-                            onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : undefined)}
+                            onSelect={(date) => {
+                              field.onChange(date ? format(date, "yyyy-MM-dd") : undefined);
+                              setEditDueDateOpen(false);
+                            }}
                             initialFocus
                           />
                         </PopoverContent>

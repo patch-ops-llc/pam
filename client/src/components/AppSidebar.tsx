@@ -1,28 +1,19 @@
 import {
-  Clock,
   BarChart3,
   Users,
   Building2,
   Settings,
   Timer,
   UserPlus,
-  MessageSquare,
-  FileSearch,
   TrendingUp,
   UsersRound,
   FileText,
-  Archive,
-  BookOpen,
-  Settings2,
-  Calendar,
   CheckSquare,
-  FileBarChart,
   ChevronDown,
   FolderOpen,
   Plug,
   Code,
   GraduationCap,
-  ClipboardCheck,
   LogOut,
 } from "lucide-react";
 import patchopsLogo from "@assets/patchops-brandmark-2_1758758915355.jpg";
@@ -161,6 +152,10 @@ const trainingItems = [
         url: "/training/admin",
       },
       {
+        title: "Enrollments",
+        url: "/training/admin/enrollments",
+      },
+      {
         title: "Reviews",
         url: "/training/reviews",
       },
@@ -253,7 +248,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-6">
+      <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
           <img 
             src={patchopsLogo} 

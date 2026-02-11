@@ -33,6 +33,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { Link, useParams } from "wouter";
+import { formatProseWithBullets } from "@/lib/trainingUtils";
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -211,7 +212,7 @@ export default function TrainingModule() {
   const allChecked = checklistItems.length > 0 && completedChecks === checklistItems.length;
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl training-ui">
       {/* Header */}
       <div>
         <Link href={module.programId ? `/training/programs/${module.programId}` : "/training"}>
@@ -256,9 +257,9 @@ export default function TrainingModule() {
                 >
                   <ExternalLink className="h-4 w-4 mt-0.5 text-muted-foreground group-hover:text-primary shrink-0" />
                   <div className="min-w-0">
-                    <p className="font-medium text-sm group-hover:text-primary">{link.label}</p>
+                    <p className="font-medium text-base group-hover:text-primary">{link.label}</p>
                     {link.description && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{link.description}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{link.description}</p>
                     )}
                   </div>
                 </a>
@@ -308,8 +309,8 @@ export default function TrainingModule() {
             </CardHeader>
             <CardContent>
               {module.clientStory ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                  {module.clientStory}
+                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-base">
+                  {formatProseWithBullets(module.clientStory)}
                 </div>
               ) : (
                 <p className="text-muted-foreground italic">No client story provided for this module.</p>
@@ -350,8 +351,8 @@ export default function TrainingModule() {
                   <CardDescription>Scenarios to verify your work before presentation</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                    {module.testingRequirements}
+                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-base">
+                    {formatProseWithBullets(module.testingRequirements)}
                   </div>
                 </CardContent>
               </Card>
@@ -403,7 +404,7 @@ export default function TrainingModule() {
                             </p>
                             {/* Notes toggle */}
                             <button
-                              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mt-1.5 transition-colors"
+                              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-1.5 transition-colors"
                               onClick={() => setExpandedNotes(prev => ({ ...prev, [item.id]: !notesExpanded }))}
                             >
                               <StickyNote className="h-3 w-3" />
@@ -433,7 +434,7 @@ export default function TrainingModule() {
                   {allChecked && (
                     <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 text-green-700 dark:text-green-400">
                       <CheckCircle2 className="h-5 w-5" />
-                      <span className="text-sm font-medium">All items complete! Head to the Submit tab when ready.</span>
+                      <span className="text-base font-medium">All items complete! Head to the Submit tab when ready.</span>
                     </div>
                   )}
                 </div>
@@ -455,8 +456,8 @@ export default function TrainingModule() {
               </CardHeader>
               <CardContent>
                 {module.deliverablesAndPresentation ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                    {module.deliverablesAndPresentation}
+                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-base">
+                    {formatProseWithBullets(module.deliverablesAndPresentation)}
                   </div>
                 ) : (
                   <p className="text-muted-foreground italic">No deliverables specified for this module.</p>
@@ -474,8 +475,8 @@ export default function TrainingModule() {
                   <CardDescription>Questions you should be prepared to discuss</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                    {module.beReadyToAnswer}
+                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-base">
+                    {formatProseWithBullets(module.beReadyToAnswer)}
                   </div>
                 </CardContent>
               </Card>
@@ -544,8 +545,8 @@ export default function TrainingModule() {
                   )}
                 </CardHeader>
                 <CardContent>
-                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                    {submission.reviewerNotes}
+                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-base">
+                    {formatProseWithBullets(submission.reviewerNotes)}
                   </div>
                 </CardContent>
               </Card>
@@ -586,8 +587,8 @@ export default function TrainingModule() {
                   <CardTitle>Your Submission Notes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                    {submission.submissionNotes}
+                  <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-base">
+                    {formatProseWithBullets(submission.submissionNotes)}
                   </div>
                 </CardContent>
               </Card>
@@ -610,8 +611,8 @@ export default function TrainingModule() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                  {section.content}
+                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-base">
+                  {formatProseWithBullets(section.content)}
                 </div>
               </CardContent>
             </Card>

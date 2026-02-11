@@ -1,12 +1,26 @@
-import { useState, useMemo, CSSProperties } from "react";
+import { useState, useMemo } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Dialog,
   DialogContent,
@@ -41,8 +55,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Search, Plus, ChevronDown, ChevronRight, Building2, Users, FolderOpen, Clock, CheckSquare, Edit, Trash2, UserPlus, X, Inbox, MoreHorizontal, Power } from "lucide-react";
+import { Search, Plus, Building2, Users, FolderOpen, Clock, CheckSquare, Edit, Trash2, Inbox, MoreHorizontal, Power } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import {
   DropdownMenu,
@@ -59,6 +72,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormDialog } from "@/components/TaskFormDialog";
 import { TabbedRichTextEditor } from "@/components/TabbedRichTextEditor";
 import { ProjectAttachments } from "@/components/ProjectAttachments";
+import { PageHeader } from "@/components/PageHeader";
 import { insertProjectSchema, insertAccountSchema } from "@shared/schema";
 import type { AccountWithAgency, Agency, Project, Task, User, TimeLog, InsertProject, InsertAccount, ProjectWithTeamAndRelations } from "@shared/schema";
 
@@ -72,9 +86,9 @@ const roleColors: Record<string, string> = {
 export default function Accounts() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [expandedAgencies, setExpandedAgencies] = useState<Set<string>>(new Set());
-  const [expandedAccounts, setExpandedAccounts] = useState<Set<string>>(new Set());
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  
+  // Sheet detail panel
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   
   // Task management state
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
@@ -387,137 +401,50 @@ export default function Accounts() {
     }));
   }, [accounts, timeLogs]);
 
-  // Build hierarchical data structure with enhanced search
-  const hierarchicalData = useMemo(() => {
+  // Flat filtered list of accounts with search across accounts, agencies, projects, tasks
+  const filteredAccounts = useMemo(() => {
     const searchLower = searchQuery.toLowerCase();
     
-    const filteredData = agencies.map(agency => {
-      // Apply status filter to accounts
-      const agencyAccounts = accountMetrics.filter(account => {
-        if (account.agencyId !== agency.id) return false;
-        if (statusFilter === "active") return account.isActive === true;
-        if (statusFilter === "inactive") return account.isActive === false;
-        return true; // "all" - show all accounts
-      });
+    return accountMetrics.filter(account => {
+      // Status filter
+      if (statusFilter === "active" && account.isActive !== true) return false;
+      if (statusFilter === "inactive" && account.isActive !== false) return false;
       
-      return {
-        ...agency,
-        accounts: agencyAccounts.map(account => {
-          const accountProjects = projects.filter(project => project.accountId === account.id);
-          const unassignedTasks = tasks.filter(task => task.accountId === account.id && !task.projectId);
-          return {
-            ...account,
-            projects: accountProjects.map(project => {
-              const projectTasks = tasks.filter(task => task.projectId === project.id);
-              return {
-                ...project,
-                tasks: projectTasks
-              };
-            }),
-            unassignedTasks
-          };
-        })
-      };
+      // Search filter
+      if (searchQuery) {
+        const agency = agencies.find(a => a.id === account.agencyId);
+        const agencyName = agency?.name?.toLowerCase() || "";
+        const accountProjects = projects.filter(p => p.accountId === account.id);
+        const accountTasks = tasks.filter(t => t.accountId === account.id);
+        
+        const accountMatches = account.name.toLowerCase().includes(searchLower) || agencyName.includes(searchLower);
+        const projectMatches = accountProjects.some(p => 
+          p.name.toLowerCase().includes(searchLower) || p.description?.toLowerCase().includes(searchLower)
+        );
+        const taskMatches = accountTasks.some(t =>
+          t.name.toLowerCase().includes(searchLower) || t.description?.toLowerCase().includes(searchLower)
+        );
+        
+        return accountMatches || projectMatches || taskMatches;
+      }
+      
+      return true;
     });
+  }, [accountMetrics, agencies, projects, tasks, searchQuery, statusFilter]);
 
-    // Apply search filter across all levels (agencies, accounts, projects, tasks)
-    if (searchQuery) {
-      return filteredData.map(agency => {
-        const matchingAccounts = agency.accounts.filter(account => {
-          const accountMatches = account.name.toLowerCase().includes(searchLower) ||
-                                agency.name.toLowerCase().includes(searchLower);
-          
-          const projectMatches = account.projects.some(project => {
-            const projectNameMatches = project.name.toLowerCase().includes(searchLower) ||
-                                     project.description?.toLowerCase().includes(searchLower);
-            
-            const taskMatches = project.tasks.some(task =>
-              task.name.toLowerCase().includes(searchLower) ||
-              task.description?.toLowerCase().includes(searchLower)
-            );
-
-            return projectNameMatches || taskMatches;
-          });
-
-          const unassignedTaskMatches = account.unassignedTasks?.some(task =>
-            task.name.toLowerCase().includes(searchLower) ||
-            task.description?.toLowerCase().includes(searchLower)
-          );
-
-          return accountMatches || projectMatches || unassignedTaskMatches;
-        }).map(account => ({
-          ...account,
-          projects: account.projects.filter(project => {
-            const projectMatches = project.name.toLowerCase().includes(searchLower) ||
-                                  project.description?.toLowerCase().includes(searchLower) ||
-                                  account.name.toLowerCase().includes(searchLower) ||
-                                  agency.name.toLowerCase().includes(searchLower);
-            
-            const taskMatches = project.tasks.some(task =>
-              task.name.toLowerCase().includes(searchLower) ||
-              task.description?.toLowerCase().includes(searchLower)
-            );
-
-            return projectMatches || taskMatches;
-          }).map(project => ({
-            ...project,
-            tasks: project.tasks.filter(task =>
-              task.name.toLowerCase().includes(searchLower) ||
-              task.description?.toLowerCase().includes(searchLower) ||
-              project.name.toLowerCase().includes(searchLower) ||
-              project.description?.toLowerCase().includes(searchLower) ||
-              account.name.toLowerCase().includes(searchLower) ||
-              agency.name.toLowerCase().includes(searchLower)
-            )
-          })),
-          unassignedTasks: account.unassignedTasks?.filter(task =>
-            task.name.toLowerCase().includes(searchLower) ||
-            task.description?.toLowerCase().includes(searchLower) ||
-            account.name.toLowerCase().includes(searchLower) ||
-            agency.name.toLowerCase().includes(searchLower)
-          ) || []
-        }));
-
-        return {
-          ...agency,
-          accounts: matchingAccounts
-        };
-      });
-    }
-
-    return filteredData;
-  }, [agencies, accountMetrics, projects, tasks, searchQuery, statusFilter]);
-
-  // Toggle functions
-  const toggleAgency = (agencyId: string) => {
-    const newExpanded = new Set(expandedAgencies);
-    if (newExpanded.has(agencyId)) {
-      newExpanded.delete(agencyId);
-    } else {
-      newExpanded.add(agencyId);
-    }
-    setExpandedAgencies(newExpanded);
-  };
-
-  const toggleAccount = (accountId: string) => {
-    const newExpanded = new Set(expandedAccounts);
-    if (newExpanded.has(accountId)) {
-      newExpanded.delete(accountId);
-    } else {
-      newExpanded.add(accountId);
-    }
-    setExpandedAccounts(newExpanded);
-  };
-
-  const toggleProject = (projectId: string) => {
-    const newExpanded = new Set(expandedProjects);
-    if (newExpanded.has(projectId)) {
-      newExpanded.delete(projectId);
-    } else {
-      newExpanded.add(projectId);
-    }
-    setExpandedProjects(newExpanded);
-  };
+  // Derive the selected account data for the Sheet panel
+  const selectedAccountData = useMemo(() => {
+    if (!selectedAccountId) return null;
+    const account = accountMetrics.find(a => a.id === selectedAccountId);
+    if (!account) return null;
+    const agency = agencies.find(a => a.id === account.agencyId);
+    const accountProjects = projects.filter(p => p.accountId === account.id).map(project => {
+      const projectTasks = tasks.filter(t => t.projectId === project.id);
+      return { ...project, tasks: projectTasks };
+    });
+    const unassignedTasks = tasks.filter(t => t.accountId === account.id && !t.projectId);
+    return { ...account, agency, projects: accountProjects, unassignedTasks };
+  }, [selectedAccountId, accountMetrics, agencies, projects, tasks]);
 
   // Task management functions
   const openCreateTaskDialog = (project: Project) => {
@@ -622,56 +549,52 @@ export default function Accounts() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Accounts</h1>
-            <p className="text-muted-foreground">
-              Manage client accounts with efficiency and activity insights
-            </p>
-          </div>
-          <Skeleton className="h-9 w-32" />
-        </div>
+      <div className="space-y-6">
+        <PageHeader
+          title="Accounts"
+          description="Manage client accounts with efficiency and activity insights"
+          actions={<Skeleton className="h-9 w-32" />}
+        />
         <div className="flex gap-4 items-center">
           <Skeleton className="h-9 flex-1" />
           <Skeleton className="h-9 w-[160px]" />
         </div>
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-48" />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Skeleton className="h-12 w-full" />
-                  <Skeleton className="h-12 w-full" />
+        <Card>
+          <CardContent className="p-0">
+            <div className="space-y-0">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-4 py-3 border-b last:border-0">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-16 ml-auto" />
+                  <Skeleton className="h-4 w-16" />
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  const totalAccounts = filteredAccounts.length;
+  const activeCount = filteredAccounts.filter(a => a.isActive).length;
+
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Accounts</h1>
-          <p className="text-muted-foreground">
-            Manage client accounts with efficiency and activity insights
-          </p>
-        </div>
-        <Button 
-          onClick={() => setIsCreateAccountDialogOpen(true)}
-          data-testid="button-new-account"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          New Account
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Accounts"
+        description={`${totalAccounts} account${totalAccounts !== 1 ? 's' : ''} \u00B7 ${activeCount} active`}
+        actions={
+          <Button 
+            onClick={() => setIsCreateAccountDialogOpen(true)}
+            data-testid="button-new-account"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Account
+          </Button>
+        }
+      />
 
       <div className="flex gap-4 items-center">
         <div className="relative flex-1">
@@ -696,540 +619,353 @@ export default function Accounts() {
         </Select>
       </div>
 
-      <div className="space-y-4">
-        {hierarchicalData.length === 0 ? (
-          <Card>
-            <CardContent>
-              <EmptyState
-                icon={searchQuery ? Search : Inbox}
-                title={searchQuery ? "No results found" : "No accounts yet"}
-                description={searchQuery 
-                  ? "Try adjusting your search terms or filters."
-                  : "Create your first account to start tracking time and managing projects."
-                }
-                actionLabel={searchQuery ? undefined : "Create Account"}
-                onAction={searchQuery ? undefined : () => setIsCreateAccountDialogOpen(true)}
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          hierarchicalData.map((agency) => {
-            const isAgencyExpanded = expandedAgencies.has(agency.id);
-            
-            return (
-              <Card key={agency.id} className="overflow-hidden" data-testid={`agency-card-${agency.id}`}>
-                <Collapsible open={isAgencyExpanded} onOpenChange={() => toggleAgency(agency.id)}>
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="hover-elevate cursor-pointer">
-                      <CardTitle className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {isAgencyExpanded ? (
-                            <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                          )}
-                          <Building2 className="h-5 w-5 text-muted-foreground" />
-                          <span>{agency.name}</span>
-                          <Badge variant="outline" className="ml-2">
-                            {agency.accounts.length} account{agency.accounts.length !== 1 ? 's' : ''}
-                          </Badge>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-                  
-                  <CollapsibleContent>
-                    <CardContent className="pt-0">
-                      <div className="space-y-4">
-                        {agency.accounts.map((account) => {
-                          const isAccountExpanded = expandedAccounts.has(account.id);
-
-                          return (
-                            <div key={account.id} className="pl-6 border-l-2 border-primary/15" data-testid={`account-section-${account.id}`}>
-                              <Collapsible open={isAccountExpanded} onOpenChange={() => toggleAccount(account.id)}>
-                                <CollapsibleTrigger asChild>
-                                  <div className="p-4 rounded-lg bg-muted/50 hover-elevate cursor-pointer">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
-                                        {isAccountExpanded ? (
-                                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                        ) : (
-                                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                        )}
-                                        <Users className="h-4 w-4 text-muted-foreground" />
-                                        <span className="font-medium">{account.name}</span>
-                                        <Badge variant={account.isActive ? "secondary" : "outline"} className="text-xs">
-                                          {account.isActive ? "Active" : "Inactive"}
-                                        </Badge>
-                                        <Badge variant="outline" className="ml-2">
-                                          {account.projects.length} project{account.projects.length !== 1 ? 's' : ''}
-                                        </Badge>
-                                      </div>
-                                      <div className="flex items-center gap-3">
-                                        {/* Compact metrics */}
-                                        <div className="hidden sm:flex items-center gap-3 text-sm">
-                                          <span className={`font-medium ${account.metrics.weeklyColor}`}>
-                                            {account.metrics.weeklyHours}h <span className="text-xs text-muted-foreground font-normal">wk</span>
-                                          </span>
-                                          <span className="text-muted-foreground/30">|</span>
-                                          <span className={`font-medium ${account.metrics.monthlyColor}`}>
-                                            {account.metrics.monthlyHours}h <span className="text-xs text-muted-foreground font-normal">mo</span>
-                                          </span>
-                                        </div>
-                                        {/* Actions menu */}
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              className="h-8 w-8"
-                                              onClick={(e) => e.stopPropagation()}
-                                              data-testid={`button-account-menu-${account.id}`}
-                                            >
-                                              <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end">
-                                            <DropdownMenuItem
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleAccountStatus(account);
-                                              }}
-                                              data-testid={`menu-toggle-active-${account.id}`}
-                                            >
-                                              <Power className="h-4 w-4 mr-2" />
-                                              {account.isActive ? "Deactivate" : "Activate"}
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                confirmDeleteAccount(account);
-                                              }}
-                                              className="text-destructive focus:text-destructive"
-                                              data-testid={`menu-delete-account-${account.id}`}
-                                            >
-                                              <Trash2 className="h-4 w-4 mr-2" />
-                                              Delete Account
-                                            </DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </CollapsibleTrigger>
-                                
-                                <CollapsibleContent>
-                                  <div className="mt-4 space-y-4">
-                                    {/* Account Metrics Details */}
-                                    <div className="grid grid-cols-2 gap-4 p-4 bg-background rounded-lg border">
-                                      <div className="space-y-2">
-                                        <h4 className="text-sm font-medium text-muted-foreground">Efficiency Metrics</h4>
-                                        <div className="space-y-1">
-                                          <div className="flex justify-between text-sm">
-                                            <span>Billed Hours:</span>
-                                            <span className="font-medium">{account.metrics.totalBilledHours}h</span>
-                                          </div>
-                                          <div className="flex justify-between text-sm">
-                                            <span>Actual Hours:</span>
-                                            <span className="font-medium">{account.metrics.totalActualHours}h</span>
-                                          </div>
-                                          {account.metrics.totalTimeLogs > 0 && (
-                                            <Progress 
-                                              value={Math.min(account.metrics.efficiency, 100)} 
-                                              className="h-2" 
-                                            />
-                                          )}
-                                        </div>
-                                      </div>
-                                      <div className="space-y-2">
-                                        <h4 className="text-sm font-medium text-muted-foreground">Recent Activity (30 days)</h4>
-                                        <div className="space-y-1">
-                                          <div className="flex justify-between text-sm">
-                                            <span>Time Logs:</span>
-                                            <span className="font-medium">{account.metrics.recentActivity}</span>
-                                          </div>
-                                          <div className="flex justify-between text-sm">
-                                            <span>Hours Logged:</span>
-                                            <span className="font-medium">{account.metrics.recentHours}h</span>
-                                          </div>
-                                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                            <Clock className="h-3 w-3" />
-                                            {account.metrics.totalTimeLogs} total logs
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Account Notes */}
-                                    <div className="pb-4 border-b">
-                                      <h4 className="text-sm font-medium text-muted-foreground mb-2">Account Notes</h4>
-                                      <TabbedRichTextEditor accountId={account.id} />
-                                    </div>
-
-                                    {/* Projects List */}
-                                    {account.projects.length > 0 ? (
-                                      <div className="space-y-2">
-                                        <div className="flex items-center justify-between mb-2">
-                                          <h4 className="text-sm font-medium text-muted-foreground">Projects</h4>
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              openCreateProjectDialog(account);
-                                            }}
-                                            className="h-6 px-2 text-xs"
-                                            data-testid={`button-add-project-${account.id}`}
-                                          >
-                                            <Plus className="h-3 w-3 mr-1" />
-                                            Add Project
-                                          </Button>
-                                        </div>
-                                        <div className="space-y-2 pl-4 border-l-2 border-muted">
-                                          {account.projects.map((project) => {
-                                            const isProjectExpanded = expandedProjects.has(project.id);
-                                            
-                                            return (
-                                              <div key={project.id} data-testid={`project-section-${project.id}`}>
-                                                <Collapsible open={isProjectExpanded} onOpenChange={() => toggleProject(project.id)}>
-                                                  <CollapsibleTrigger asChild>
-                                                    <div className="p-3 rounded-lg bg-muted/30 hover-elevate cursor-pointer">
-                                                      <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                          {isProjectExpanded ? (
-                                                            <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                                                          ) : (
-                                                            <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                                                          )}
-                                                          <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                                                          <span className="text-sm font-medium">{project.name}</span>
-                                                          <Badge variant="outline" className="text-xs">
-                                                            {project.tasks.length} task{project.tasks.length !== 1 ? 's' : ''}
-                                                          </Badge>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                          <Button
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            onClick={(e) => {
-                                                              e.stopPropagation();
-                                                              openEditProjectDialog(project);
-                                                            }}
-                                                            className="h-6 w-6"
-                                                            data-testid={`button-edit-project-${project.id}`}
-                                                          >
-                                                            <Edit className="h-3 w-3" />
-                                                          </Button>
-                                                          <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={(e) => {
-                                                              e.stopPropagation();
-                                                              openCreateTaskDialog(project);
-                                                            }}
-                                                            className="h-6 px-2 text-xs"
-                                                            data-testid={`button-add-task-${project.id}`}
-                                                          >
-                                                            <Plus className="h-3 w-3 mr-1" />
-                                                            Add Task
-                                                          </Button>
-                                                          <Badge 
-                                                            variant={project.status === 'active' ? 'secondary' : 'outline'} 
-                                                            className="text-xs"
-                                                          >
-                                                            {project.status}
-                                                          </Badge>
-                                                        </div>
-                                                      </div>
-                                                      {project.description && (
-                                                        <p className="text-xs text-muted-foreground mt-2 ml-5">
-                                                          {project.description}
-                                                        </p>
-                                                      )}
-                                                    </div>
-                                                  </CollapsibleTrigger>
-                                                  
-                                                  <CollapsibleContent>
-                                                    <div className="mt-2 ml-5 space-y-4">
-                                                      {(() => {
-                                                        const projectWithTeam = projectsWithTeam.find(p => p.id === project.id);
-                                                        
-                                                        return (
-                                                          <div className="grid gap-4 md:grid-cols-2">
-                                                            {/* Left Column: Team & Hours */}
-                                                            <div className="space-y-4">
-                                                              {/* Team Members */}
-                                                              {projectWithTeam && (
-                                                                <div className="space-y-2">
-                                                                  <div className="flex items-center gap-2 text-sm font-medium">
-                                                                    <Users className="h-4 w-4" />
-                                                                    <span>Team</span>
-                                                                  </div>
-                                                                  {projectWithTeam.teamMembers && projectWithTeam.teamMembers.length > 0 ? (
-                                                                    <div className="space-y-1">
-                                                                      {projectWithTeam.teamMembers.map((member: any) => (
-                                                                        <div
-                                                                          key={member.id}
-                                                                          className="flex items-center justify-between text-xs p-2 rounded bg-background/50"
-                                                                        >
-                                                                          <div className="flex items-center gap-2 flex-1">
-                                                                            <span className="font-medium">
-                                                                              {member.user.firstName} {member.user.lastName}
-                                                                            </span>
-                                                                            <Badge variant="outline" className={`${roleColors[member.role]} text-xs`}>
-                                                                              {member.role}
-                                                                            </Badge>
-                                                                          </div>
-                                                                          {member.actualHoursPerWeek && (
-                                                                            <span className="text-muted-foreground">
-                                                                              {member.actualHoursPerWeek}h/wk
-                                                                            </span>
-                                                                          )}
-                                                                        </div>
-                                                                      ))}
-                                                                    </div>
-                                                                  ) : (
-                                                                    <p className="text-xs text-muted-foreground">No team members assigned</p>
-                                                                  )}
-                                                                </div>
-                                                              )}
-
-                                                              {/* Hours Tracking */}
-                                                              {(projectHours[project.id] || project.estimatedHours) && (
-                                                                <div className="space-y-2">
-                                                                  <div className="flex items-center gap-2 text-sm font-medium">
-                                                                    <Clock className="h-4 w-4" />
-                                                                    <span>Hours Tracker</span>
-                                                                  </div>
-                                                                  {project.estimatedHours && (
-                                                                    <div className="space-y-2">
-                                                                      <div className="flex items-center justify-between text-sm">
-                                                                        <span className="text-muted-foreground">
-                                                                          {projectHours[project.id]?.actual.toFixed(1) || '0.0'}h logged
-                                                                        </span>
-                                                                        <span className="font-medium">
-                                                                          {Math.round((projectHours[project.id]?.actual || 0) / parseFloat(project.estimatedHours) * 100)}%
-                                                                        </span>
-                                                                      </div>
-                                                                      <Progress 
-                                                                        value={Math.min(100, (projectHours[project.id]?.actual || 0) / parseFloat(project.estimatedHours) * 100)} 
-                                                                        className="h-2"
-                                                                      />
-                                                                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                                        <span>Actual: {projectHours[project.id]?.actual.toFixed(1) || '0.0'}h</span>
-                                                                        <span>Total: {parseFloat(project.estimatedHours).toFixed(1)}h</span>
-                                                                      </div>
-                                                                      {projectHours[project.id]?.billed && (
-                                                                        <div className="text-xs text-muted-foreground">
-                                                                          Billed: {projectHours[project.id].billed.toFixed(1)}h
-                                                                        </div>
-                                                                      )}
-                                                                    </div>
-                                                                  )}
-                                                                </div>
-                                                              )}
-                                                            </div>
-
-                                                            {/* Right Column: Tasks & Attachments */}
-                                                            <div className="space-y-4">
-                                                              {/* Tasks */}
-                                                              <div className="space-y-2">
-                                                                <div className="flex items-center gap-2 text-sm font-medium">
-                                                                  <CheckSquare className="h-4 w-4" />
-                                                                  <span>Tasks {project.tasks.length > 0 && `(${project.tasks.length})`}</span>
-                                                                </div>
-                                                                {project.tasks.length > 0 ? (
-                                                                  <div className="space-y-1">
-                                                                    {project.tasks.map((task) => (
-                                                                      <div key={task.id} className="flex items-center gap-2 text-sm p-2 rounded bg-background/50 hover-elevate" data-testid={`task-item-${task.id}`}>
-                                                                        <CheckSquare className="h-3 w-3 text-muted-foreground" />
-                                                                        <span className="flex-1">{task.name}</span>
-                                                                        <StatusBadge status={task.status} />
-                                                                        <Badge variant={task.billingType === 'prebilled' ? 'outline' : 'secondary'} className="text-xs">
-                                                                          {task.billingType === 'prebilled' ? 'Pre-billed' : 'Billable'}
-                                                                        </Badge>
-                                                                        <div className="flex items-center gap-1">
-                                                                          <Button
-                                                                            size="icon"
-                                                                            variant="ghost"
-                                                                            onClick={() => openEditTaskDialog(task)}
-                                                                            className="h-6 w-6"
-                                                                            data-testid={`button-edit-task-${task.id}`}
-                                                                          >
-                                                                            <Edit className="h-3 w-3" />
-                                                                          </Button>
-                                                                          <Button
-                                                                            size="icon"
-                                                                            variant="ghost"
-                                                                            onClick={() => confirmDeleteTask(task)}
-                                                                            className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                                            data-testid={`button-delete-task-${task.id}`}
-                                                                          >
-                                                                            <Trash2 className="h-3 w-3" />
-                                                                          </Button>
-                                                                        </div>
-                                                                      </div>
-                                                                    ))}
-                                                                  </div>
-                                                                ) : (
-                                                                  <p className="text-xs text-muted-foreground">No tasks in this project</p>
-                                                                )}
-                                                              </div>
-
-                                                              {/* Project Attachments */}
-                                                              {projectWithTeam && (
-                                                                <div className="space-y-2">
-                                                                  <ProjectAttachments projectId={project.id} />
-                                                                </div>
-                                                              )}
-                                                            </div>
-                                                          </div>
-                                                        );
-                                                      })()}
-                                                    </div>
-                                                  </CollapsibleContent>
-                                                </Collapsible>
-                                              </div>
-                                            );
-                                          })}
-                                        </div>
-                                      
-                                      {/* Non-Project Tasks Section */}
-                                      {account.unassignedTasks && account.unassignedTasks.length > 0 && (
-                                        <div className="mt-4">
-                                          <h4 className="text-sm font-medium text-muted-foreground mb-2">Non-Project Tasks</h4>
-                                          <div className="space-y-1 pl-4 border-l-2 border-muted">
-                                            {account.unassignedTasks.map((task) => (
-                                              <div key={task.id} className="flex items-center gap-2 text-sm p-2 rounded bg-background/50 hover-elevate" data-testid={`non-project-task-item-${task.id}`}>
-                                                <CheckSquare className="h-3 w-3 text-muted-foreground" />
-                                                <span className="flex-1">{task.name}</span>
-                                                <StatusBadge status={task.status} />
-                                                <Badge variant={task.billingType === 'prebilled' ? 'outline' : 'secondary'} className="text-xs">
-                                                  {task.billingType === 'prebilled' ? 'Pre-billed' : 'Billable'}
-                                                </Badge>
-                                                <div className="flex items-center gap-1">
-                                                  <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() => openEditTaskDialog(task)}
-                                                    className="h-6 w-6"
-                                                    data-testid={`button-edit-non-project-task-${task.id}`}
-                                                  >
-                                                    <Edit className="h-3 w-3" />
-                                                  </Button>
-                                                  <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    onClick={() => confirmDeleteTask(task)}
-                                                    className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                    data-testid={`button-delete-non-project-task-${task.id}`}
-                                                  >
-                                                    <Trash2 className="h-3 w-3" />
-                                                  </Button>
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      )}
-                                      </div>
-                                    ) : (
-                                      <div>
-                                        <div className="flex items-center justify-between mb-2">
-                                          <p className="text-sm text-muted-foreground italic">No projects assigned to this account</p>
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              openCreateProjectDialog(account);
-                                            }}
-                                            className="h-6 px-2 text-xs"
-                                            data-testid={`button-add-project-empty-${account.id}`}
-                                          >
-                                            <Plus className="h-3 w-3 mr-1" />
-                                            Add Project
-                                          </Button>
-                                        </div>
-                                        
-                                        {/* Show non-project tasks even if no projects */}
-                                        {account.unassignedTasks && account.unassignedTasks.length > 0 && (
-                                          <div className="mt-4">
-                                            <h4 className="text-sm font-medium text-muted-foreground mb-2">Non-Project Tasks</h4>
-                                            <div className="space-y-1 pl-4 border-l-2 border-muted">
-                                              {account.unassignedTasks.map((task) => (
-                                                <div key={task.id} className="flex items-center gap-2 text-sm p-2 rounded bg-background/50 hover-elevate" data-testid={`non-project-task-item-${task.id}`}>
-                                                  <CheckSquare className="h-3 w-3 text-muted-foreground" />
-                                                  <span className="flex-1">{task.name}</span>
-                                                  <StatusBadge status={task.status} />
-                                                  <Badge variant={task.billingType === 'prebilled' ? 'outline' : 'secondary'} className="text-xs">
-                                                    {task.billingType === 'prebilled' ? 'Pre-billed' : 'Billable'}
-                                                  </Badge>
-                                                  <div className="flex items-center gap-1">
-                                                    <Button
-                                                      size="icon"
-                                                      variant="ghost"
-                                                      onClick={() => openEditTaskDialog(task)}
-                                                      className="h-6 w-6"
-                                                      data-testid={`button-edit-non-project-task-${task.id}`}
-                                                    >
-                                                      <Edit className="h-3 w-3" />
-                                                    </Button>
-                                                    <Button
-                                                      size="icon"
-                                                      variant="ghost"
-                                                      onClick={() => confirmDeleteTask(task)}
-                                                      className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                      data-testid={`button-delete-non-project-task-${task.id}`}
-                                                    >
-                                                      <Trash2 className="h-3 w-3" />
-                                                    </Button>
-                                                  </div>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                </CollapsibleContent>
-                              </Collapsible>
-                            </div>
-                          );
-                        })}
-                        
-                        {/* Add Account button for this client */}
-                        <div className="flex justify-center pt-2">
+      {filteredAccounts.length === 0 ? (
+        <Card>
+          <CardContent className="py-4">
+            <EmptyState
+              icon={searchQuery ? Search : Inbox}
+              title={searchQuery ? "No results found" : "No accounts yet"}
+              description={searchQuery 
+                ? "Try adjusting your search terms or filters."
+                : "Create your first account to start tracking time and managing projects."
+              }
+              actionLabel={searchQuery ? undefined : "Create Account"}
+              onAction={searchQuery ? undefined : () => setIsCreateAccountDialogOpen(true)}
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Account</TableHead>
+                <TableHead>Agency</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Weekly</TableHead>
+                <TableHead className="text-right">Monthly</TableHead>
+                <TableHead className="text-right">Projects</TableHead>
+                <TableHead className="text-right">Efficiency</TableHead>
+                <TableHead className="w-10"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAccounts.map((account) => {
+                const agency = agencies.find(a => a.id === account.agencyId);
+                const accountProjectCount = projects.filter(p => p.accountId === account.id).length;
+                return (
+                  <TableRow
+                    key={account.id}
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => setSelectedAccountId(account.id)}
+                    data-testid={`account-row-${account.id}`}
+                  >
+                    <TableCell className="font-medium">{account.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Building2 className="h-3.5 w-3.5" />
+                        <span className="text-sm">{agency?.name || "—"}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={account.isActive ? "secondary" : "outline"} className="text-xs">
+                        {account.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className={`text-sm font-medium ${account.metrics.weeklyColor}`}>
+                        {account.metrics.weeklyHours}h
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className={`text-sm font-medium ${account.metrics.monthlyColor}`}>
+                        {account.metrics.monthlyHours}h
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-muted-foreground">
+                      {accountProjectCount}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {account.metrics.efficiency > 0 ? (
+                        <span className="text-sm font-medium text-gold">{account.metrics.efficiency}%</span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                           <Button
-                            variant="outline"
-                            size="sm"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => e.stopPropagation()}
+                            data-testid={`button-account-menu-${account.id}`}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
                             onClick={(e) => {
                               e.stopPropagation();
-                              accountForm.reset({
-                                agencyId: agency.id,
-                                name: "",
-                                description: "",
-                                isActive: true,
-                              });
-                              setIsCreateAccountDialogOpen(true);
+                              toggleAccountStatus(account);
                             }}
-                            data-testid={`button-add-account-${agency.id}`}
+                            data-testid={`menu-toggle-active-${account.id}`}
                           >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Account to {agency.name}
-                          </Button>
-                        </div>
+                            <Power className="h-4 w-4 mr-2" />
+                            {account.isActive ? "Deactivate" : "Activate"}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              confirmDeleteAccount(account);
+                            }}
+                            className="text-destructive focus:text-destructive"
+                            data-testid={`menu-delete-account-${account.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Account
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+
+      {/* Account Detail Sheet */}
+      <Sheet open={!!selectedAccountId} onOpenChange={(open) => !open && setSelectedAccountId(null)}>
+        <SheetContent className="sm:max-w-xl overflow-y-auto">
+          {selectedAccountData && (
+            <>
+              <SheetHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <SheetTitle className="text-lg">{selectedAccountData.name}</SheetTitle>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
+                      <Building2 className="h-3.5 w-3.5" />
+                      {selectedAccountData.agency?.name}
+                    </p>
+                  </div>
+                  <Badge variant={selectedAccountData.isActive ? "secondary" : "outline"}>
+                    {selectedAccountData.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+              </SheetHeader>
+
+              <Tabs defaultValue="overview" className="mt-2">
+                <TabsList className="w-full">
+                  <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
+                  <TabsTrigger value="projects" className="flex-1">
+                    Projects ({selectedAccountData.projects.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="notes" className="flex-1">Notes</TabsTrigger>
+                </TabsList>
+
+                {/* Overview Tab */}
+                <TabsContent value="overview" className="mt-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">Weekly Hours</p>
+                      <p className={`text-lg font-semibold ${selectedAccountData.metrics.weeklyColor}`}>
+                        {selectedAccountData.metrics.weeklyHours}h
+                      </p>
+                    </div>
+                    <div className="rounded-lg border p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">Monthly Hours</p>
+                      <p className={`text-lg font-semibold ${selectedAccountData.metrics.monthlyColor}`}>
+                        {selectedAccountData.metrics.monthlyHours}h
+                      </p>
+                    </div>
+                    <div className="rounded-lg border p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">Efficiency</p>
+                      <p className="text-lg font-semibold text-gold">
+                        {selectedAccountData.metrics.efficiency > 0 ? `${selectedAccountData.metrics.efficiency}%` : "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border p-3 space-y-1">
+                      <p className="text-xs text-muted-foreground">Recent Activity</p>
+                      <p className="text-lg font-semibold">{selectedAccountData.metrics.recentActivity}</p>
+                      <p className="text-xs text-muted-foreground">logs (30d)</p>
+                    </div>
+                  </div>
+
+                  {selectedAccountData.metrics.totalTimeLogs > 0 && (
+                    <div className="rounded-lg border p-3 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Billed</span>
+                        <span className="font-medium">{selectedAccountData.metrics.totalBilledHours.toFixed(1)}h</span>
                       </div>
-                    </CardContent>
-                  </CollapsibleContent>
-                </Collapsible>
-              </Card>
-            );
-          })
-        )}
-      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Actual</span>
+                        <span className="font-medium">{selectedAccountData.metrics.totalActualHours.toFixed(1)}h</span>
+                      </div>
+                      <Progress value={Math.min(selectedAccountData.metrics.efficiency, 100)} className="h-2" />
+                      <p className="text-xs text-muted-foreground">{selectedAccountData.metrics.totalTimeLogs} total time logs</p>
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Projects Tab */}
+                <TabsContent value="projects" className="mt-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      {selectedAccountData.projects.length} project{selectedAccountData.projects.length !== 1 ? "s" : ""}
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openCreateProjectDialog(selectedAccountData as any)}
+                      data-testid={`sheet-button-add-project-${selectedAccountData.id}`}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Project
+                    </Button>
+                  </div>
+
+                  {selectedAccountData.projects.map((project) => {
+                    const projectWithTeam = projectsWithTeam.find(p => p.id === project.id);
+                    return (
+                      <div key={project.id} className="rounded-lg border p-3 space-y-3" data-testid={`sheet-project-${project.id}`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium">{project.name}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => openEditProjectDialog(project)}
+                              className="h-7 w-7"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Badge variant={project.status === 'active' ? 'secondary' : 'outline'} className="text-xs">
+                              {project.status}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {project.description && (
+                          <p className="text-xs text-muted-foreground">{project.description}</p>
+                        )}
+
+                        {/* Hours progress */}
+                        {project.estimatedHours && projectHours[project.id] && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>{projectHours[project.id]?.actual.toFixed(1)}h / {parseFloat(project.estimatedHours).toFixed(1)}h</span>
+                              <span className="font-medium text-gold">
+                                {Math.round((projectHours[project.id]?.actual || 0) / parseFloat(project.estimatedHours) * 100)}%
+                              </span>
+                            </div>
+                            <Progress 
+                              value={Math.min(100, (projectHours[project.id]?.actual || 0) / parseFloat(project.estimatedHours) * 100)}
+                              className="h-1.5"
+                            />
+                          </div>
+                        )}
+
+                        {/* Team members */}
+                        {projectWithTeam?.teamMembers && projectWithTeam.teamMembers.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {projectWithTeam.teamMembers.map((member: any) => (
+                              <Badge key={member.id} variant="outline" className={`${roleColors[member.role]} text-xs`}>
+                                {member.user.firstName} {member.user.lastName}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Tasks list */}
+                        {project.tasks.length > 0 && (
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-medium text-muted-foreground">Tasks ({project.tasks.length})</p>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => openCreateTaskDialog(project)}
+                                className="h-6 px-2 text-xs"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add
+                              </Button>
+                            </div>
+                            {project.tasks.map((task) => (
+                              <div key={task.id} className="flex items-center gap-2 text-sm py-1.5 px-2 rounded bg-muted/50" data-testid={`sheet-task-${task.id}`}>
+                                <CheckSquare className="h-3 w-3 text-muted-foreground shrink-0" />
+                                <span className="flex-1 truncate text-xs">{task.name}</span>
+                                <StatusBadge status={task.status} />
+                                <div className="flex items-center gap-0.5 shrink-0">
+                                  <Button size="icon" variant="ghost" onClick={() => openEditTaskDialog(task)} className="h-6 w-6">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" onClick={() => confirmDeleteTask(task)} className="h-6 w-6 text-destructive hover:text-destructive">
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {project.tasks.length === 0 && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openCreateTaskDialog(project)}
+                            className="text-xs text-muted-foreground w-full justify-center"
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add Task
+                          </Button>
+                        )}
+
+                        {/* Attachments */}
+                        {projectWithTeam && <ProjectAttachments projectId={project.id} />}
+                      </div>
+                    );
+                  })}
+
+                  {/* Unassigned Tasks */}
+                  {selectedAccountData.unassignedTasks.length > 0 && (
+                    <div className="rounded-lg border p-3 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Non-Project Tasks ({selectedAccountData.unassignedTasks.length})</p>
+                      {selectedAccountData.unassignedTasks.map((task) => (
+                        <div key={task.id} className="flex items-center gap-2 text-sm py-1.5 px-2 rounded bg-muted/50">
+                          <CheckSquare className="h-3 w-3 text-muted-foreground shrink-0" />
+                          <span className="flex-1 truncate text-xs">{task.name}</span>
+                          <StatusBadge status={task.status} />
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <Button size="icon" variant="ghost" onClick={() => openEditTaskDialog(task)} className="h-6 w-6">
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => confirmDeleteTask(task)} className="h-6 w-6 text-destructive hover:text-destructive">
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Notes Tab */}
+                <TabsContent value="notes" className="mt-4">
+                  <TabbedRichTextEditor accountId={selectedAccountData.id} />
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* Task Form Dialog */}
       <TaskFormDialog

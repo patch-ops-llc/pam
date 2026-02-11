@@ -57,7 +57,7 @@ export default function Training() {
           <GraduationCap className="h-8 w-8" />
           Training
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-muted-foreground mt-1 text-base">
           Build your skills through hands-on training programs
         </p>
       </div>
@@ -77,7 +77,7 @@ export default function Training() {
                   <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
-                        <CardTitle className="text-lg">{enrollment.program.title}</CardTitle>
+                        <CardTitle className="text-xl">{enrollment.program.title}</CardTitle>
                         <Badge variant={
                           enrollment.status === "completed" ? "default" :
                           enrollment.status === "in_progress" ? "secondary" : "outline"
@@ -94,12 +94,12 @@ export default function Training() {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-base">
                           <span className="text-muted-foreground">Progress</span>
                           <span className="font-medium">{enrollment.completedModules}/{enrollment.totalModules} modules</span>
                         </div>
                         <Progress value={progressPct} className="h-2" />
-                        <p className="text-xs text-muted-foreground text-right">{progressPct}% complete</p>
+                        <p className="text-sm text-muted-foreground text-right">{progressPct}% complete</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -119,8 +119,8 @@ export default function Training() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium">No Training Programs Available</h3>
-              <p className="text-muted-foreground mt-1">
+              <h3 className="text-xl font-medium">No Training Programs Available</h3>
+              <p className="text-muted-foreground mt-1 text-base">
                 Training programs will appear here once they are created by an administrator.
               </p>
             </CardContent>
@@ -132,12 +132,12 @@ export default function Training() {
               .map((program) => (
                 <Card key={program.id} className="h-full flex flex-col">
                   <CardHeader>
-                    <CardTitle className="text-lg">{program.title}</CardTitle>
-                    <CardDescription>{program.description}</CardDescription>
+                    <CardTitle className="text-xl">{program.title}</CardTitle>
+                    <CardDescription className="text-base">{program.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col justify-end gap-3">
                     {program.prerequisites && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
                         Prerequisites: {program.prerequisites}
                       </p>
                     )}
@@ -158,7 +158,7 @@ export default function Training() {
             {activePrograms.filter(p => !enrolledProgramIds.has(p.id)).length === 0 && (
               <Card>
                 <CardContent className="flex items-center justify-center py-8 text-center">
-                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="flex items-center gap-2 text-muted-foreground text-base">
                     <CheckCircle2 className="h-5 w-5" />
                     <span>You're enrolled in all available programs</span>
                   </div>

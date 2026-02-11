@@ -45,7 +45,7 @@ export function DashboardStats() {
   const currentEfficiency = stats.efficiency[efficiencyTimeFilter as keyof typeof stats.efficiency];
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {/* Weekly Hours with Target & Change */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -165,12 +165,12 @@ export function DashboardStats() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Efficiency</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <DollarSign className="h-4 w-4 text-gold" />
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{currentEfficiency}%</div>
+              <div className="text-2xl font-bold text-gold">{currentEfficiency}%</div>
               <Select value={efficiencyTimeFilter} onValueChange={setEfficiencyTimeFilter} data-testid="select-efficiency-filter">
                 <SelectTrigger className="w-28">
                   <SelectValue />

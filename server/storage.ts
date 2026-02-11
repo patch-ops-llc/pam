@@ -577,6 +577,7 @@ export interface IStorage {
 
   // Training Enrollments
   getTrainingEnrollments(userId: string): Promise<TrainingEnrollmentWithProgress[]>;
+  getTrainingEnrollmentsByProgram(programId: string): Promise<(TrainingEnrollmentWithProgress & { user: User })[]>;
   getTrainingEnrollment(id: string): Promise<TrainingEnrollment | undefined>;
   getTrainingEnrollmentByUserAndProgram(userId: string, programId: string): Promise<TrainingEnrollment | undefined>;
   createTrainingEnrollment(enrollment: InsertTrainingEnrollment): Promise<TrainingEnrollment>;
@@ -999,7 +1000,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTasksWithRelations(): Promise<TaskWithRelations[]> {
-    return await db
+    const rows = await db
       .select({
         id: tasks.id,
         agencyId: tasks.agencyId,
@@ -1010,7 +1011,12 @@ export class DatabaseStorage implements IStorage {
         status: tasks.status,
         priority: tasks.priority,
         category: tasks.category,
+        size: tasks.size,
+        notes: tasks.notes,
+        billingType: tasks.billingType,
         estimatedHours: tasks.estimatedHours,
+        startDate: tasks.startDate,
+        dueDate: tasks.dueDate,
         assignedToUserId: tasks.assignedToUserId,
         isActive: tasks.isActive,
         createdAt: tasks.createdAt,
@@ -1037,10 +1043,17 @@ export class DatabaseStorage implements IStorage {
         project: projects || undefined
       })
       .from(tasks)
-      .innerJoin(accounts, eq(tasks.accountId, accounts.id))
-      .innerJoin(agencies, eq(tasks.agencyId, agencies.id))
+      .leftJoin(accounts, eq(tasks.accountId, accounts.id))
+      .leftJoin(agencies, eq(tasks.agencyId, agencies.id))
       .leftJoin(projects, eq(tasks.projectId, projects.id))
       .where(and(eq(tasks.isActive, true), isNull(tasks.deletedAt)));
+
+    // Normalize null joins (tasks without agency/account) to undefined for type consistency
+    return rows.map((row) => ({
+      ...row,
+      account: row.account?.id ? row.account : null,
+      agency: row.agency?.id ? row.agency : null,
+    })) as TaskWithRelations[];
   }
 
   async getTasksByProject(projectId: string): Promise<Task[]> {
@@ -4310,6 +4323,40 @@ export class DatabaseStorage implements IStorage {
         return {
           ...enrollment,
           program: program!,
+          submissions,
+          totalModules,
+          completedModules,
+        };
+      })
+    );
+  }
+
+  async getTrainingEnrollmentsByProgram(programId: string): Promise<(TrainingEnrollmentWithProgress & { user: User })[]> {
+    const enrollments = await db.select().from(trainingEnrollments)
+      .where(eq(trainingEnrollments.programId, programId))
+      .orderBy(desc(trainingEnrollments.createdAt));
+
+    return await Promise.all(
+      enrollments.map(async (enrollment) => {
+        const program = await this.getTrainingProgram(enrollment.programId);
+        const user = await this.getUser(enrollment.userId);
+        const submissions = await this.getTrainingModuleSubmissions(enrollment.id);
+
+        const phases = await db.select().from(trainingPhases)
+          .where(eq(trainingPhases.programId, enrollment.programId));
+        let totalModules = 0;
+        for (const phase of phases) {
+          const modules = await db.select().from(trainingModules)
+            .where(eq(trainingModules.phaseId, phase.id));
+          totalModules += modules.length;
+        }
+
+        const completedModules = submissions.filter(s => s.status === "passed").length;
+
+        return {
+          ...enrollment,
+          program: program!,
+          user: user!,
           submissions,
           totalModules,
           completedModules,

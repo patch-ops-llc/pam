@@ -86,13 +86,13 @@ export default function TrainingReview() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 training-ui">
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
           <ClipboardCheck className="h-8 w-8" />
           Training Reviews
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-muted-foreground mt-1 text-base">
           Review and provide feedback on trainee module submissions
         </p>
       </div>

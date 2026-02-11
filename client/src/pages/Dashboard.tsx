@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock, CalendarDays, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { PageHeader } from "@/components/PageHeader";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -40,49 +41,44 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="space-y-8">
-      {/* Greeting Banner */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {getGreeting()}, {firstName}
-        </h1>
-        <p className="text-muted-foreground">
-          {formatDate()}
-        </p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        title={`${getGreeting()}, ${firstName}`}
+        description={formatDate()}
+      />
 
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="rounded-lg bg-primary/10 p-2.5">
-              <Clock className="h-5 w-5 text-primary" />
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="rounded-lg bg-primary/10 p-2">
+              <Clock className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Today</p>
-              <p className="text-2xl font-bold">{quickStats?.todayHours?.toFixed(1) ?? "0.0"}h</p>
+              <p className="text-xs text-muted-foreground">Today</p>
+              <p className="text-xl font-bold">{quickStats?.todayHours?.toFixed(1) ?? "0.0"}h</p>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="rounded-lg bg-primary/10 p-2.5">
-              <CalendarDays className="h-5 w-5 text-primary" />
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="rounded-lg bg-primary/10 p-2">
+              <CalendarDays className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">This Week</p>
-              <p className="text-2xl font-bold">{quickStats?.weekHours?.toFixed(1) ?? "0.0"}h</p>
+              <p className="text-xs text-muted-foreground">This Week</p>
+              <p className="text-xl font-bold">{quickStats?.weekHours?.toFixed(1) ?? "0.0"}h</p>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="rounded-lg bg-primary/10 p-2.5">
-              <TrendingUp className="h-5 w-5 text-primary" />
+          <CardContent className="flex items-center gap-3 p-4">
+            <div className="rounded-lg bg-primary/10 p-2">
+              <TrendingUp className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">This Month</p>
-              <p className="text-2xl font-bold">{quickStats?.monthHours?.toFixed(1) ?? "0.0"}h</p>
+              <p className="text-xs text-muted-foreground">This Month</p>
+              <p className="text-xl font-bold">{quickStats?.monthHours?.toFixed(1) ?? "0.0"}h</p>
             </div>
           </CardContent>
         </Card>
@@ -94,7 +90,7 @@ export default function Dashboard() {
       <ResourceQuotaTracker />
 
       {/* Secondary Cards - 2-Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <BonusScorecard />
         <PenguinHoursTracker />
       </div>

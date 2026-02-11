@@ -735,7 +735,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           z.union([z.string().refine(val => !val || Number(val) >= 0, { message: "Estimated hours must be non-negative" }), z.null()]).optional()
         ),
         startDate: z.string().optional(),
-        dueDate: z.string().optional(),
+        dueDate: z.union([z.string(), z.null()]).optional(),
         labelIds: z.array(z.string()).optional(),
         collaboratorIds: z.array(z.string()).optional(),
       });
@@ -7910,6 +7910,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching training enrollments:", error);
       res.status(500).json({ error: "Failed to fetch training enrollments" });
+    }
+  });
+
+  // Admin: all enrollments for a program (who is enrolled + progress)
+  app.get("/api/training/admin/programs/:programId/enrollments", requireAuth, async (req, res) => {
+    try {
+      const enrollments = await storage.getTrainingEnrollmentsByProgram(req.params.programId);
+      res.json(enrollments);
+    } catch (error) {
+      console.error("Error fetching program enrollments:", error);
+      res.status(500).json({ error: "Failed to fetch program enrollments" });
     }
   });
 

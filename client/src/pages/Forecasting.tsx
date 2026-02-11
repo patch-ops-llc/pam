@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Lock, DollarSign, TrendingUp, Calculator, FolderKanban, Users } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { FORECAST_PASSWORD, AUTH_KEY } from "./forecasting/utils";
 import { ExpensesTab } from "./forecasting/tabs/ExpensesTab";
 import { RetainersTab } from "./forecasting/tabs/RetainersTab";
@@ -86,16 +87,16 @@ export default function Forecasting() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Financial Forecasting</h1>
-          <p className="text-muted-foreground">Revenue projections and scenario planning</p>
-        </div>
-        <Button variant="outline" onClick={handleLogout} data-testid="button-forecast-logout">
-          Lock
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Financial Forecasting"
+        description="Revenue projections and scenario planning"
+        actions={
+          <Button variant="outline" onClick={handleLogout} data-testid="button-forecast-logout">
+            Lock
+          </Button>
+        }
+      />
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>

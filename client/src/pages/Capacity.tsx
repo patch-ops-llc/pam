@@ -1,5 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Target, CalendarX, BarChart3 } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { ResourcesTab } from "./capacity/ResourcesTab";
 import { AllocationsTab } from "./capacity/AllocationsTab";
 import { ReportsTab } from "./capacity/ReportsTab";
@@ -9,11 +10,11 @@ import { HolidaysTab } from "./capacity/HolidaysTab";
 
 export default function Capacity() {
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Capacity Management</h1>
-        <p className="text-muted-foreground">Team capacity, allocations, quotas, and time tracking</p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Capacity Management"
+        description="Team capacity, allocations, quotas, and time tracking"
+      />
 
       <Tabs defaultValue="quotas-bonuses" className="space-y-4">
         <TabsList>

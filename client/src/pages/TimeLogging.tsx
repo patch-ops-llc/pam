@@ -485,11 +485,11 @@ export default function TimeLogging() {
   const weekTotal = dailyTotals.reduce((sum, total) => sum + total, 0);
 
   return (
-    <div className="h-full flex flex-col p-6 space-y-6">
+    <div className="h-full flex flex-col space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-3xl font-bold tracking-tight">Time Logging</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Time Logging</h1>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
