@@ -12,15 +12,31 @@
     {
       "title": "Phase 1: Foundations",
       "description": "Modules 1-3 build your foundational HubSpot skills through a progressive gym client scenario.",
-      "estimatedHours": "16-20",
       "order": 0,
       "milestoneReview": "Schedule a meeting to present all three modules\nFormat: 45-60 minute review session\n\n- 30 min: Walk through your implementations\n- 15-30 min: Q&A and design critique\n\nWhat I'm Looking For:\n- Do your solutions actually solve the client problems?\n- Can you articulate why you made specific design choices?\n- Did you think through edge cases?\n- Is your documentation clear enough for client handoff?\n- Are you making decisions independently or just following instructions?",
       "passCriteria": "- All core functionality works\n- You can explain your design decisions confidently\n- Edge cases are handled (even if solution is \"flag for manual review\")\n- Documentation exists and is usable",
       "modules": [
         {
           "title": "Module 1: Basic Contact Management",
-          "estimatedHours": "4-6",
           "order": 0,
+          "resourceLinks": [
+            { "label": "Claude AI Projects", "url": "https://claude.ai/projects", "description": "Use Claude to brainstorm property structures and form designs" },
+            { "label": "HubSpot: Manage Your CRM Database", "url": "https://knowledge.hubspot.com/get-started", "description": "Overview of CRM setup, properties, and segmentation" },
+            { "label": "HubSpot: Properties", "url": "https://knowledge.hubspot.com/crm/manage-your-properties", "description": "How to create and organize contact properties" },
+            { "label": "HubSpot: Forms", "url": "https://knowledge.hubspot.com/forms/create-forms", "description": "Building website forms in HubSpot" },
+            { "label": "HubSpot: Lists", "url": "https://knowledge.hubspot.com/crm/create-active-or-static-lists", "description": "Creating active and static lists for segmentation" }
+          ],
+          "checklist": [
+            { "id": "m1-1", "text": "Design property structure for contact data (membership type, class interests, status)" },
+            { "id": "m1-2", "text": "Create all custom properties in HubSpot with appropriate field types" },
+            { "id": "m1-3", "text": "Build website form that captures the right member information" },
+            { "id": "m1-4", "text": "Create workflow that triggers on form submission" },
+            { "id": "m1-5", "text": "Build segmentation lists (active members, by class type, by membership tier)" },
+            { "id": "m1-6", "text": "Create 10 test contacts with varied data" },
+            { "id": "m1-7", "text": "Test form submission end-to-end and verify automations" },
+            { "id": "m1-8", "text": "Write brief documentation for Sarah's day-to-day use" },
+            { "id": "m1-9", "text": "Prepare 15-minute presentation walkthrough" }
+          ],
           "clientStory": "LocalFit Gym is a small fitness studio in downtown Austin run by Sarah Martinez. She's been running the business for 3 years and currently tracks her 100 members in a combination of Excel spreadsheets and sticky notes. People sign up for classes through a Google Form, but Sarah has to manually email everyone.\n\nSarah offers three membership types: Monthly ($150/month), Annual ($1,400/year), and Drop-In ($25/class). She teaches four main class types: Yoga, Spin, CrossFit, and Pilates.\n\nSarah's Pain Points:\n- \"I spend an hour every morning organizing emails and forms\"\n- \"I can never remember which members prefer which classes\"\n- \"When someone fills out the interest form, I don't see it until I check email\"\n- \"I have no easy way to email just my yoga members or just my annual members\"\n\nWhat Sarah Wants:\n- A single place to see all member information organized\n- Automatic categorization by membership type and class interests\n- Professional website form with instant notification\n- Ability to easily pull up lists like \"all active members\" or \"everyone interested in yoga\"",
           "assignment": "Set up Sarah's first CRM. She's not technical, so everything needs to be simple and clearly labeled.\n\nGoals:\n- Organize contact data with appropriate properties\n- Build a website form that captures the right information\n- Create automated workflow when forms are submitted\n- Build lists for segmentation\n- Ensure Sarah can find and use everything easily\n\nKey Decisions You'll Make:\n- Which properties are needed and how to structure them (dropdown vs checkbox vs text?)\n- How to organize properties for Sarah's workflow\n- What should happen automatically when someone submits the form?\n- What lists does Sarah need day-to-day?",
           "testingRequirements": "Before your presentation, test:\n- Create 10 test contacts with varied data\n- Submit your form and verify all automations trigger\n- Check that lists update dynamically\n- Verify Sarah would immediately understand how to use this",
@@ -29,8 +45,25 @@
         },
         {
           "title": "Module 2: Deal Pipeline & Basic Automation",
-          "estimatedHours": "6-8",
           "order": 1,
+          "resourceLinks": [
+            { "label": "Claude AI Projects", "url": "https://claude.ai/projects", "description": "Use Claude to design pipeline stages and workflow logic" },
+            { "label": "HubSpot: Deal Pipelines", "url": "https://knowledge.hubspot.com/crm/use-deal-pipelines", "description": "Setting up and customizing deal pipelines" },
+            { "label": "HubSpot: Workflows", "url": "https://knowledge.hubspot.com/workflows/create-workflows", "description": "Creating automated workflows" },
+            { "label": "HubSpot: Reports", "url": "https://knowledge.hubspot.com/reports/create-reports", "description": "Building custom reports and dashboards" }
+          ],
+          "checklist": [
+            { "id": "m2-1", "text": "Design pipeline stages that reflect Sarah's sales process" },
+            { "id": "m2-2", "text": "Create deal properties for tracking (trial date, membership type, lost reason)" },
+            { "id": "m2-3", "text": "Build the pipeline in HubSpot with all stages configured" },
+            { "id": "m2-4", "text": "Create workflow that updates contact records when deal is Closed Won" },
+            { "id": "m2-5", "text": "Implement trial class reminder workflow with appropriate timing" },
+            { "id": "m2-6", "text": "Set up lost reason tracking for Closed Lost deals" },
+            { "id": "m2-7", "text": "Build weekly reports Sarah can use to track her pipeline" },
+            { "id": "m2-8", "text": "Test happy path: deal from inquiry through Closed Won" },
+            { "id": "m2-9", "text": "Test edge cases: trial less than 24 hours away, no trial date set" },
+            { "id": "m2-10", "text": "Document what happens when Sarah marks a deal as Closed Won" }
+          ],
           "clientStory": "LocalFit Gym - Three Months Later\n\nSarah is thrilled with the contact organization, but business is growing. She's now converting 3-5 leads to members every week and losing track of where people are in the sales process.\n\nCurrent Manual Process:\n1. Lead submits free class form\n2. Sarah emails to schedule trial\n3. They attend trial (or no-show)\n4. Sarah follows up to ask if they want to join\n5. They either become a member or decline\n\nSarah's New Pain Points:\n- \"I have 15 people in process and can't remember who I've followed up with\"\n- \"I schedule trials but don't have a good reminder system\"\n- \"When someone becomes a member, I forget steps in the onboarding\"\n- \"I want to know why people say no so I can improve\"\n\nWhat Sarah Wants:\n- Visual pipeline showing where every potential member is\n- Automatic contact updates when someone becomes a member\n- Automated trial class reminders\n- Tracking for why she loses deals\n- Weekly pipeline summary",
           "assignment": "Design and implement a complete membership sales process that automates Sarah's conversion workflow.\n\nGoals:\n- Create a sales pipeline that reflects Sarah's process\n- Build workflows that update contact data automatically\n- Implement trial reminder system\n- Track lost reasons\n- Build useful reports\n\nKey Decisions You'll Make:\n- What stages should the pipeline have?\n- Which deal properties does Sarah need to track?\n- When should contact records update? What should change?\n- How should trial reminders be timed?\n- What reports would Sarah actually use weekly?\n- How do you handle edge cases (trial scheduled tomorrow, etc.)?",
           "testingRequirements": "Test these scenarios:\n- Happy Path: Move a deal from inquiry through closed won, verify all contact updates\n- Lost Deal: Close deal as lost, check if it appears in reports correctly\n- Trial Reminder Timing: Create deals with various trial dates, verify reminder timing\n- Edge Cases: Trial less than 24 hours away, no trial date set, etc.",
@@ -39,8 +72,25 @@
         },
         {
           "title": "Module 3: Lead Scoring & Intelligent Assignment",
-          "estimatedHours": "6-8",
           "order": 2,
+          "resourceLinks": [
+            { "label": "Claude AI Projects", "url": "https://claude.ai/projects", "description": "Use Claude to design scoring methodology and weight factors" },
+            { "label": "HubSpot: Lead Scoring", "url": "https://knowledge.hubspot.com/scoring/set-up-score-properties", "description": "Setting up HubSpot score properties" },
+            { "label": "HubSpot: Sequences", "url": "https://knowledge.hubspot.com/sequences/create-and-edit-sequences", "description": "Creating email sequences for follow-up" },
+            { "label": "HubSpot: Workflows", "url": "https://knowledge.hubspot.com/workflows/create-workflows", "description": "Building assignment and routing workflows" }
+          ],
+          "checklist": [
+            { "id": "m3-1", "text": "Design lead scoring model with weighted factors (location, interest, source)" },
+            { "id": "m3-2", "text": "Create scoring properties and implement in HubSpot" },
+            { "id": "m3-3", "text": "Define hot/warm/cold score thresholds" },
+            { "id": "m3-4", "text": "Build lead assignment workflow (Sarah vs Marcus)" },
+            { "id": "m3-5", "text": "Create at least 2-3 email sequences with different approaches per lead quality" },
+            { "id": "m3-6", "text": "Build workflow to prevent conflicts and overlaps" },
+            { "id": "m3-7", "text": "Create lead quality dashboard" },
+            { "id": "m3-8", "text": "Test perfect lead scenario (downtown Austin, CrossFit, referral)" },
+            { "id": "m3-9", "text": "Test score recalculation when profile updates" },
+            { "id": "m3-10", "text": "Document scoring logic and assignment rules" }
+          ],
           "clientStory": "LocalFit Gym - Six Months Later\n\nSarah hired her first employee - Marcus, her new sales rep. They're getting 15-20 leads per week. Both Sarah and Marcus are following up on the same leads, sometimes reaching out to people who aren't that interested while missing high-quality prospects.\n\nCurrent Chaos:\n- Lead fills out form → both see it → confusion about who follows up\n- Someone who downloaded a class schedule gets the same aggressive follow-up as someone who requested a trial\n- Sarah notices people who live nearby convert way better, but there's no system to prioritize them\n- Marcus spends time on leads that go nowhere while Sarah chases hot prospects\n\nBusiness Context:\n- LocalFit is in downtown Austin (78701)\n- People within 3 miles convert at 65%\n- People 3-10 miles convert at 35%\n- CrossFit and Spin are most profitable offerings\n- Referrals convert at 80% vs 40% for other sources\n- Leads who visit pricing page are 3x more likely to convert\n\nWhat They Need:\n- Automatic prioritization: which leads are most likely to convert?\n- Clear assignment: who should follow up?\n- Different communication for different quality leads\n- Visibility into lead quality",
           "assignment": "Build an intelligent lead qualification system that automatically scores leads, categorizes them by quality, and routes them appropriately.\n\nGoals:\n- Create a lead scoring system based on conversion factors\n- Categorize leads by temperature/priority\n- Assign leads to the right person\n- Trigger appropriate follow-up based on lead quality\n- Build reports to validate scoring works\n\nKey Decisions You'll Make:\n- Which properties do you need to track scoring and assignment?\n- How should you weight different factors in the scoring?\n- What score ranges define hot/warm/cold?\n- How do you assign leads geographically?\n- What should happen differently for hot vs warm vs cold leads?\n- Do you need different email sequences? How many? What cadence?\n- How do you prevent workflow conflicts or overlaps?",
           "testingRequirements": "Test these scenarios:\n- Perfect Lead: Downtown Austin, CrossFit interest, referral source, visited pricing page\n- Distant Lead: Outside Austin, basic interest, social media source\n- Score Update: Start with low score, update profile, verify score recalculates\n- Assignment Logic: Create leads from different states, verify correct assignment\n- Sequence Exits: Enroll someone in a sequence, then convert them, verify unenrollment",
@@ -52,15 +102,33 @@
     {
       "title": "Phase 2: Intermediate Complexity",
       "description": "Modules 4-5 introduce multi-touch campaigns and custom objects, building on your foundation.",
-      "estimatedHours": "18-22",
       "order": 1,
       "milestoneReview": "Schedule a meeting to present Modules 4-5\nFormat: 45-60 minute review session\n\n- 35 min: Walk through your implementations\n- 15-25 min: Deep-dive Q&A on design decisions\n\nWhat I'm Looking For:\n- Are you designing solutions independently vs following templates?\n- Do you understand tradeoffs in your design choices?\n- Can you articulate what your system can't do?\n- Have you thought about scalability?\n- Is documentation sufficient for another person to understand and maintain?",
       "passCriteria": "- Complex functionality works end-to-end\n- You can defend your architecture decisions\n- You've identified system limitations and proposed enhancements\n- Documentation is professional and complete\n- You demonstrate independent problem-solving",
       "modules": [
         {
           "title": "Module 4: Multi-Touch Campaign Automation",
-          "estimatedHours": "8-10",
           "order": 0,
+          "resourceLinks": [
+            { "label": "Claude AI Projects", "url": "https://claude.ai/projects", "description": "Use Claude to map out multi-touch journeys and sequence logic" },
+            { "label": "HubSpot: Marketing Email", "url": "https://knowledge.hubspot.com/marketing-email/create-marketing-emails", "description": "Creating marketing emails" },
+            { "label": "HubSpot: Workflows", "url": "https://knowledge.hubspot.com/workflows/create-workflows", "description": "Advanced workflow branching and delays" },
+            { "label": "HubSpot: Campaigns", "url": "https://knowledge.hubspot.com/campaigns/create-campaigns", "description": "Organizing multi-touch campaigns" },
+            { "label": "HubSpot: Dashboards", "url": "https://knowledge.hubspot.com/dashboards/create-dashboards", "description": "Building marketing performance dashboards" }
+          ],
+          "checklist": [
+            { "id": "m4-1", "text": "Create B2B lead tracking properties (company size, role, entry point)" },
+            { "id": "m4-2", "text": "Build multiple forms for different intents (demo, trial, content download)" },
+            { "id": "m4-3", "text": "Design and implement B2B lead scoring" },
+            { "id": "m4-4", "text": "Build territory assignment workflow with time-zone awareness" },
+            { "id": "m4-5", "text": "Create demo request follow-up path" },
+            { "id": "m4-6", "text": "Create 14-day trial nurture journey" },
+            { "id": "m4-7", "text": "Create content download nurture path" },
+            { "id": "m4-8", "text": "Handle path evolution (content → demo transition)" },
+            { "id": "m4-9", "text": "Implement sequence conflict prevention" },
+            { "id": "m4-10", "text": "Build marketing performance dashboard" },
+            { "id": "m4-11", "text": "Write TechFlow Marketing Automation Guide" }
+          ],
           "clientStory": "TechFlow Solutions - A New Client\n\nTechFlow Solutions is a 15-person B2B SaaS company in San Francisco selling project management software to marketing agencies. They have two sales reps: Jessica (West Coast) and Michael (East Coast).\n\nCompany Background:\n- Pricing: $3,000/year (small), $8,000/year (medium), $20,000+ (enterprise)\n- Average sales cycle: 30-45 days\n- Offer a 14-day free trial\n- Key decision point: prospects need personalized demo\n\nCurrent Marketing Funnel:\n- Top of Funnel: Content downloads (whitepapers, guides)\n- Middle of Funnel: Webinars, case studies\n- Bottom of Funnel: Demo request or trial signup\n\nCEO Sarah's Frustration:\n\"We get 40-50 leads weekly, but they're all mixed together. Someone who downloads our ebook gets treated the same as someone who requests a demo. We need different paths for different interest levels.\"\n\nSales Reps' Complaints:\n- Jessica: \"I'm in California but keep getting New York leads at midnight their time\"\n- Michael: \"Half my demos are no-shows because people signed up but weren't ready\"\n- Both: \"Trial users ghost us - we need better nurture during their trial\"",
           "assignment": "Build a sophisticated multi-touch automation system that treats leads differently based on their actions, assigns them geographically, and nurtures trial users throughout their evaluation.\n\nGoals:\n- Create different paths based on entry point (demo vs trial vs content)\n- Implement geographic assignment with time-zone awareness\n- Build trial user nurture journey (14 days)\n- Score leads based on B2B buying signals\n- Track and report on different paths' effectiveness\n\nKey Decisions You'll Make:\n- What properties do you need for B2B lead tracking?\n- How many different forms? What fields on each?\n- How should you score B2B buyers differently than B2C?\n- What's the right cadence for demo request follow-up?\n- How do you structure a 14-day trial nurture? What happens each day?\n- How do you handle time zones for assignments?\n- What happens when someone takes multiple actions (downloads content then requests demo)?\n- How do you prevent sequence conflicts?\n- What reports prove this is working?",
           "testingRequirements": "Test these complete journeys:\n- Demo Path: Submit demo form from CA, verify immediate assignment, check follow-up\n- Trial Path: Start trial from NY, verify 14-day sequence sends correctly, test trial expiration\n- Content Path: Download content from TX, verify slower nurture begins\n- Path Evolution: Start with content download, later request demo, verify path changes\n- Time Zone: Create lead at 11pm ET, verify notification timing",
@@ -69,8 +137,28 @@
         },
         {
           "title": "Module 5: Custom Objects - Equipment Rental System",
-          "estimatedHours": "10-12",
           "order": 1,
+          "resourceLinks": [
+            { "label": "Claude AI Projects", "url": "https://claude.ai/projects", "description": "Use Claude to design object architecture and association strategy" },
+            { "label": "HubSpot: Custom Objects", "url": "https://knowledge.hubspot.com/crm/create-custom-objects", "description": "Creating and configuring custom objects" },
+            { "label": "HubSpot: Object Settings", "url": "https://knowledge.hubspot.com/crm/set-up-your-objects", "description": "Configuring object properties and associations" },
+            { "label": "HubSpot: Workflows", "url": "https://knowledge.hubspot.com/workflows/create-workflows", "description": "Workflows with custom objects" },
+            { "label": "HubSpot: Reports", "url": "https://knowledge.hubspot.com/reports/create-reports", "description": "Reporting across custom objects" }
+          ],
+          "checklist": [
+            { "id": "m5-1", "text": "Design Equipment custom object with all properties" },
+            { "id": "m5-2", "text": "Design Rental Agreement custom object with pipeline" },
+            { "id": "m5-3", "text": "Plan and create association architecture between all objects" },
+            { "id": "m5-4", "text": "Create 10 equipment records with varied data" },
+            { "id": "m5-5", "text": "Build workflows that update equipment status through rental lifecycle" },
+            { "id": "m5-6", "text": "Implement time-based maintenance triggering (every 90 days)" },
+            { "id": "m5-7", "text": "Implement usage-based maintenance triggering (every 20 rentals)" },
+            { "id": "m5-8", "text": "Build double-booking prevention/flagging mechanism" },
+            { "id": "m5-9", "text": "Set up revenue tracking per equipment item" },
+            { "id": "m5-10", "text": "Create operations dashboard" },
+            { "id": "m5-11", "text": "Test 5 rental agreement scenarios end-to-end" },
+            { "id": "m5-12", "text": "Document object architecture diagram and process flow" }
+          ],
           "clientStory": "OutdoorPro Rentals\n\nMeet Jack Thompson, owner of OutdoorPro Rentals in Boulder, Colorado. His business rents outdoor equipment - kayaks, mountain bikes, camping gear, climbing equipment - to individuals and corporate groups.\n\nJack's Current Disaster:\n\"I track my 50 pieces of equipment in a spreadsheet. Another spreadsheet for who's renting what. Another for maintenance schedules. When someone calls asking if we have a kayak available next weekend, I cross-reference three sheets. Last month I double-booked two bikes. I also forgot to do maintenance on a kayak and it leaked during a rental - customer was NOT happy.\"\n\nBusiness Model:\n- Individual rentals: $40-150/day depending on equipment\n- Corporate packages: $500-2000/day for multiple items\n- Equipment needs maintenance every 90 days OR after 20 rentals\n- Some equipment is seasonal\n\nWhat Jack Needs:\n- Track each individual equipment item (serial numbers, condition)\n- Know instantly: \"Is bike #47 available on July 15th?\"\n- Automatic maintenance scheduling\n- Link equipment to customers and rentals\n- Block equipment from being rented when in maintenance\n- See which equipment makes the most money\n- Understand which customers rent what types of gear\n\nWhy Standard Objects Won't Work:\n- Can't track individual equipment as Deals (deals are transactions, not assets)\n- Can't track as Contacts (not people) or Companies (not organizations)\n- Need custom objects: Equipment and Rental Agreements",
           "assignment": "This is your first custom object implementation. You're creating a system where multiple object types interact: Companies (customers), Contacts (renters), Equipment (gear), and Rental Agreements (transactions).\n\nGoals:\n- Design and build two custom objects with appropriate properties\n- Create association architecture connecting all objects\n- Implement workflows that update equipment status through rental lifecycle\n- Build maintenance triggering logic (time-based AND usage-based)\n- Track revenue at equipment level\n- Create operational dashboard\n\nKey Decisions You'll Make:\n- What properties should Equipment object have?\n- What properties should Rental Agreement object have?\n- How do these objects associate to each other? What labels?\n- How does equipment status change as rentals progress?\n- How do you trigger maintenance based on two different conditions?\n- How do you calculate and track revenue per equipment item?\n- How do you prevent double-booking (or at least flag it)?\n- What reports does Jack need for operations?\n\nThink About:\n- Multiple equipment items in one rental - how to handle?\n- Revenue attribution when one rental has multiple items\n- Maintenance needed during reserved period - what happens?\n- Searching availability across date ranges\n- Seasonal patterns affecting maintenance schedules",
           "testingRequirements": "Test complete rental lifecycles:\n- Happy Path: Create rental, move through stages, verify equipment status updates, check revenue calculation\n- Maintenance Trigger - Time: Equipment last maintained 91 days ago, verify trigger\n- Maintenance Trigger - Usage: Equipment reaches 20th rental, verify trigger\n- Damage Scenario: Return rental as damaged, verify status changes and tasks created\n- Booking Conflict: Try to create overlapping rentals, document how you prevent/flag this",
@@ -82,15 +170,34 @@
     {
       "title": "Phase 3: Advanced Integration",
       "description": "Module 6 and the Capstone project push you into behavioral events and custom code.",
-      "estimatedHours": "16-20",
       "order": 2,
       "milestoneReview": "Schedule final presentation: 60-90 minutes\n\nFormat:\n- 40 min: Present Modules 6 and Capstone\n- 20-30 min: Program retrospective discussion\n- 10-20 min: Next steps and advanced topics preview\n\nRetrospective Discussion Topics:\n- Which module was most challenging and why?\n- What surprised you about HubSpot's capabilities or limitations?\n- How would you approach a new client project now?\n- What areas do you want to develop further?\n- Where do you need more practice?",
       "passCriteria": "Program Completion Criteria:\n- All Phase 3 deliverables meet standards\n- Can articulate design decisions at strategic level\n- Demonstrates independent problem-solving\n- Identifies system limitations and proposes solutions\n- Documentation is professional and complete\n- Code is readable and maintainable\n\nUpon Completion, you've built skills to handle:\n- Standard CRM implementations\n- Complex automation workflows\n- Custom object modeling\n- Behavioral event tracking\n- Basic custom code",
       "modules": [
         {
           "title": "Module 6: Behavioral Events & Engagement Tracking",
-          "estimatedHours": "10-12",
           "order": 0,
+          "resourceLinks": [
+            { "label": "Claude AI Projects", "url": "https://claude.ai/projects", "description": "Use Claude to design engagement scoring logic and event strategy" },
+            { "label": "HubSpot: Custom Behavioral Events", "url": "https://knowledge.hubspot.com/reports/create-custom-behavioral-events", "description": "Creating and tracking custom events" },
+            { "label": "HubSpot: Scoring", "url": "https://knowledge.hubspot.com/scoring/set-up-score-properties", "description": "Building engagement scoring" },
+            { "label": "HubSpot: Workflows", "url": "https://knowledge.hubspot.com/workflows/create-workflows", "description": "Event-triggered automations" },
+            { "label": "HubSpot: Dashboards", "url": "https://knowledge.hubspot.com/dashboards/create-dashboards", "description": "Engagement analytics dashboards" }
+          ],
+          "checklist": [
+            { "id": "m6-1", "text": "Design custom behavioral event with all needed properties" },
+            { "id": "m6-2", "text": "Create Contact and Company properties for engagement tracking" },
+            { "id": "m6-3", "text": "Build event logging workflow triggered by deals" },
+            { "id": "m6-4", "text": "Design family engagement scoring methodology" },
+            { "id": "m6-5", "text": "Implement scoring workflow with casual/active/VIP tiers" },
+            { "id": "m6-6", "text": "Build VIP recognition automation" },
+            { "id": "m6-7", "text": "Build cross-sell opportunity trigger" },
+            { "id": "m6-8", "text": "Build at-risk family re-engagement workflow" },
+            { "id": "m6-9", "text": "Build milestone celebration workflow" },
+            { "id": "m6-10", "text": "Create engagement analytics dashboard" },
+            { "id": "m6-11", "text": "Test multi-child family aggregation" },
+            { "id": "m6-12", "text": "Document event strategy and scoring logic" }
+          ],
           "clientStory": "Elite Youth Sports Academy\n\nMaria Rodriguez runs Elite Youth Sports Academy in Denver. She offers sports camps and training programs for kids aged 6-16: soccer, basketball, baseball, track & field.\n\nSeasons:\n- Spring camps (March-May): 8-week programs\n- Summer camps (June-August): Week-long intensives\n- Fall leagues (Sept-Nov): Competitive team play\n- Winter clinics (Dec-Feb): Skill development\n- Pricing: $200-500 per program\n\nMaria's Frustration:\n\"I have 400 families in my database. Some have one kid, some have three. The Johnson family - Emma does soccer, Tyler does basketball, Maya does track. I want to know: Is this a 'soccer family' or a 'multi-sport family'?\"\n\n\"When Emma registers for summer soccer camp, I create a deal. Six months later she registers for fall league - another deal. Now I have 2 separate deals and I can't easily see: This family registered for soccer twice, basketball once, track once. They're super engaged!\"\n\n\"I want to reward my most loyal families, but I can't track: How many programs has this family done? How long have they been with me? Do they keep coming back?\"\n\nThe Problem Deals Alone Can't Solve:\n- Deals show transactions, not patterns\n- Can't easily query: \"Families who registered for 5 camps this year\" vs \"Been customers for 3 years\"\n- Can't segment: \"Families who've done soccer but never basketball\"\n- Can't identify: \"This family just hit their 10th registration - send thank you!\"\n\nWhat Maria Wants:\n- Track every registration as a behavioral event (separate from deals)\n- Score families based on engagement: 1 camp = casual, 3+ = active, 10+ lifetime = VIP\n- Trigger special communications at milestones\n- Identify cross-selling opportunities\n- Build reports showing registration trends by sport, retention rates, seasonal patterns",
           "assignment": "Implement a behavioral event tracking system that captures rich engagement data beyond standard deals, and use that data to segment families and trigger intelligent automations.\n\nGoals:\n- Design and implement custom behavioral event\n- Build event logging workflow triggered by deals\n- Create engagement scoring system at family level\n- Implement workflows triggered by event patterns\n- Build analytics showing engagement trends\n\nKey Decisions You'll Make:\n- What properties should your Camp Registration event capture?\n- What properties do you need on Contacts (kids) and Companies (families)?\n- How do you roll up child data to family level?\n- How should you score family engagement? What factors matter?\n- What score ranges define casual/active/VIP?\n- What events should trigger special actions?\n- What cross-selling opportunities make sense?\n- How do you identify at-risk families?\n- What milestone celebrations matter?\n- What reports show meaningful engagement patterns?\n\nThink About:\n- One family, multiple children - how to aggregate data?\n- Child switches sports - does \"favorite sport\" change?\n- Family registers frequently then stops - when do you intervene?\n- Seasonal patterns - should scoring account for this?\n- Event data vs deal data - when to use each?",
           "testingRequirements": "Test these scenarios:\n- New Family: First registration, verify event logs, properties update\n- Multi-Child Family: Multiple kids register, verify family-level aggregation\n- VIP Trigger: Family hits VIP threshold, verify recognition workflow\n- Cross-Sell: Soccer family (3+ soccer, 0 basketball), verify cross-sell trigger\n- At-Risk: Family with no registration in 13 months, verify re-engagement\n- Milestone: Child hits 5th camp, verify celebration\n- Pattern Evolution: Family goes from casual → active → VIP over time",
@@ -99,8 +206,28 @@
         },
         {
           "title": "Capstone: Custom Code Action",
-          "estimatedHours": "6-8",
           "order": 1,
+          "resourceLinks": [
+            { "label": "Claude AI Projects", "url": "https://claude.ai/projects", "description": "Use Claude to help write and debug your custom code action" },
+            { "label": "HubSpot: Custom Code Actions", "url": "https://knowledge.hubspot.com/workflows/use-custom-code-actions-in-workflows", "description": "Writing custom code in workflows" },
+            { "label": "HubSpot Developer Docs: Workflow Actions", "url": "https://developers.hubspot.com/docs/api/workflows/custom-code-actions", "description": "API reference for custom coded workflow actions" },
+            { "label": "HubSpot Developer Docs: CRM API", "url": "https://developers.hubspot.com/docs/api/crm/deals", "description": "Deals API for querying and updating deal properties" }
+          ],
+          "checklist": [
+            { "id": "cap-1", "text": "Design code structure and function organization" },
+            { "id": "cap-2", "text": "Implement age calculation from birthdate to camp start date" },
+            { "id": "cap-3", "text": "Implement age group assignment logic (U8, U10, U12, U14, U16)" },
+            { "id": "cap-4", "text": "Implement sibling deal query logic" },
+            { "id": "cap-5", "text": "Implement 15% sibling discount calculation" },
+            { "id": "cap-6", "text": "Ensure idempotency (running twice doesn't double-discount)" },
+            { "id": "cap-7", "text": "Add comprehensive error handling (missing birthdate, invalid dates, edge ages)" },
+            { "id": "cap-8", "text": "Add logging for debugging and auditing" },
+            { "id": "cap-9", "text": "Add deal note documenting the calculation" },
+            { "id": "cap-10", "text": "Test: solo registration, 10-year-old → U10, no discount" },
+            { "id": "cap-11", "text": "Test: sibling registration with 15% discount applied" },
+            { "id": "cap-12", "text": "Test: edge cases (missing birthdate, 5-year-old, idempotency)" },
+            { "id": "cap-13", "text": "Write developer documentation with code comments" }
+          ],
           "clientStory": "Elite Youth Sports needs automated age group assignment and sibling discount calculation.\n\nBusiness Requirement:\nWhen a camp registration deal is created, automatically:\n1. Calculate child's age at camp start date\n2. Assign correct age group (U8, U10, U12, U14, U16)\n3. Check for sibling discounts (15% if multiple kids in same camp session)\n4. Update deal amount if discount applies\n5. Ensure action is idempotent (running twice doesn't double-discount)",
           "assignment": "Write a custom coded workflow action that handles this logic with proper error handling.\n\nGoals:\n- Build working JavaScript custom action\n- Handle date calculations correctly\n- Query for sibling deals appropriately\n- Update deal properties\n- Include comprehensive error handling\n- Log actions for debugging\n- Create documentation\n\nKey Decisions You'll Make:\n- How to structure the code (organization, functions, etc.)\n- How to calculate age accounting for birthdate not yet occurred this year\n- Age group assignment logic\n- How to query for sibling deals\n- Discount application logic and idempotency\n- What errors need handling and how\n- What to log for debugging/auditing\n- How to document for another developer\n\nRequirements:\n- Must handle missing birthdate gracefully\n- Must handle invalid camp dates\n- Must handle edge cases (3-year-old, 18-year-old)\n- Must be idempotent\n- Must log key actions\n- Must add deal note documenting calculation\n- Must be readable by another developer",
           "testingRequirements": "Test Scenarios to Build:\n- Solo registration, 10-year-old → U10, no discount\n- Sibling registration, 8-year-old → U8, 15% discount applied\n- Edge case: birthdate missing → graceful error\n- Edge case: 5-year-old → flag for manual review\n- Edge case: same family, different camp dates → no discount\n- Idempotency: run twice, discount only applied once",

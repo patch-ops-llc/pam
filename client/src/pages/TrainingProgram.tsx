@@ -24,7 +24,6 @@ import {
   Pencil,
   Send,
   AlertCircle,
-  Lock,
 } from "lucide-react";
 import { Link, useParams } from "wouter";
 
@@ -110,7 +109,7 @@ export default function TrainingProgram() {
       </div>
 
       {/* Program Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -118,17 +117,6 @@ export default function TrainingProgram() {
               <div>
                 <p className="text-sm text-muted-foreground">Modules</p>
                 <p className="text-2xl font-bold">{totalModules}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Estimated Time</p>
-                <p className="text-2xl font-bold">{program.estimatedHours || "N/A"} hrs</p>
               </div>
             </div>
           </CardContent>
@@ -194,11 +182,6 @@ export default function TrainingProgram() {
                         {phaseCompleted && <CheckCircle2 className="h-4 w-4 text-green-600" />}
                       </div>
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
-                        {phase.estimatedHours && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />{phase.estimatedHours} hrs
-                          </span>
-                        )}
                         <span>{phaseModulesCompleted}/{phase.modules.length} modules</span>
                       </div>
                     </div>
@@ -219,11 +202,6 @@ export default function TrainingProgram() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-sm truncate">{mod.title}</p>
-                              {mod.estimatedHours && (
-                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />{mod.estimatedHours} hours
-                                </p>
-                              )}
                             </div>
                             {getModuleStatusBadge(submission)}
                           </div>

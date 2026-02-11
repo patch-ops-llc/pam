@@ -7,12 +7,10 @@ import {
   Timer,
   UserPlus,
   MessageSquare,
-  Target,
   FileSearch,
   TrendingUp,
   UsersRound,
   FileText,
-  Workflow,
   Archive,
   BookOpen,
   Settings2,
@@ -104,14 +102,6 @@ const operationsItems = [
     url: "/forecasting",
     icon: TrendingUp,
   },
-];
-
-const salesItems = [
-  {
-    title: "CRM",
-    url: "/crm",
-    icon: Target,
-  },
   {
     title: "Proposals",
     icon: FileText,
@@ -129,11 +119,6 @@ const salesItems = [
         url: "/guidance-settings",
       },
     ],
-  },
-  {
-    title: "Pipeline",
-    url: "/pipeline",
-    icon: Workflow,
   },
 ];
 
@@ -275,17 +260,6 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {operationsItems.map((item) => (
-                <MenuItem key={item.title} item={item} />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        
-        <SidebarGroup>
-          <SidebarGroupLabel>Sales</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {salesItems.map((item) => (
                 <MenuItem key={item.title} item={item} />
               ))}
             </SidebarMenu>

@@ -2504,6 +2504,8 @@ export const trainingModules = pgTable("training_modules", {
   testingRequirements: text("testing_requirements"),
   deliverablesAndPresentation: text("deliverables_and_presentation"),
   beReadyToAnswer: text("be_ready_to_answer"),
+  resourceLinks: jsonb("resource_links").$type<{ label: string; url: string; description?: string }[]>(),
+  checklist: jsonb("checklist").$type<{ id: string; text: string }[]>(),
   order: integer("order").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -2582,6 +2584,7 @@ export const trainingModuleSubmissions = pgTable(
       .references(() => trainingModules.id, { onDelete: "cascade" }),
     status: text("status").notNull().default("not_started"), // not_started, in_progress, submitted, under_review, passed, needs_revision
     submissionNotes: text("submission_notes"),
+    checklistProgress: jsonb("checklist_progress").$type<Record<string, { completed: boolean; notes: string }>>(),
     reviewerNotes: text("reviewer_notes"),
     reviewerRating: text("reviewer_rating"), // passed, needs_revision
     reviewedBy: varchar("reviewed_by").references(() => users.id),
@@ -2612,6 +2615,7 @@ export type TrainingProgramWithPhases = TrainingProgram & {
 
 export type TrainingModuleWithSections = TrainingModule & {
   sections: TrainingModuleSection[];
+  programId: string;
 };
 
 export type TrainingEnrollmentWithProgress = TrainingEnrollment & {

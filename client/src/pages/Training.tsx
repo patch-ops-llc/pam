@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { GraduationCap, BookOpen, Clock, CheckCircle2, ArrowRight } from "lucide-react";
+import { GraduationCap, BookOpen, CheckCircle2, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Training() {
@@ -86,10 +86,9 @@ export default function Training() {
                            enrollment.status === "in_progress" ? "In Progress" : "Not Started"}
                         </Badge>
                       </div>
-                      {enrollment.program.estimatedHours && (
-                        <CardDescription className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {enrollment.program.estimatedHours} hours
+                      {enrollment.program.description && (
+                        <CardDescription className="line-clamp-2">
+                          {enrollment.program.description}
                         </CardDescription>
                       )}
                     </CardHeader>
@@ -137,12 +136,6 @@ export default function Training() {
                     <CardDescription>{program.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col justify-end gap-3">
-                    {program.estimatedHours && (
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        Estimated {program.estimatedHours} hours
-                      </div>
-                    )}
                     {program.prerequisites && (
                       <p className="text-xs text-muted-foreground">
                         Prerequisites: {program.prerequisites}

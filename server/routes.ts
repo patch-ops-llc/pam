@@ -7813,7 +7813,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mod = await storage.getTrainingModule(req.params.id);
       if (!mod) return res.status(404).json({ error: "Module not found" });
       const sections = await storage.getTrainingModuleSections(mod.id);
-      res.json({ ...mod, sections });
+      // Resolve programId from phase
+      const phase = await storage.getTrainingPhase(mod.phaseId);
+      res.json({ ...mod, sections, programId: phase?.programId });
     } catch (error) {
       console.error("Error fetching training module:", error);
       res.status(500).json({ error: "Failed to fetch training module" });
