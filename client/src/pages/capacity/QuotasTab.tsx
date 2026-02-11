@@ -13,7 +13,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
@@ -746,23 +746,7 @@ export function QuotasTab() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="client-quotas" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="client-quotas" data-testid="subtab-client-quotas">
-            Client Quotas
-          </TabsTrigger>
-          <TabsTrigger value="resource-quotas" data-testid="subtab-resource-quotas">
-            Resource Quotas
-          </TabsTrigger>
-          <TabsTrigger value="bonus-policies" data-testid="subtab-bonus-policies">
-            Bonus Policies
-          </TabsTrigger>
-          <TabsTrigger value="historical" data-testid="subtab-historical">
-            Historical Snapshots
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="client-quotas">
+      {/* Team Progress & Client Quotas */}
           {/* Team/Partner Progress Tracking */}
           <Card className="mb-6">
             <CardHeader>
@@ -938,10 +922,7 @@ export function QuotasTab() {
         </CardContent>
       </Card>
 
-        </TabsContent>
-
-        <TabsContent value="resource-quotas">
-          {/* Individual Progress Tracking */}
+      {/* Individual Progress & Resource Quotas */}
           <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -1304,10 +1285,8 @@ export function QuotasTab() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="bonus-policies">
-          {/* Partner Bonus Policies */}
+      {/* Bonus Policies */}
           <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-4">
               <div>
@@ -1493,17 +1472,21 @@ export function QuotasTab() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="historical">
+      {/* Historical Snapshots (collapsible) */}
+      <Accordion type="single" collapsible className="w-full" defaultValue="">
+        <AccordionItem value="historical" data-testid="accordion-historical">
+          <AccordionTrigger className="hover:no-underline">
+            <span className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Historical Quota Snapshots
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Historical Quota Snapshots
-                  </CardTitle>
                   <CardDescription>
                     Save and view monthly quota configurations and actual hours achieved. Finalize months to lock in historical data.
                   </CardDescription>
@@ -1685,8 +1668,9 @@ export function QuotasTab() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }

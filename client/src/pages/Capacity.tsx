@@ -22,9 +22,9 @@ export default function Capacity() {
             <Target className="h-4 w-4 mr-2" />
             Quotas & Bonuses
           </TabsTrigger>
-          <TabsTrigger value="allocations-reports" data-testid="tab-allocations-reports">
+          <TabsTrigger value="capacity-planning" data-testid="tab-capacity-planning">
             <BarChart3 className="h-4 w-4 mr-2" />
-            Allocations & Reports
+            Capacity Planning
           </TabsTrigger>
           <TabsTrigger value="time-away" data-testid="tab-time-away">
             <CalendarX className="h-4 w-4 mr-2" />
@@ -36,49 +36,21 @@ export default function Capacity() {
           <QuotasTab />
         </TabsContent>
 
-        <TabsContent value="allocations-reports">
-          <Tabs defaultValue="resources" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="resources" data-testid="subtab-resources">
-                <Users className="h-4 w-4 mr-2" />
-                Resources
-              </TabsTrigger>
-              <TabsTrigger value="allocations" data-testid="subtab-allocations">
-                Allocations
-              </TabsTrigger>
-              <TabsTrigger value="reports" data-testid="subtab-reports">
-                Reports
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="resources">
-              <ResourcesTab />
-            </TabsContent>
-            <TabsContent value="allocations">
-              <AllocationsTab />
-            </TabsContent>
-            <TabsContent value="reports">
-              <ReportsTab />
-            </TabsContent>
-          </Tabs>
+        <TabsContent value="capacity-planning" className="space-y-6">
+          <ResourcesTab />
+          <AllocationsTab />
+          <ReportsTab />
         </TabsContent>
 
-        <TabsContent value="time-away">
-          <Tabs defaultValue="time-off" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="time-off" data-testid="subtab-time-off">
-                Time Off
-              </TabsTrigger>
-              <TabsTrigger value="holidays" data-testid="subtab-holidays">
-                Holidays
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="time-off">
-              <TimeOffTab />
-            </TabsContent>
-            <TabsContent value="holidays">
-              <HolidaysTab />
-            </TabsContent>
-          </Tabs>
+        <TabsContent value="time-away" className="space-y-8">
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Time Off</h3>
+            <TimeOffTab />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Holidays</h3>
+            <HolidaysTab />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

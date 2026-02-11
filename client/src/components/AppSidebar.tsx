@@ -16,6 +16,8 @@ import {
   GraduationCap,
   LogOut,
   FlaskConical,
+  GitBranch,
+  Contact,
 } from "lucide-react";
 import patchopsLogo from "@assets/patchops-brandmark-2_1758758915355.jpg";
 import { Link, useLocation } from "wouter";
@@ -58,12 +60,12 @@ const mainItems = [
 
 const deliveryItems = [
   {
-    title: "Accounts",
-    url: "/accounts",
-    icon: Users,
+    title: "Clients & Accounts",
+    url: "/clients-and-accounts",
+    icon: Building2,
   },
   {
-    title: "Audits",
+    title: "Records & Reports",
     icon: FolderOpen,
     children: [
       {
@@ -81,14 +83,14 @@ const deliveryItems = [
     ],
   },
   {
-    title: "Clients",
-    url: "/clients",
-    icon: Building2,
-  },
-  {
     title: "Capacity",
     url: "/capacity",
     icon: UsersRound,
+  },
+  {
+    title: "Team Resources",
+    url: "/team-resources",
+    icon: Users,
   },
 ];
 
@@ -97,6 +99,16 @@ const operationsItems = [
     title: "Forecasting",
     url: "/forecasting",
     icon: TrendingUp,
+  },
+  {
+    title: "Pipeline",
+    url: "/pipeline",
+    icon: GitBranch,
+  },
+  {
+    title: "CRM",
+    url: "/crm",
+    icon: Contact,
   },
 ];
 

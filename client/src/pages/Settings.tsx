@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/form";
 import { Save, Palette, Plus, Edit, Trash2, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PageHeader } from "@/components/PageHeader";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
@@ -186,12 +187,10 @@ export default function Settings() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your branding profiles for proposals
-        </p>
-      </div>
+      <PageHeader
+        title="Settings"
+        description="Manage your branding profiles for proposals"
+      />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-4">

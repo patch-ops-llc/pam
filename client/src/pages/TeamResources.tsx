@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { PageHeader } from "@/components/PageHeader";
 import type { User, ProjectTeamMemberWithUser, UserAvailabilityWithUser } from "@shared/schema";
 
 const availabilitySchema = z.object({
@@ -246,17 +247,17 @@ export default function TeamResources() {
   };
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold" data-testid="heading-team-resources">Team Resources</h1>
-          <p className="text-muted-foreground">Capacity planning and availability tracking</p>
-        </div>
-        <Button onClick={() => setIsCreateUserDialogOpen(true)} data-testid="button-add-resource">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Resource
-        </Button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Team Resources"
+        description="Capacity planning and availability tracking"
+        actions={
+          <Button onClick={() => setIsCreateUserDialogOpen(true)} data-testid="button-add-resource">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Resource
+          </Button>
+        }
+      />
 
       {/* Team Capacity Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">

@@ -26,19 +26,18 @@ export default function Dashboard() {
   const firstName = user?.firstName || user?.username || "there";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <PageHeader
         title={`${getGreeting()}, ${firstName}`}
         description={formatDate()}
       />
 
-      <TargetProgress />
-
-      <ResourceQuotaTracker />
-
-      <PenguinHoursTracker />
-
-      <CustomPeriodClientTracker />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <TargetProgress />
+        <ResourceQuotaTracker />
+        <PenguinHoursTracker />
+        <CustomPeriodClientTracker />
+      </div>
     </div>
   );
 }

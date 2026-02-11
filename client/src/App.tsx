@@ -23,15 +23,12 @@ import TimeLogging from "@/pages/TimeLogging";
 import TimeLogAudit from "@/pages/TimeLogAudit";
 import Reports from "@/pages/Reports";
 import Calendar from "@/pages/Calendar";
-import Agencies from "@/pages/Agencies";
-import Accounts from "@/pages/Accounts";
+import ClientsAndAccounts from "@/pages/ClientsAndAccounts";
 import Users from "@/pages/Users";
 import Settings from "@/pages/Settings";
 import SlackConfiguration from "@/pages/SlackConfiguration";
-import QuotaSettings from "@/pages/QuotaSettings";
 import Forecasting from "@/pages/Forecasting";
 import TeamResources from "@/pages/TeamResources";
-import Holidays from "@/pages/Holidays";
 import Capacity from "@/pages/Capacity";
 import Proposals from "@/pages/Proposals";
 import CreateProposal from "@/pages/CreateProposal";
@@ -78,10 +75,8 @@ const routeTitles: Record<string, string> = {
   "/tasks": "Tasks",
   "/settings": "Settings",
   "/slack-configuration": "Slack Configuration",
-  "/quota-settings": "Quota Settings",
   "/forecasting": "Forecasting",
   "/team-resources": "Team Resources",
-  "/holidays": "Holidays",
   "/proposals": "Proposals",
   "/proposals/create": "New Proposal",
   "/proposals/create/transcript": "Transcript Proposal",
@@ -106,11 +101,10 @@ const searchableRoutes = [
   { label: "Dashboard", path: "/", group: "Main" },
   { label: "Time Logging", path: "/time-logging", group: "Main" },
   { label: "Tasks", path: "/tasks", group: "Main" },
-  { label: "Accounts", path: "/accounts", group: "Delivery" },
+  { label: "Clients & Accounts", path: "/clients-and-accounts", group: "Delivery" },
   { label: "Time Log Audit", path: "/time-log-audit", group: "Delivery" },
   { label: "Reports", path: "/reports", group: "Delivery" },
   { label: "Archive", path: "/archive", group: "Delivery" },
-  { label: "Clients", path: "/clients", group: "Delivery" },
   { label: "Capacity", path: "/capacity", group: "Delivery" },
   { label: "UAT Sessions", path: "/uat", group: "Delivery" },
   { label: "Forecasting", path: "/forecasting", group: "Operations" },
@@ -149,17 +143,18 @@ function Router() {
       <Route path="/time-log-audit" component={() => <Layout><TimeLogAudit /></Layout>} />
       <Route path="/reports" component={() => <Layout><Reports /></Layout>} />
       <Route path="/calendar" component={() => <Layout><Calendar /></Layout>} />
-      <Route path="/clients" component={() => <Layout><Agencies /></Layout>} />
-      <Route path="/accounts" component={() => <Layout><Accounts /></Layout>} />
+      <Route path="/clients-and-accounts" component={() => <Layout><ClientsAndAccounts /></Layout>} />
+      <Route path="/clients" component={() => <Layout><ClientsAndAccounts /></Layout>} />
+      <Route path="/accounts" component={() => <Layout><ClientsAndAccounts /></Layout>} />
       <Route path="/capacity" component={() => <Layout><Capacity /></Layout>} />
       <Route path="/users" component={() => <Layout><Users /></Layout>} />
       <Route path="/tasks" component={() => <Layout><Tasks /></Layout>} />
       <Route path="/settings" component={() => <Layout><Settings /></Layout>} />
       <Route path="/slack-configuration" component={() => <Layout><SlackConfiguration /></Layout>} />
-      <Route path="/quota-settings" component={() => <Layout><QuotaSettings /></Layout>} />
+      <Route path="/quota-settings" component={() => <Redirect to="/capacity" />} />
       <Route path="/forecasting" component={() => <Layout><Forecasting /></Layout>} />
       <Route path="/team-resources" component={() => <Layout><TeamResources /></Layout>} />
-      <Route path="/holidays" component={() => <Layout><Holidays /></Layout>} />
+      <Route path="/holidays" component={() => <Redirect to="/capacity" />} />
       <Route path="/proposals" component={() => <Layout><Proposals /></Layout>} />
       <Route path="/proposals/create" component={() => <Layout><NewProposalSelector /></Layout>} />
       <Route path="/proposals/create/transcript" component={() => <Layout><CreateProposal /></Layout>} />
