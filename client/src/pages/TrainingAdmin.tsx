@@ -55,8 +55,12 @@ export default function TrainingAdmin() {
   const [seedDialogOpen, setSeedDialogOpen] = useState(false);
   const [seedJson, setSeedJson] = useState("");
   const [aiGenerateDialogOpen, setAiGenerateDialogOpen] = useState(false);
+  const [aiStep, setAiStep] = useState<"planning" | "questions" | "review" | "build">("planning");
   const [aiPrompt, setAiPrompt] = useState("");
+  const [aiQuestions, setAiQuestions] = useState<string[]>([]);
+  const [aiAnswers, setAiAnswers] = useState<Record<number, string>>({});
   const [aiGeneratedData, setAiGeneratedData] = useState<{ program: Record<string, unknown>; phases: Array<Record<string, unknown>> } | null>(null);
+  const [aiGeneratedJson, setAiGeneratedJson] = useState("");
 
   // Form state
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -204,15 +208,30 @@ export default function TrainingAdmin() {
     onError: (error) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
 
+  // AI Planning - get clarifying questions
+  const planMutation = useMutation({
+    mutationFn: async (prompt: string) => {
+      const response = await apiRequest("/api/training/generate-plan", "POST", { prompt });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      setAiQuestions(data.questions || []);
+      setAiStep("questions");
+      setAiAnswers({});
+    },
+    onError: (error) => toast({ title: "Error", description: error.message, variant: "destructive" }),
+  });
+
   // AI Generate mutation
   const generateMutation = useMutation({
-    mutationFn: async (prompt: string) => {
-      const response = await apiRequest("/api/training/generate", "POST", { prompt });
+    mutationFn: async ({ prompt, answers }: { prompt: string; answers?: Record<string, string> }) => {
+      const response = await apiRequest("/api/training/generate", "POST", { prompt, answers });
       return await response.json();
     },
     onSuccess: (data) => {
       setAiGeneratedData(data);
-      toast({ title: "Generated", description: "Program structure generated. Review and create when ready." });
+      setAiStep("review");
+      toast({ title: "Generated", description: "Program structure generated. Review and refine before building." });
     },
     onError: (error) => toast({ title: "Error", description: error.message, variant: "destructive" }),
   });
@@ -335,7 +354,7 @@ export default function TrainingAdmin() {
     <div className="space-y-6 training-ui">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
             <Settings2 className="h-8 w-8" />
             Training Admin
           </h1>
@@ -348,17 +367,17 @@ export default function TrainingAdmin() {
               Enrollments
             </Button>
           </Link>
-          <Button variant="outline" onClick={() => setAiGenerateDialogOpen(true)}>
+          <Button onClick={() => setAiGenerateDialogOpen(true)}>
             <Sparkles className="h-4 w-4 mr-2" />
-            Generate with AI
+            Create Program with AI
           </Button>
           <Button variant="outline" onClick={() => setSeedDialogOpen(true)}>
             <Upload className="h-4 w-4 mr-2" />
             Import Seed Data
           </Button>
-          <Button onClick={openCreateProgram}>
+          <Button variant="outline" onClick={openCreateProgram}>
             <Plus className="h-4 w-4 mr-2" />
-            New Program
+            Create from Scratch
           </Button>
         </div>
       </div>
@@ -368,16 +387,19 @@ export default function TrainingAdmin() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <GraduationCap className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">No Training Programs</h3>
+            <h3 className="text-base font-medium">No Training Programs</h3>
             <p className="text-muted-foreground mt-1 mb-4">
               Create your first training program or import seed data to get started.
             </p>
             <div className="flex gap-2">
+              <Button onClick={() => setAiGenerateDialogOpen(true)}>
+                <Sparkles className="h-4 w-4 mr-2" />Create Program with AI
+              </Button>
               <Button variant="outline" onClick={() => setSeedDialogOpen(true)}>
                 <Upload className="h-4 w-4 mr-2" />Import Seed Data
               </Button>
-              <Button onClick={openCreateProgram}>
-                <Plus className="h-4 w-4 mr-2" />Create Program
+              <Button variant="outline" onClick={openCreateProgram}>
+                <Plus className="h-4 w-4 mr-2" />Create from Scratch
               </Button>
             </div>
           </CardContent>
@@ -415,7 +437,7 @@ export default function TrainingAdmin() {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold flex items-center gap-2">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
                         <Layers className="h-4 w-4" />
                         Phases
                       </h3>
@@ -733,53 +755,117 @@ export default function TrainingAdmin() {
         </DialogContent>
       </Dialog>
 
-      {/* AI Generate Dialog */}
+      {/* AI Generate Dialog - Multi-step: Planning → Questions → Review → Build */}
       <Dialog open={aiGenerateDialogOpen} onOpenChange={(open) => {
         setAiGenerateDialogOpen(open);
-        if (!open) {
+          if (!open) {
+          setAiStep("planning");
           setAiPrompt("");
+          setAiQuestions([]);
+          setAiAnswers({});
           setAiGeneratedData(null);
+          setAiGeneratedJson("");
         }
       }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
-              Generate Program with AI
+              Create Program with AI
             </DialogTitle>
             <DialogDescription>
-              Describe the training program you want. The AI will generate a complete structure with phases, modules, client stories, assignments, and checklists.
+              {aiStep === "planning" && "Describe your training program. We'll ask clarifying questions to refine it."}
+              {aiStep === "questions" && "Answer these questions to help us design a better program."}
+              {aiStep === "review" && "Review the generated structure. Edit the JSON if needed, then build."}
+              {aiStep === "build" && "Building your program..."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {!aiGeneratedData ? (
+            {/* Step 1: Planning */}
+            {aiStep === "planning" && (
               <>
                 <div className="space-y-2">
                   <Label>What kind of training program do you want?</Label>
                   <Textarea
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="e.g., A HubSpot implementation training for new consultants with 3 phases: foundations (CRM basics), intermediate (workflows & automation), and advanced (custom objects). Include realistic client scenarios like a gym and a B2B SaaS company."
+                    placeholder="e.g., A HubSpot implementation training for new consultants. Include CRM basics, workflows, and custom objects. Realistic client scenarios for a gym and B2B SaaS company."
                     rows={6}
                   />
                 </div>
-                <Button
-                  onClick={() => generateMutation.mutate(aiPrompt)}
-                  disabled={!aiPrompt.trim() || generateMutation.isPending}
-                >
-                  {generateMutation.isPending ? (
-                    <>
-                      <span className="animate-pulse">Generating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Generate Program
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => planMutation.mutate(aiPrompt)}
+                    disabled={!aiPrompt.trim() || planMutation.isPending}
+                  >
+                    {planMutation.isPending ? (
+                      <span className="animate-pulse">Generating questions...</span>
+                    ) : (
+                      <>
+                        Continue to Questions
+                        <Sparkles className="h-4 w-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setAiStep("planning");
+                      generateMutation.mutate({ prompt: aiPrompt });
+                    }}
+                    disabled={!aiPrompt.trim() || generateMutation.isPending}
+                  >
+                    Skip to Generate
+                  </Button>
+                </div>
               </>
-            ) : (
+            )}
+
+            {/* Step 2: Questions */}
+            {aiStep === "questions" && (
+              <>
+                <div className="space-y-4">
+                  {aiQuestions.map((q, i) => (
+                    <div key={i} className="space-y-2">
+                      <Label className="text-base">{q}</Label>
+                      <Textarea
+                        value={aiAnswers[i] ?? ""}
+                        onChange={(e) => setAiAnswers((prev) => ({ ...prev, [i]: e.target.value }))}
+                        placeholder="Your answer..."
+                        rows={2}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setAiStep("planning")}>
+                    Back
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const answers: Record<string, string> = {};
+                      aiQuestions.forEach((q, i) => {
+                        if (aiAnswers[i]?.trim()) answers[q] = aiAnswers[i].trim();
+                      });
+                      generateMutation.mutate({ prompt: aiPrompt, answers });
+                    }}
+                    disabled={generateMutation.isPending}
+                  >
+                    {generateMutation.isPending ? (
+                      <span className="animate-pulse">Generating program...</span>
+                    ) : (
+                      <>
+                        Generate Program
+                        <Sparkles className="h-4 w-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* Step 3: Review (collaboration - edit before building) */}
+            {(aiStep === "review" || aiStep === "build") && aiGeneratedData && (
               <>
                 <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
                   <h4 className="font-medium">{String(aiGeneratedData.program.title)}</h4>
@@ -788,23 +874,50 @@ export default function TrainingAdmin() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Generated structure</Label>
+                  <Label>Review & edit (optional)</Label>
                   <Textarea
                     value={JSON.stringify(aiGeneratedData, null, 2)}
-                    readOnly
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value);
+                        if (parsed.program && parsed.phases) setAiGeneratedData(parsed);
+                      } catch {
+                        // Invalid JSON, ignore
+                      }
+                    }}
                     rows={12}
                     className="font-mono text-xs"
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setAiGeneratedData(null)}>
-                    Generate Different
+                  <Button variant="outline" onClick={() => setAiStep("questions")}>
+                    Back to Questions
+                  </Button>
+                  <Button variant="outline" onClick={() => { setAiGeneratedData(null); setAiStep("planning"); }}>
+                    Start Over
                   </Button>
                   <Button
-                    onClick={() => seedMutation.mutate(aiGeneratedData)}
+                    onClick={() => {
+                      setAiStep("build");
+                      try {
+                        const parsed = JSON.parse(aiGeneratedJson);
+                        if (parsed.program && parsed.phases) {
+                          seedMutation.mutate(parsed);
+                        } else {
+                          toast({ title: "Invalid structure", description: "Ensure program and phases exist.", variant: "destructive" });
+                          setAiStep("review");
+                        }
+                      } catch {
+                        toast({ title: "Invalid JSON", description: "Please fix the JSON syntax.", variant: "destructive" });
+                      }
+                    }}
                     disabled={seedMutation.isPending}
                   >
-                    Create Program
+                    {seedMutation.isPending ? (
+                      <span className="animate-pulse">Creating program...</span>
+                    ) : (
+                      "Build Program"
+                    )}
                   </Button>
                 </div>
               </>

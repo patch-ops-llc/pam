@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { TrainingProgram, TrainingProgramWithPhases } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +13,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, ChevronLeft, GraduationCap, User as UserIcon } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Users, ChevronLeft, GraduationCap, User as UserIcon, Trash2 } from "lucide-react";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 type EnrollmentWithUser = {
   id: string;
@@ -29,6 +41,30 @@ type EnrollmentWithUser = {
 
 export default function TrainingEnrollments() {
   const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const [enrollmentToDelete, setEnrollmentToDelete] = useState<EnrollmentWithUser | null>(null);
+  const { toast } = useToast();
+
+  const deleteMutation = useMutation({
+    mutationFn: async (enrollmentId: string) => {
+      const response = await apiRequest(`/api/training/enrollments/${enrollmentId}`, "DELETE");
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete enrollment");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/training/admin/programs", selectedProgramId, "enrollments"] });
+      setEnrollmentToDelete(null);
+      toast({ title: "Enrollment removed", description: "The user has been removed from the program." });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete enrollment",
+        variant: "destructive",
+      });
+    },
+  });
 
   const { data: programs, isLoading: loadingPrograms } = useQuery<TrainingProgram[]>({
     queryKey: ["/api/training/programs"],
@@ -61,7 +97,7 @@ export default function TrainingEnrollments() {
             Back to Training Admin
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
           <Users className="h-8 w-8" />
           Enrollments
         </h1>
@@ -73,7 +109,7 @@ export default function TrainingEnrollments() {
       {/* Program selector */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Select Program</CardTitle>
+          <CardTitle className="text-lg">Select Program</CardTitle>
           <CardDescription className="text-base">
             Choose a program to view enrolled students and their progress
           </CardDescription>
@@ -133,13 +169,28 @@ export default function TrainingEnrollments() {
                               )}
                             </div>
                           </div>
-                          <Badge variant={
-                            enrollment.status === "completed" ? "default" :
-                            enrollment.status === "in_progress" ? "secondary" : "outline"
-                          }>
-                            {enrollment.status === "completed" ? "Completed" :
-                             enrollment.status === "in_progress" ? "In Progress" : "Not Started"}
-                          </Badge>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge variant={
+                              enrollment.status === "completed" ? "default" :
+                              enrollment.status === "in_progress" ? "secondary" : "outline"
+                            }>
+                              {enrollment.status === "completed" ? "Completed" :
+                               enrollment.status === "in_progress" ? "In Progress" : "Not Started"}
+                            </Badge>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive border-destructive/50 hover:bg-destructive/10 hover:border-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEnrollmentToDelete(enrollment);
+                              }}
+                              title="Remove enrollment"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Remove
+                            </Button>
+                          </div>
                         </div>
                       </CardHeader>
                       <CardContent>
@@ -187,7 +238,7 @@ export default function TrainingEnrollments() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                 <GraduationCap className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium">No Enrollments</h3>
+                <h3 className="text-base font-medium">No Enrollments</h3>
                 <p className="text-muted-foreground mt-1 text-base">
                   No one has enrolled in this program yet.
                 </p>
@@ -206,6 +257,32 @@ export default function TrainingEnrollments() {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={!!enrollmentToDelete} onOpenChange={(open) => !open && setEnrollmentToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Enrollment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {enrollmentToDelete
+                ? `This will remove ${enrollmentToDelete.user?.firstName} ${enrollmentToDelete.user?.lastName} from "${enrollmentToDelete.program?.title}". All progress and submissions will be deleted. This cannot be undone.`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onPointerDown={(e) => {
+                e.preventDefault();
+                if (enrollmentToDelete) deleteMutation.mutate(enrollmentToDelete.id);
+              }}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? "Removing..." : "Remove"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

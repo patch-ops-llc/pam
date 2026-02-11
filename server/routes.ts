@@ -7959,6 +7959,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/training/enrollments/:id", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const enrollment = await storage.getTrainingEnrollment(req.params.id);
+      if (!enrollment) return res.status(404).json({ error: "Enrollment not found" });
+
+      const canDelete = enrollment.userId === user.id || user.role === "admin" || user.role === "manager";
+      if (!canDelete) return res.status(403).json({ error: "You don't have permission to delete this enrollment" });
+
+      await storage.deleteTrainingEnrollment(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting training enrollment:", error);
+      res.status(500).json({ error: "Failed to delete training enrollment" });
+    }
+  });
+
   // Training Module Submissions
   app.get("/api/training/enrollments/:enrollmentId/submissions", requireAuth, async (req, res) => {
     try {
@@ -8033,14 +8050,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Training AI Generate endpoint - generates program structure from natural language
-  app.post("/api/training/generate", requireAuth, async (req, res) => {
+  // Training AI Planning - returns clarifying questions
+  app.post("/api/training/generate-plan", requireAuth, async (req, res) => {
     try {
       const { prompt } = req.body;
       if (!prompt || typeof prompt !== "string") {
         return res.status(400).json({ error: "prompt is required" });
       }
-      const result = await aiService.generateTrainingProgram(prompt.trim());
+      const result = await aiService.generateTrainingPlanQuestions(prompt.trim());
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating planning questions:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to generate planning questions",
+      });
+    }
+  });
+
+  // Training AI Generate endpoint - generates program structure from natural language
+  app.post("/api/training/generate", requireAuth, async (req, res) => {
+    try {
+      const { prompt, answers } = req.body;
+      if (!prompt || typeof prompt !== "string") {
+        return res.status(400).json({ error: "prompt is required" });
+      }
+      const result = await aiService.generateTrainingProgram(prompt.trim(), answers);
       res.json(result);
     } catch (error) {
       console.error("Error generating training program:", error);

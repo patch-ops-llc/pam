@@ -5,8 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { GraduationCap, BookOpen, CheckCircle2, ArrowRight } from "lucide-react";
+import { GraduationCap, BookOpen, CheckCircle2, ArrowRight, MoreVertical, LogOut } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Training() {
@@ -38,6 +44,27 @@ export default function Training() {
     },
   });
 
+  const unenrollMutation = useMutation({
+    mutationFn: async (enrollmentId: string) => {
+      const response = await apiRequest(`/api/training/enrollments/${enrollmentId}`, "DELETE");
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to unenroll");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/training/enrollments"] });
+      toast({ title: "Unenrolled", description: "You've been removed from the training program." });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to unenroll",
+        variant: "destructive",
+      });
+    },
+  });
+
   const enrolledProgramIds = new Set(enrollments?.map(e => e.programId) || []);
 
   const activePrograms = programs?.filter(p => p.status === "active") || [];
@@ -53,7 +80,7 @@ export default function Training() {
   return (
     <div className="space-y-8 training-ui">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
           <GraduationCap className="h-8 w-8" />
           Training
         </h1>
@@ -65,7 +92,7 @@ export default function Training() {
       {/* My Enrollments */}
       {enrollments && enrollments.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">My Programs</h2>
+          <h2 className="text-lg font-semibold">My Programs</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {enrollments.map((enrollment) => {
               const progressPct = enrollment.totalModules > 0
@@ -73,18 +100,48 @@ export default function Training() {
                 : 0;
 
               return (
-                <Link key={enrollment.id} href={`/training/programs/${enrollment.programId}`}>
-                  <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+                <Card key={enrollment.id} className="h-full flex flex-col cursor-pointer hover:shadow-md transition-shadow">
+                  <Link href={`/training/programs/${enrollment.programId}`} className="flex-1 flex flex-col min-w-0">
                     <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between gap-2">
                         <CardTitle className="text-xl">{enrollment.program.title}</CardTitle>
-                        <Badge variant={
-                          enrollment.status === "completed" ? "default" :
-                          enrollment.status === "in_progress" ? "secondary" : "outline"
-                        }>
-                          {enrollment.status === "completed" ? "Completed" :
-                           enrollment.status === "in_progress" ? "In Progress" : "Not Started"}
-                        </Badge>
+                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                          <Badge variant={
+                            enrollment.status === "completed" ? "default" :
+                            enrollment.status === "in_progress" ? "secondary" : "outline"
+                          }>
+                            {enrollment.status === "completed" ? "Completed" :
+                             enrollment.status === "in_progress" ? "In Progress" : "Not Started"}
+                          </Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={(e) => e.preventDefault()}
+                                title="Actions (Leave program)"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (confirm("Leave this training program? Your progress will be lost.")) {
+                                    unenrollMutation.mutate(enrollment.id);
+                                  }
+                                }}
+                                disabled={unenrollMutation.isPending}
+                              >
+                                <LogOut className="h-4 w-4 mr-2" />
+                                Unenroll
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
                       {enrollment.program.description && (
                         <CardDescription className="line-clamp-2">
@@ -99,11 +156,26 @@ export default function Training() {
                           <span className="font-medium">{enrollment.completedModules}/{enrollment.totalModules} modules</span>
                         </div>
                         <Progress value={progressPct} className="h-2" />
-                        <p className="text-sm text-muted-foreground text-right">{progressPct}% complete</p>
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-muted-foreground">{progressPct}% complete</p>
+                          <button
+                            type="button"
+                            className="text-sm text-destructive hover:underline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (confirm("Leave this training program? Your progress will be lost.")) {
+                                unenrollMutation.mutate(enrollment.id);
+                              }
+                            }}
+                          >
+                            Leave program
+                          </button>
+                        </div>
                       </div>
                     </CardContent>
-                  </Card>
-                </Link>
+                  </Link>
+                </Card>
               );
             })}
           </div>
@@ -112,14 +184,14 @@ export default function Training() {
 
       {/* Available Programs */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-lg font-semibold">
           {enrollments && enrollments.length > 0 ? "Available Programs" : "Training Programs"}
         </h2>
         {activePrograms.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-medium">No Training Programs Available</h3>
+              <h3 className="text-base font-medium">No Training Programs Available</h3>
               <p className="text-muted-foreground mt-1 text-base">
                 Training programs will appear here once they are created by an administrator.
               </p>
@@ -132,7 +204,7 @@ export default function Training() {
               .map((program) => (
                 <Card key={program.id} className="h-full flex flex-col">
                   <CardHeader>
-                    <CardTitle className="text-xl">{program.title}</CardTitle>
+                    <CardTitle className="text-lg">{program.title}</CardTitle>
                     <CardDescription className="text-base">{program.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col justify-end gap-3">

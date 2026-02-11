@@ -582,6 +582,7 @@ export interface IStorage {
   getTrainingEnrollmentByUserAndProgram(userId: string, programId: string): Promise<TrainingEnrollment | undefined>;
   createTrainingEnrollment(enrollment: InsertTrainingEnrollment): Promise<TrainingEnrollment>;
   updateTrainingEnrollment(id: string, updates: Partial<InsertTrainingEnrollment>): Promise<TrainingEnrollment>;
+  deleteTrainingEnrollment(id: string): Promise<void>;
 
   // Training Module Submissions
   getTrainingModuleSubmissions(enrollmentId: string): Promise<TrainingModuleSubmission[]>;
@@ -4391,6 +4392,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(trainingEnrollments.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteTrainingEnrollment(id: string): Promise<void> {
+    await db.delete(trainingEnrollments).where(eq(trainingEnrollments.id, id));
   }
 
   // Training Module Submissions

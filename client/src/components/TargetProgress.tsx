@@ -452,7 +452,10 @@ export function TargetProgress() {
                     <CollapsibleContent>
                       {hasAccounts && (
                         <div className="ml-6 mt-2 border-l-2 border-muted pl-3 space-y-1.5">
-                          {[...agencyAccounts].sort((a, b) => (b.monthlyBilled || 0) - (a.monthlyBilled || 0)).map((account) => (
+                          {[...agencyAccounts]
+                            .filter((account) => (account.monthlyBilled || 0) > 0)
+                            .sort((a, b) => (b.monthlyBilled || 0) - (a.monthlyBilled || 0))
+                            .map((account) => (
                             <div key={account.account.id} className="flex items-center justify-between py-1.5 px-2 bg-muted/30 rounded text-sm" data-testid={`account-${account.account.id}`}>
                               <span>{account.account.name}</span>
                               <span className="text-muted-foreground">{Math.round(account.monthlyBilled || 0)}h</span>

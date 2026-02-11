@@ -76,7 +76,7 @@ export default function TrainingProgram() {
   if (!program) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <h2 className="text-xl font-semibold">Program Not Found</h2>
+        <h2 className="text-lg font-semibold">Program Not Found</h2>
         <Link href="/training">
           <Button variant="outline"><ChevronLeft className="h-4 w-4 mr-2" />Back to Training</Button>
         </Link>
@@ -99,7 +99,7 @@ export default function TrainingProgram() {
               Back to Training
             </Button>
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
             <GraduationCap className="h-8 w-8" />
             {program.title}
           </h1>
@@ -158,7 +158,7 @@ export default function TrainingProgram() {
 
       {/* Phases & Modules */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Curriculum</h2>
+        <h2 className="text-lg font-semibold">Curriculum</h2>
         <Accordion type="multiple" defaultValue={program.phases.map(p => p.id)} className="space-y-4">
           {program.phases.map((phase, phaseIdx) => {
             const phaseCompleted = phase.modules.every(m => {
@@ -221,7 +221,7 @@ export default function TrainingProgram() {
                     {phase.passCriteria && (
                       <Card className="border-dashed">
                         <CardContent className="pt-4">
-                          <h4 className="text-base font-semibold mb-1">Pass Criteria</h4>
+                          <h4 className="text-sm font-semibold mb-1">Pass Criteria</h4>
                           <p className="text-sm text-muted-foreground whitespace-pre-wrap">{formatProseWithBullets(phase.passCriteria)}</p>
                         </CardContent>
                       </Card>

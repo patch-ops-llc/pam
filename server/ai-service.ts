@@ -696,7 +696,52 @@ Return ONLY valid JSON, no markdown formatting.`;
     }
   }
 
-  async generateTrainingProgram(prompt: string): Promise<{ program: Record<string, unknown>; phases: Array<Record<string, unknown>> }> {
+  async generateTrainingPlanQuestions(prompt: string): Promise<{ questions: string[] }> {
+    const systemPrompt = `You are an expert instructional designer. A user wants to create a training program and has given an initial description.
+
+Your task: Generate 3-5 clarifying questions to help refine the program. Questions should cover:
+- Target audience (who is being trained?)
+- Depth and scope (foundational vs advanced, specific tools/systems?)
+- Duration and format (self-paced vs cohort, estimated length?)
+- Industry or use case (any specific scenarios?)
+- Success criteria (what does "done" look like?)
+
+Return a JSON object with this exact structure:
+{
+  "questions": ["question 1", "question 2", ...]
+}
+
+Return ONLY valid JSON, no markdown or code fences.`;
+
+    const userPrompt = `The user wants to create a training program. Here's their initial description:\n\n${prompt}\n\nGenerate 3-5 clarifying questions to help design a better program.`;
+
+    try {
+      const message = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2000,
+        temperature: 0.3,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      });
+
+      const responseText = message.content[0].type === "text" ? message.content[0].text : "";
+      const cleanedResponse = responseText
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .trim();
+
+      const result = JSON.parse(cleanedResponse);
+      if (!result.questions || !Array.isArray(result.questions)) {
+        throw new Error("Invalid structure: expected questions array");
+      }
+      return { questions: result.questions };
+    } catch (error) {
+      console.error("Failed to generate плани questions:", error);
+      throw new Error("Failed to generate planning questions. Please try again.");
+    }
+  }
+
+  async generateTrainingProgram(prompt: string, answers?: Record<string, string>): Promise<{ program: Record<string, unknown>; phases: Array<Record<string, unknown>> }> {
     const systemPrompt = `You are an expert instructional designer. Your task is to generate a complete training program structure based on the user's description.
 
 Output a JSON object with this exact structure:
@@ -738,7 +783,11 @@ Output a JSON object with this exact structure:
 
 Create a structured, practical program with 2-4 phases and 2-5 modules per phase. Each module should have realistic client stories, clear assignments, and useful checklists. Use progressive complexity. Return ONLY valid JSON, no markdown or code fences.`;
 
-    const userPrompt = `Generate a training program based on this description:\n\n${prompt}`;
+    const answersContext = answers && Object.keys(answers).length > 0
+      ? `\n\nAdditional context from planning Q&A:\n${Object.entries(answers).map(([q, a]) => `Q: ${q}\nA: ${a}`).join("\n\n")}`
+      : "";
+
+    const userPrompt = `Generate a training program based on this description:\n\n${prompt}${answersContext}`;
 
     try {
       const message = await anthropic.messages.create({

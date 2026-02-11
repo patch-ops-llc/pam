@@ -88,7 +88,7 @@ export default function TrainingReview() {
   return (
     <div className="space-y-6 training-ui">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
           <ClipboardCheck className="h-8 w-8" />
           Training Reviews
         </h1>
@@ -101,7 +101,7 @@ export default function TrainingReview() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <CheckCircle2 className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">No Pending Reviews</h3>
+            <h3 className="text-base font-medium">No Pending Reviews</h3>
             <p className="text-muted-foreground mt-1">
               All submissions have been reviewed. Check back later for new submissions.
             </p>
@@ -123,7 +123,7 @@ export default function TrainingReview() {
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-semibold">{review.module.title}</span>
+                      <span className="text-base font-semibold">{review.module.title}</span>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">

@@ -7,6 +7,7 @@ import type {
   TrainingModuleSubmission,
 } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -195,7 +196,7 @@ export default function TrainingModule() {
   if (!module) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <h2 className="text-xl font-semibold">Module Not Found</h2>
+        <h2 className="text-lg font-semibold">Module Not Found</h2>
         <Link href="/training">
           <Button variant="outline"><ChevronLeft className="h-4 w-4 mr-2" />Back to Training</Button>
         </Link>
@@ -223,7 +224,7 @@ export default function TrainingModule() {
         </Link>
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">{module.title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{module.title}</h1>
           </div>
           <div className="flex items-center gap-2">
             {submission && <StatusBadge status={submission.status} />}
@@ -238,35 +239,44 @@ export default function TrainingModule() {
 
       {/* Resource Links */}
       {module.resourceLinks && module.resourceLinks.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <ExternalLink className="h-4 w-4" />
-              Resources
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {module.resourceLinks.map((link, idx) => (
-                <a
-                  key={idx}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors group"
-                >
-                  <ExternalLink className="h-4 w-4 mt-0.5 text-muted-foreground group-hover:text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-base group-hover:text-primary">{link.label}</p>
-                    {link.description && (
-                      <p className="text-sm text-muted-foreground mt-0.5">{link.description}</p>
-                    )}
-                  </div>
-                </a>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <Collapsible defaultOpen={true} className="group">
+          <Card>
+            <CollapsibleTrigger asChild>
+              <CardHeader className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors rounded-t-lg">
+                <CardTitle className="text-sm font-semibold flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    <ExternalLink className="h-4 w-4" />
+                    Resources ({module.resourceLinks.length})
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                </CardTitle>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {module.resourceLinks.map((link, idx) => (
+                    <a
+                      key={idx}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-start gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors group"
+                    >
+                      <ExternalLink className="h-4 w-4 mt-0.5 text-muted-foreground group-hover:text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-base group-hover:text-primary">{link.label}</p>
+                        {link.description && (
+                          <p className="text-sm text-muted-foreground mt-0.5">{link.description}</p>
+                        )}
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       )}
 
       {/* Tabs */}
@@ -301,7 +311,7 @@ export default function TrainingModule() {
         <TabsContent value="client-story">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <BookOpen className="h-5 w-5" />
                 Client Story
               </CardTitle>
@@ -324,7 +334,7 @@ export default function TrainingModule() {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <Target className="h-5 w-5" />
                   Your Assignment
                 </CardTitle>
@@ -344,7 +354,7 @@ export default function TrainingModule() {
             {module.testingRequirements && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <TestTubes className="h-5 w-5" />
                     Testing Requirements
                   </CardTitle>
@@ -364,7 +374,7 @@ export default function TrainingModule() {
         <TabsContent value="checklist">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <ListChecks className="h-5 w-5" />
                 Checklist
               </CardTitle>
@@ -448,7 +458,7 @@ export default function TrainingModule() {
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <FileCheck className="h-5 w-5" />
                   Deliverables & Presentation
                 </CardTitle>
@@ -468,7 +478,7 @@ export default function TrainingModule() {
             {module.beReadyToAnswer && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
                     Be Ready to Answer
                   </CardTitle>
@@ -490,7 +500,7 @@ export default function TrainingModule() {
             {/* Current Status */}
             <Card>
               <CardHeader>
-                <CardTitle>Submission Status</CardTitle>
+                <CardTitle className="text-base font-semibold">Submission Status</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-3">
@@ -534,7 +544,7 @@ export default function TrainingModule() {
             {submission?.reviewerNotes && (
               <Card className={submission.status === "needs_revision" ? "border-destructive" : "border-green-600"}>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <MessageSquare className="h-5 w-5" />
                     Reviewer Feedback
                   </CardTitle>
@@ -584,7 +594,7 @@ export default function TrainingModule() {
             {submission?.submissionNotes && !canSubmit && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Your Submission Notes</CardTitle>
+                  <CardTitle className="text-base font-semibold">Your Submission Notes</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-base">
@@ -601,22 +611,35 @@ export default function TrainingModule() {
       {module.sections && module.sections.length > 0 && (
         <div className="space-y-4">
           <Separator />
-          <h2 className="text-lg font-semibold">Additional Resources</h2>
-          {module.sections.map((section) => (
-            <Card key={section.id}>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-base">{section.title}</CardTitle>
-                  <Badge variant="outline" className="text-xs">{section.sectionType}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-base">
-                  {formatProseWithBullets(section.content)}
-                </div>
-              </CardContent>
+          <Collapsible defaultOpen={false} className="group">
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors rounded-t-lg">
+                  <CardTitle className="text-base font-semibold flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                      Additional Resources ({module.sections.length})
+                    </span>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0 space-y-4">
+                  {module.sections.map((section) => (
+                    <div key={section.id} className="rounded-lg border p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-medium">{section.title}</span>
+                        <Badge variant="outline" className="text-xs">{section.sectionType}</Badge>
+                      </div>
+                      <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-base">
+                        {formatProseWithBullets(section.content)}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </CollapsibleContent>
             </Card>
-          ))}
+          </Collapsible>
         </div>
       )}
     </div>
