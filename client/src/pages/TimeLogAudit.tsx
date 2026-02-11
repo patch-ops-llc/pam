@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Trash2, Download, ChevronLeft, ChevronRight, CalendarIcon, X, Copy } from "lucide-react";
+import { Trash2, Download, ChevronLeft, ChevronRight, CalendarIcon, X, Copy, ChevronDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +45,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const PAGE_SIZE = 50;
 
@@ -457,7 +462,7 @@ export default function TimeLogAudit() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 max-w-full w-full overflow-hidden">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Time Logs</h1>
         <p className="text-muted-foreground">
@@ -713,7 +718,7 @@ export default function TimeLogAudit() {
       {accountMetrics && accountMetrics.length > 0 && (
         <div className="border rounded-lg p-4 bg-card min-w-0 overflow-hidden" data-testid="account-hours-breakdown">
           <p className="text-sm font-medium text-muted-foreground mb-3">Hours by Account</p>
-          <div className="space-y-3 min-w-0">
+          <div className="space-y-1 min-w-0">
             {(() => {
               const grouped = accountMetrics.reduce((acc, am) => {
                 const key = am.agencyName;
@@ -722,17 +727,25 @@ export default function TimeLogAudit() {
                 return acc;
               }, {} as Record<string, AccountMetric[]>);
               return Object.entries(grouped).map(([agencyName, accounts]) => (
-                <div key={agencyName} className="space-y-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{agencyName}</p>
-                  <div className="space-y-1">
-                    {accounts.map(am => (
-                      <div key={am.accountId} className="flex justify-between gap-4 min-w-0">
-                        <span className="truncate">{am.accountName}</span>
-                        <span className="font-medium shrink-0">{am.totalActual.toFixed(1)} actual / {am.totalBilled.toFixed(1)} billed</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <Collapsible key={agencyName} defaultOpen={true}>
+                  <CollapsibleTrigger className="flex items-center gap-2 w-full py-1.5 hover:bg-muted/50 rounded-md px-2 -mx-2 text-left group">
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
+                    <p className="text-sm font-semibold truncate flex-1">{agencyName}</p>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {accounts.reduce((s, a) => s + a.totalActual, 0).toFixed(1)}h total
+                    </span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-1 pl-6 py-1">
+                      {accounts.map(am => (
+                        <div key={am.accountId} className="flex justify-between gap-4 min-w-0">
+                          <span className="truncate text-sm">{am.accountName}</span>
+                          <span className="font-medium shrink-0 text-sm">{am.totalActual.toFixed(1)} actual / {am.totalBilled.toFixed(1)} billed</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               ));
             })()}
           </div>
@@ -764,7 +777,7 @@ export default function TimeLogAudit() {
         </div>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg min-w-0 overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -860,7 +873,7 @@ export default function TimeLogAudit() {
                         }}
                         disabled={updateTimeLogMutation.isPending || deleteTimeLogMutation.isPending}
                       >
-                        <SelectTrigger className="h-8 w-48 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`agency-select-${log.id}`}>
+                        <SelectTrigger className="h-8 w-36 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`agency-select-${log.id}`}>
                           <SelectValue placeholder="Select agency..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -887,7 +900,7 @@ export default function TimeLogAudit() {
                         }}
                         disabled={updateTimeLogMutation.isPending || deleteTimeLogMutation.isPending}
                       >
-                        <SelectTrigger className="h-8 w-48 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`account-select-${log.id}`}>
+                        <SelectTrigger className="h-8 w-36 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`account-select-${log.id}`}>
                           <SelectValue placeholder="Select account..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -914,7 +927,7 @@ export default function TimeLogAudit() {
                         }}
                         disabled={updateTimeLogMutation.isPending || deleteTimeLogMutation.isPending}
                       >
-                        <SelectTrigger className="h-8 w-48 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`project-select-${log.id}`}>
+                        <SelectTrigger className="h-8 w-36 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-testid={`project-select-${log.id}`}>
                           <SelectValue placeholder="Select project..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -946,7 +959,7 @@ export default function TimeLogAudit() {
                         data-testid={`task-input-${log.id}`}
                       />
                     </TableCell>
-                    <TableCell className="max-w-xs">
+                    <TableCell className="max-w-[180px]">
                       {editingDescription === log.id ? (
                         <Textarea
                           defaultValue={log.description || ''}
@@ -966,13 +979,13 @@ export default function TimeLogAudit() {
                               setEditingDescription(null);
                             }
                           }}
-                          className="min-h-20 text-xs"
+                          className="min-h-20 text-xs max-w-[180px]"
                           data-testid={`description-textarea-${log.id}`}
                         />
                       ) : (
                         <div 
                           onClick={() => setEditingDescription(log.id)}
-                          className="cursor-pointer hover-elevate p-2 rounded-sm text-xs max-w-xs truncate"
+                          className="cursor-pointer hover-elevate p-2 rounded-sm text-xs max-w-[180px] truncate"
                           data-testid={`description-display-${log.id}`}
                         >
                           {log.description || <span className="text-muted-foreground">Click to add...</span>}
@@ -1067,7 +1080,7 @@ export default function TimeLogAudit() {
                         }}
                         disabled={updateTimeLogMutation.isPending || deleteTimeLogMutation.isPending}
                       >
-                        <SelectTrigger className="h-8 w-28 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-type="billingType" data-testid={`billingType-select-${log.id}`}>
+                        <SelectTrigger className="h-8 w-24 min-w-0 text-xs border-none bg-transparent focus:ring-1 focus:ring-ring hover-elevate" data-type="billingType" data-testid={`billingType-select-${log.id}`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

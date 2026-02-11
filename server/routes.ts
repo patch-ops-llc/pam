@@ -1138,7 +1138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tier3BilledHours: 0,
       };
       
-      // Account-level breakdown: { [accountId]: { accountName, agencyId, agencyName, total, tier1, tier2, tier3 } }
+      // Account-level breakdown: { [accountId]: { accountName, agencyId, agencyName, total, tier1, tier2, tier3, accountIsActive, agencyIsActive } }
       const accountBreakdown: Record<string, {
         accountId: string;
         accountName: string;
@@ -1152,6 +1152,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tier2Billed: number;
         tier3Actual: number;
         tier3Billed: number;
+        accountIsActive: boolean;
+        agencyIsActive: boolean;
       }> = {};
       
       for (const log of timeLogs) {
@@ -1189,6 +1191,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             tier2Billed: 0,
             tier3Actual: 0,
             tier3Billed: 0,
+            accountIsActive: log.account?.isActive ?? true,
+            agencyIsActive: log.agency?.isActive ?? true,
           };
         }
         
@@ -1207,13 +1211,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Convert to array and sort by agency then account name
-      const accountMetrics = Object.values(accountBreakdown).sort((a, b) => {
-        if (a.agencyName !== b.agencyName) {
-          return a.agencyName.localeCompare(b.agencyName);
-        }
-        return a.accountName.localeCompare(b.accountName);
-      });
+      // Convert to array, filter out inactive clients/accounts, sort by agency then account name
+      const accountMetrics = Object.values(accountBreakdown)
+        .filter(am => am.agencyIsActive && am.accountIsActive)
+        .sort((a, b) => {
+          if (a.agencyName !== b.agencyName) {
+            return a.agencyName.localeCompare(b.agencyName);
+          }
+          return a.accountName.localeCompare(b.accountName);
+        });
       
       res.json({
         data: paginatedLogs,
