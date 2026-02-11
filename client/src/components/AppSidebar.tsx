@@ -8,7 +8,6 @@ import {
   UsersRound,
   CheckSquare,
   ChevronDown,
-  FolderOpen,
   Plug,
   Code,
   GraduationCap,
@@ -61,22 +60,9 @@ const deliveryItems = [
     icon: Building2,
   },
   {
-    title: "Records & Reports",
-    icon: FolderOpen,
-    children: [
-      {
-        title: "Time Logs",
-        url: "/time-log-audit",
-      },
-      {
-        title: "Reports",
-        url: "/reports",
-      },
-      {
-        title: "Archive",
-        url: "/archive",
-      },
-    ],
+    title: "Time Logs",
+    url: "/time-log-audit",
+    icon: Timer,
   },
   {
     title: "Capacity",
@@ -117,11 +103,15 @@ const experimentsItems = [
       },
       {
         title: "Proposals",
-        children: [
-          { title: "Proposals", url: "/proposals" },
-          { title: "Knowledge Base", url: "/knowledge-base" },
-          { title: "Guidance Settings", url: "/guidance-settings" },
-        ],
+        url: "/proposals",
+      },
+      {
+        title: "Knowledge Base",
+        url: "/knowledge-base",
+      },
+      {
+        title: "Guidance Settings",
+        url: "/guidance-settings",
       },
     ],
   },
