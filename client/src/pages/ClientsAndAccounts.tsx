@@ -1,4 +1,4 @@
-import { useState, useMemo, Fragment, useEffect } from "react";
+import { useState, useMemo, Fragment } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,7 +68,7 @@ import {
   Trash2,
   Inbox,
   MoreHorizontal,
-  Power,
+  Archive,
   ChevronRight,
 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
@@ -126,7 +126,6 @@ export default function ClientsAndAccounts() {
   const [selectedAccount, setSelectedAccount] = useState<AccountWithAgency | null>(null);
   const [selectedProjectToEdit, setSelectedProjectToEdit] = useState<Project | null>(null);
   const [isCreateAccountDialogOpen, setIsCreateAccountDialogOpen] = useState(false);
-  const [isEditAccountDialogOpen, setIsEditAccountDialogOpen] = useState(false);
   const [accountAgencyId, setAccountAgencyId] = useState<string | null>(null);
   const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
   const [newClientName, setNewClientName] = useState("");
@@ -280,14 +279,6 @@ export default function ClientsAndAccounts() {
     return { ...account, agency, projects: accountProjects, unassignedTasks };
   }, [selectedAccountId, accountMetrics, agencies, projects, tasks]);
 
-  useEffect(() => {
-    if (isEditAccountDialogOpen && selectedAccountData) {
-      editAccountForm.reset({
-        monthlyQuotaHours: selectedAccountData.monthlyQuotaHours ?? "",
-        maxHoursPerWeek: selectedAccountData.maxHoursPerWeek ?? "",
-      });
-    }
-  }, [isEditAccountDialogOpen, selectedAccountData]);
 
   const projectHours = useMemo(() => {
     const hours: Record<string, { actual: number; billed: number }> = {};
@@ -393,12 +384,6 @@ export default function ClientsAndAccounts() {
     },
   });
 
-  const editAccountForm = useForm<{
-    monthlyQuotaHours?: string;
-    maxHoursPerWeek?: string;
-  }>({
-    defaultValues: { monthlyQuotaHours: "", maxHoursPerWeek: "" },
-  });
 
   const createAccountMutation = useMutation({
     mutationFn: async (data: InsertAccount) =>
@@ -625,22 +610,6 @@ export default function ClientsAndAccounts() {
     });
   };
 
-  const handleEditAccountLimits = (data: { monthlyQuotaHours?: string; maxHoursPerWeek?: string }) => {
-    if (!selectedAccountData) return;
-    updateAccountMutation.mutate(
-      {
-        id: selectedAccountData.id,
-        monthlyQuotaHours: data.monthlyQuotaHours || undefined,
-        maxHoursPerWeek: data.maxHoursPerWeek || undefined,
-      },
-      {
-        onSuccess: () => {
-          setIsEditAccountDialogOpen(false);
-          toast({ title: "Success", description: "Account limits updated" });
-        },
-      }
-    );
-  };
 
   if (isLoading) {
     return (
@@ -672,7 +641,7 @@ export default function ClientsAndAccounts() {
   }
 
   const totalClients = filteredAgencies.length;
-  const totalAccounts = accounts.length;
+  const totalAccounts = accounts.filter((a) => a.isActive).length;
 
   return (
     <div className="space-y-6">
@@ -869,25 +838,24 @@ export default function ClientsAndAccounts() {
                                           <TableHead>Account</TableHead>
                                           <TableHead>Status</TableHead>
                                           <TableHead className="text-right">
-                                            Weekly
+                                            Hrs/Week
                                           </TableHead>
                                           <TableHead className="text-right">
-                                            Monthly
+                                            Hrs/Month
                                           </TableHead>
                                           <TableHead className="text-right">
                                             Projects
-                                          </TableHead>
-                                          <TableHead className="text-right">
-                                            Efficiency
                                           </TableHead>
                                           <TableHead className="w-10" />
                                         </TableRow>
                                       </TableHeader>
                                       <TableBody>
-                                          {agencyAccounts.map((account) => (
+                                          {agencyAccounts
+                                            .filter((a) => showInactive || a.isActive)
+                                            .map((account) => (
                                             <TableRow
                                               key={account.id}
-                                              className="cursor-pointer hover:bg-muted/50"
+                                              className={`cursor-pointer hover:bg-muted/50 ${!account.isActive ? "opacity-60" : ""}`}
                                               onClick={() =>
                                                 setSelectedAccountId(account.id)
                                               }
@@ -905,14 +873,50 @@ export default function ClientsAndAccounts() {
                                                 >
                                                   {account.isActive
                                                     ? "Active"
-                                                    : "Inactive"}
+                                                    : "Archived"}
                                                 </Badge>
                                               </TableCell>
-                                              <TableCell className="text-right text-sm">
-                                                {account.metrics.weeklyHours}h
+                                              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                                <Input
+                                                  type="number"
+                                                  step="0.5"
+                                                  min="0"
+                                                  className="w-20 h-7 text-right text-xs ml-auto"
+                                                  defaultValue={account.maxHoursPerWeek ? parseFloat(String(account.maxHoursPerWeek)) : ""}
+                                                  key={`${account.id}-wk-${account.maxHoursPerWeek}`}
+                                                  placeholder="—"
+                                                  onBlur={(e) => {
+                                                    const newVal = e.target.value;
+                                                    const current = account.maxHoursPerWeek ? String(parseFloat(String(account.maxHoursPerWeek))) : "";
+                                                    if (newVal !== current) {
+                                                      updateAccountMutation.mutate({
+                                                        id: account.id,
+                                                        maxHoursPerWeek: newVal || undefined,
+                                                      });
+                                                    }
+                                                  }}
+                                                />
                                               </TableCell>
-                                              <TableCell className="text-right text-sm">
-                                                {account.metrics.monthlyHours}h
+                                              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                                <Input
+                                                  type="number"
+                                                  step="0.5"
+                                                  min="0"
+                                                  className="w-20 h-7 text-right text-xs ml-auto"
+                                                  defaultValue={account.monthlyQuotaHours ? parseFloat(String(account.monthlyQuotaHours)) : ""}
+                                                  key={`${account.id}-mo-${account.monthlyQuotaHours}`}
+                                                  placeholder="—"
+                                                  onBlur={(e) => {
+                                                    const newVal = e.target.value;
+                                                    const current = account.monthlyQuotaHours ? String(parseFloat(String(account.monthlyQuotaHours))) : "";
+                                                    if (newVal !== current) {
+                                                      updateAccountMutation.mutate({
+                                                        id: account.id,
+                                                        monthlyQuotaHours: newVal || undefined,
+                                                      });
+                                                    }
+                                                  }}
+                                                />
                                               </TableCell>
                                               <TableCell className="text-right text-sm">
                                                 {
@@ -921,11 +925,6 @@ export default function ClientsAndAccounts() {
                                                       p.accountId === account.id
                                                   ).length
                                                 }
-                                              </TableCell>
-                                              <TableCell className="text-right text-sm">
-                                                {account.metrics.efficiency > 0
-                                                  ? `${account.metrics.efficiency}%`
-                                                  : "—"}
                                               </TableCell>
                                               <TableCell>
                                                 <DropdownMenu>
@@ -950,10 +949,10 @@ export default function ClientsAndAccounts() {
                                                         );
                                                       }}
                                                     >
-                                                      <Power className="h-4 w-4 mr-2" />
+                                                      <Archive className="h-4 w-4 mr-2" />
                                                       {account.isActive
-                                                        ? "Deactivate"
-                                                        : "Activate"}
+                                                        ? "Archive"
+                                                        : "Unarchive"}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem
@@ -1015,7 +1014,7 @@ export default function ClientsAndAccounts() {
                       selectedAccountData.isActive ? "secondary" : "outline"
                     }
                   >
-                    {selectedAccountData.isActive ? "Active" : "Inactive"}
+                    {selectedAccountData.isActive ? "Active" : "Archived"}
                   </Badge>
                 </div>
               </SheetHeader>
@@ -1030,73 +1029,80 @@ export default function ClientsAndAccounts() {
                 </TabsList>
 
                 <TabsContent value="overview" className="mt-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border p-3 space-y-1">
-                      <p className="text-xs text-muted-foreground">
-                        Weekly Hours
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {selectedAccountData.metrics.weeklyHours}h
-                      </p>
-                    </div>
-                    <div className="rounded-lg border p-3 space-y-1">
-                      <p className="text-xs text-muted-foreground">
-                        Monthly Hours
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {selectedAccountData.metrics.monthlyHours}h
-                      </p>
-                    </div>
-                    <div className="rounded-lg border p-3 space-y-1">
-                      <p className="text-xs text-muted-foreground">Efficiency</p>
-                      <p className="text-lg font-semibold text-gold">
-                        {selectedAccountData.metrics.efficiency > 0
-                          ? `${selectedAccountData.metrics.efficiency}%`
-                          : "—"}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border p-3 space-y-1">
-                      <p className="text-xs text-muted-foreground">
-                        Recent Activity
-                      </p>
-                      <p className="text-lg font-semibold">
-                        {selectedAccountData.metrics.recentActivity}
-                      </p>
-                      <p className="text-xs text-muted-foreground">logs (30d)</p>
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Allotted Hours</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-lg border p-3 space-y-2">
+                        <Label className="text-xs text-muted-foreground">Hrs / Week</Label>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          className="h-8 text-sm"
+                          defaultValue={selectedAccountData.maxHoursPerWeek ? parseFloat(String(selectedAccountData.maxHoursPerWeek)) : ""}
+                          key={`sheet-wk-${selectedAccountData.id}-${selectedAccountData.maxHoursPerWeek}`}
+                          placeholder="Not set"
+                          onBlur={(e) => {
+                            const newVal = e.target.value;
+                            const current = selectedAccountData.maxHoursPerWeek ? String(parseFloat(String(selectedAccountData.maxHoursPerWeek))) : "";
+                            if (newVal !== current) {
+                              updateAccountMutation.mutate({
+                                id: selectedAccountData.id,
+                                maxHoursPerWeek: newVal || undefined,
+                              });
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="rounded-lg border p-3 space-y-2">
+                        <Label className="text-xs text-muted-foreground">Hrs / Month</Label>
+                        <Input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          className="h-8 text-sm"
+                          defaultValue={selectedAccountData.monthlyQuotaHours ? parseFloat(String(selectedAccountData.monthlyQuotaHours)) : ""}
+                          key={`sheet-mo-${selectedAccountData.id}-${selectedAccountData.monthlyQuotaHours}`}
+                          placeholder="Not set"
+                          onBlur={(e) => {
+                            const newVal = e.target.value;
+                            const current = selectedAccountData.monthlyQuotaHours ? String(parseFloat(String(selectedAccountData.monthlyQuotaHours))) : "";
+                            if (newVal !== current) {
+                              updateAccountMutation.mutate({
+                                id: selectedAccountData.id,
+                                monthlyQuotaHours: newVal || undefined,
+                              });
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                  {(selectedAccountData.monthlyQuotaHours || selectedAccountData.maxHoursPerWeek) && (
-                    <div className="rounded-lg border p-3 space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground">Account limits</p>
-                      <div className="flex gap-4 text-sm">
-                        {selectedAccountData.monthlyQuotaHours && (
-                          <span>Monthly: {parseFloat(selectedAccountData.monthlyQuotaHours).toFixed(2)}h</span>
-                        )}
-                        {selectedAccountData.maxHoursPerWeek && (
-                          <span>Max/week: {parseFloat(selectedAccountData.maxHoursPerWeek).toFixed(1)}h</span>
-                        )}
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Logged Hours</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-lg border p-3 space-y-1">
+                        <p className="text-xs text-muted-foreground">Last 7 Days</p>
+                        <p className="text-lg font-semibold">
+                          {selectedAccountData.metrics.weeklyHours}h
+                        </p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="mt-2"
-                        onClick={() => setIsEditAccountDialogOpen(true)}
-                      >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit limits
-                      </Button>
+                      <div className="rounded-lg border p-3 space-y-1">
+                        <p className="text-xs text-muted-foreground">Last 30 Days</p>
+                        <p className="text-lg font-semibold">
+                          {selectedAccountData.metrics.monthlyHours}h
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3 space-y-1">
+                        <p className="text-xs text-muted-foreground">Efficiency</p>
+                        <p className="text-lg font-semibold text-gold">
+                          {selectedAccountData.metrics.efficiency > 0
+                            ? `${selectedAccountData.metrics.efficiency}%`
+                            : "—"}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  {(!selectedAccountData.monthlyQuotaHours && !selectedAccountData.maxHoursPerWeek) && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setIsEditAccountDialogOpen(true)}
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Set account limits
-                    </Button>
-                  )}
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="projects" className="mt-4 space-y-3">
@@ -1555,77 +1561,6 @@ export default function ClientsAndAccounts() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Account Limits Dialog */}
-      <Dialog
-        open={isEditAccountDialogOpen}
-        onOpenChange={setIsEditAccountDialogOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Account Limits</DialogTitle>
-            <DialogDescription>
-              Set max hours per week to avoid exceeding client caps. {selectedAccountData && `Editing ${selectedAccountData.name}`}
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...editAccountForm}>
-            <form
-              onSubmit={editAccountForm.handleSubmit(handleEditAccountLimits)}
-              className="space-y-4"
-            >
-              <FormField
-                control={editAccountForm.control}
-                name="monthlyQuotaHours"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Monthly Quota (Hours)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.5"
-                        placeholder="Optional"
-                        {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value ? e.target.value : undefined)}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editAccountForm.control}
-                name="maxHoursPerWeek"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Max Hours Per Week</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.5"
-                        placeholder="Cap hours per client per week"
-                        {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value ? e.target.value : undefined)}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsEditAccountDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateAccountMutation.isPending}>
-                  {updateAccountMutation.isPending ? "Saving..." : "Save"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
 
       {/* Create Project Dialog */}
       <Dialog

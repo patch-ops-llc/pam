@@ -185,7 +185,7 @@ export const tasks = pgTable("tasks", {
   name: text("name").notNull(),
   description: text("description"),
   notes: text("notes"), // Rich text notes
-  status: text("status").notNull().default("todo"), // todo, in-progress, completed, cancelled
+  status: text("status").notNull().default("todo"), // todo, in_progress, waiting_on_client, waiting_on_internal_review, complete, cancelled
   priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
   size: text("size").notNull().default("medium"), // small, medium, large, xlarge
   category: text("category").notNull().default("standard"), // standard, recurring

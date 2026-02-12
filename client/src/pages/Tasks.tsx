@@ -284,7 +284,7 @@ export default function Tasks() {
   const handleMarkComplete = (taskId: string) => {
     updateTaskMutation.mutate({
       id: taskId,
-      data: { status: "completed" },
+      data: { status: "complete" },
     });
   };
 
@@ -637,9 +637,9 @@ export default function Tasks() {
       category: task.category || "standard",
       billingType: task.billingType || "billable",
       estimatedHours: task.estimatedHours ? Number(task.estimatedHours) : undefined,
-      agencyId: undefined,
-      accountId: undefined,
-      projectId: undefined,
+      agencyId: task.agencyId || undefined,
+      accountId: task.accountId || undefined,
+      projectId: task.projectId || undefined,
       dueDate: task.dueDate || undefined
     });
     setIsEditSheetOpen(true);
@@ -731,25 +731,33 @@ export default function Tasks() {
           )}
           
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Building2 className="h-3 w-3" />
-              {task.agency?.name}
-            </div>
+            <StatusBadge status={task.status} className="text-[10px] py-0 px-1.5" />
             <div className="flex items-center gap-1">
-              <Badge variant={task.billingType === 'prebilled' ? 'outline' : 'secondary'} className="text-xs">
-                {task.billingType === 'prebilled' ? 'Pre-billed' : 'Billable'}
-              </Badge>
               <Badge variant={getPriorityColor(task.priority)} className="text-xs">
                 {task.priority}
               </Badge>
             </div>
           </div>
 
-          {task.estimatedHours && (
-            <div className="text-xs text-muted-foreground">
-              Est: {Number(task.estimatedHours)}h
-            </div>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {task.dueDate && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <CalendarIcon className="h-3 w-3" />
+                {format(new Date(task.dueDate + "T00:00:00"), "MMM d, yyyy")}
+              </div>
+            )}
+            {task.startDate && !task.dueDate && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <CalendarIcon className="h-3 w-3" />
+                Started {format(new Date(task.startDate + "T00:00:00"), "MMM d, yyyy")}
+              </div>
+            )}
+            {task.estimatedHours && (
+              <div className="text-xs text-muted-foreground">
+                Est: {Number(task.estimatedHours)}h
+              </div>
+            )}
+          </div>
 
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -1005,8 +1013,8 @@ export default function Tasks() {
           return project?.name || "Unknown Project";
         case "status":
         default:
-          const statusLabels = { todo: "To Do", "in-progress": "In Progress", review: "Review", completed: "Completed" };
-          return statusLabels[key as keyof typeof statusLabels] || key;
+          const statusLabels: Record<string, string> = { todo: "To Do", in_progress: "In Progress", waiting_on_client: "Waiting on Client", waiting_on_internal_review: "Waiting on Internal Review", complete: "Complete", cancelled: "Cancelled" };
+          return statusLabels[key] || key;
       }
     };
 
@@ -1020,8 +1028,8 @@ export default function Tasks() {
           return FolderOpen;
         case "status":
         default:
-          const statusIcons = { todo: Circle, "in-progress": Clock, review: Timer, completed: CheckCircle2 };
-          return statusIcons[key as keyof typeof statusIcons] || Circle;
+          const statusIcons: Record<string, any> = { todo: Circle, in_progress: Clock, waiting_on_client: Timer, waiting_on_internal_review: Timer, complete: CheckCircle2, cancelled: Trash2 };
+          return statusIcons[key] || Circle;
       }
     };
 
@@ -1035,7 +1043,7 @@ export default function Tasks() {
           return ["no-project", ...allProjects.map(p => p.id)];
         case "status":
         default:
-          return ["todo", "in-progress", "review", "completed"];
+          return ["todo", "in_progress", "waiting_on_client", "waiting_on_internal_review", "complete", "cancelled"];
       }
     };
 
@@ -1158,8 +1166,13 @@ export default function Tasks() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
+      case "complete":
       case "completed": return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      case "in_progress":
       case "in-progress": return <Clock className="h-4 w-4 text-blue-600" />;
+      case "waiting_on_client": return <Timer className="h-4 w-4 text-amber-500" />;
+      case "waiting_on_internal_review": return <Timer className="h-4 w-4 text-blue-500" />;
+      case "cancelled": return <Circle className="h-4 w-4 text-red-600" />;
       case "todo": return <Circle className="h-4 w-4 text-gray-400" />;
       default: return <Circle className="h-4 w-4 text-gray-400" />;
     }
@@ -1167,6 +1180,7 @@ export default function Tasks() {
 
   const getStatusColor = (status: string): { style: CSSProperties } => {
     switch (status) {
+      case "complete":
       case "completed": 
         return { 
           style: {
@@ -1180,6 +1194,7 @@ export default function Tasks() {
             boxShadow: "0 0 20px #00ff00" as any
           }
         };
+      case "in_progress":
       case "in-progress":
       case "active":
         return { 
@@ -1192,6 +1207,32 @@ export default function Tasks() {
             borderRadius: "8px" as any,
             textShadow: "0 0 10px #ff0000" as any,
             boxShadow: "0 0 20px #ff0000" as any
+          }
+        };
+      case "waiting_on_client":
+        return { 
+          style: {
+            background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)" as any,
+            color: "#000000" as any,
+            border: "5px solid #f59e0b" as any,
+            fontWeight: "900" as any,
+            padding: "8px 16px" as any,
+            borderRadius: "8px" as any,
+            textShadow: "0 0 10px #f59e0b" as any,
+            boxShadow: "0 0 20px #f59e0b" as any
+          }
+        };
+      case "waiting_on_internal_review":
+        return { 
+          style: {
+            background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)" as any,
+            color: "#ffffff" as any,
+            border: "5px solid #3b82f6" as any,
+            fontWeight: "900" as any,
+            padding: "8px 16px" as any,
+            borderRadius: "8px" as any,
+            textShadow: "0 0 10px #3b82f6" as any,
+            boxShadow: "0 0 20px #3b82f6" as any
           }
         };
       case "cancelled": 
@@ -1689,9 +1730,12 @@ export default function Tasks() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="todo">Todo</SelectItem>
-            <SelectItem value="in-progress">In Progress</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="todo">To Do</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="waiting_on_client">Waiting on Client</SelectItem>
+            <SelectItem value="waiting_on_internal_review">Waiting on Internal Review</SelectItem>
+            <SelectItem value="complete">Complete</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
           </SelectContent>
         </Select>
         <Select value={priorityFilter} onValueChange={setPriorityFilter}>
@@ -1947,19 +1991,31 @@ export default function Tasks() {
                         <SelectItem value="todo">
                           <div className="flex items-center gap-2">
                             <Circle className="h-4 w-4 text-gray-400" />
-                            Todo
+                            To Do
                           </div>
                         </SelectItem>
-                        <SelectItem value="in-progress">
+                        <SelectItem value="in_progress">
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-blue-600" />
                             In Progress
                           </div>
                         </SelectItem>
-                        <SelectItem value="completed">
+                        <SelectItem value="waiting_on_client">
+                          <div className="flex items-center gap-2">
+                            <Timer className="h-4 w-4 text-amber-500" />
+                            Waiting on Client
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="waiting_on_internal_review">
+                          <div className="flex items-center gap-2">
+                            <Timer className="h-4 w-4 text-blue-500" />
+                            Waiting on Internal Review
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="complete">
                           <div className="flex items-center gap-2">
                             <CheckCircle2 className="h-4 w-4 text-green-600" />
-                            Completed
+                            Complete
                           </div>
                         </SelectItem>
                         <SelectItem value="cancelled">
@@ -2023,7 +2079,7 @@ export default function Tasks() {
                           <Timer className="h-4 w-4 mr-2" />
                           Log Time
                         </DropdownMenuItem>
-                        {task.status !== "completed" && (
+                        {task.status !== "complete" && task.status !== "completed" && (
                           <DropdownMenuItem 
                             onClick={() => handleMarkComplete(task.id)}
                             disabled={updateTaskMutation.isPending || deleteTaskMutation.isPending}
@@ -2075,6 +2131,52 @@ export default function Tasks() {
                       <FormLabel>Task Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter task name..." {...field} data-testid="input-edit-task-name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter task description..."
+                          {...field}
+                          value={field.value || ""}
+                          rows={3}
+                          data-testid="textarea-edit-task-description"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger data-testid="select-edit-task-status">
+                            <SelectValue placeholder="Select status..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="todo">To Do</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="waiting_on_client">Waiting on Client</SelectItem>
+                            <SelectItem value="waiting_on_internal_review">Waiting on Internal Review</SelectItem>
+                            <SelectItem value="complete">Complete</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

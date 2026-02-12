@@ -294,8 +294,10 @@ export function TaskFormDialog({ isOpen, onOpenChange, mode, project, task, user
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="todo">To Do</SelectItem>
-                        <SelectItem value="in-progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="waiting_on_client">Waiting on Client</SelectItem>
+                        <SelectItem value="waiting_on_internal_review">Waiting on Internal Review</SelectItem>
+                        <SelectItem value="complete">Complete</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                       </SelectContent>
                     </Select>

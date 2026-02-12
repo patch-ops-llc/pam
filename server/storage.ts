@@ -821,32 +821,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAccountsWithAgency(): Promise<AccountWithAgency[]> {
-    return await db
-      .select({
-        id: accounts.id,
-        agencyId: accounts.agencyId,
-        name: accounts.name,
-        description: accounts.description,
-        contactEmail: accounts.contactEmail,
-        contactPhone: accounts.contactPhone,
-        richTextContent: accounts.richTextContent,
-        isActive: accounts.isActive,
-        createdAt: accounts.createdAt,
-        agency: {
-          id: agencies.id,
-          name: agencies.name,
-          description: agencies.description,
-          monthlyBillingTarget: agencies.monthlyBillingTarget,
-          contactEmail: agencies.contactEmail,
-          contactPhone: agencies.contactPhone,
-          isActive: agencies.isActive,
-          createdAt: agencies.createdAt,
-        }
-      })
+    const rows = await db
+      .select()
       .from(accounts)
       .innerJoin(agencies, eq(accounts.agencyId, agencies.id))
-      .where(eq(accounts.isActive, true))
       .orderBy(accounts.createdAt);
+
+    return rows.map(row => ({
+      ...row.accounts,
+      agency: row.agencies,
+    }));
   }
 
   async getAccountsByAgency(agencyId: string): Promise<Account[]> {
