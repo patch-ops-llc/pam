@@ -1,9 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Target, CalendarX, BarChart3 } from "lucide-react";
+import { Target, CalendarX, Table2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
-import { ResourcesTab } from "./capacity/ResourcesTab";
-import { AllocationsTab } from "./capacity/AllocationsTab";
-import { ReportsTab } from "./capacity/ReportsTab";
+import { CapacityWorksheetTab } from "./capacity/CapacityWorksheetTab";
 import { QuotasTab } from "./capacity/QuotasTab";
 import { TimeOffTab } from "./capacity/TimeOffTab";
 import { HolidaysTab } from "./capacity/HolidaysTab";
@@ -16,15 +14,15 @@ export default function Capacity() {
         description="Team capacity, allocations, quotas, and time tracking"
       />
 
-      <Tabs defaultValue="quotas-bonuses" className="space-y-4">
+      <Tabs defaultValue="worksheet" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="worksheet" data-testid="tab-worksheet">
+            <Table2 className="h-4 w-4 mr-2" />
+            Capacity Worksheet
+          </TabsTrigger>
           <TabsTrigger value="quotas-bonuses" data-testid="tab-quotas-bonuses">
             <Target className="h-4 w-4 mr-2" />
             Quotas & Bonuses
-          </TabsTrigger>
-          <TabsTrigger value="capacity-planning" data-testid="tab-capacity-planning">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Capacity Planning
           </TabsTrigger>
           <TabsTrigger value="time-away" data-testid="tab-time-away">
             <CalendarX className="h-4 w-4 mr-2" />
@@ -32,14 +30,12 @@ export default function Capacity() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="quotas-bonuses">
-          <QuotasTab />
+        <TabsContent value="worksheet">
+          <CapacityWorksheetTab />
         </TabsContent>
 
-        <TabsContent value="capacity-planning" className="space-y-6">
-          <ResourcesTab />
-          <AllocationsTab />
-          <ReportsTab />
+        <TabsContent value="quotas-bonuses">
+          <QuotasTab />
         </TabsContent>
 
         <TabsContent value="time-away" className="space-y-8">

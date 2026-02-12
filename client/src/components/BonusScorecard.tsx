@@ -119,10 +119,10 @@ export function BonusScorecard() {
                       <span className="text-xs font-medium">Wk {week.weekNumber}</span>
                     </div>
                     <div className="text-sm font-semibold mt-1">
-                      {week.billedHours.toFixed(1)}h
+                      {week.billedHours.toFixed(2)}h
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      / {week.weeklyTarget.toFixed(1)}h
+                      / {week.weeklyTarget.toFixed(2)}h
                     </div>
                   </div>
                 ))}

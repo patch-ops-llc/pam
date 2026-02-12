@@ -805,11 +805,11 @@ export function QuotasTab() {
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{progress.agency.name}</span>
                             <Badge variant={isPacingAhead ? "default" : "secondary"} className={cn("text-xs", isPacingAhead ? "bg-green-600 hover:bg-green-600" : "")}>
-                              {isPacingAhead ? "+" : ""}{pacing.toFixed(1)}hrs
+                              {isPacingAhead ? "+" : ""}{pacing.toFixed(2)}hrs
                             </Badge>
                           </div>
                           <span className="text-sm text-muted-foreground">
-                            {progress.billedHours.toFixed(1)} / {progress.monthlyTarget} hrs ({progressPercent.toFixed(0)}%)
+                            {progress.billedHours.toFixed(2)} / {progress.monthlyTarget} hrs ({progressPercent.toFixed(0)}%)
                           </span>
                         </div>
                         <Progress value={progressPercent} className="h-2" />
@@ -981,11 +981,11 @@ export function QuotasTab() {
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{progress.user.firstName} {progress.user.lastName}</span>
                             <Badge variant={isPacingAhead ? "default" : "secondary"} className={cn("text-xs", isPacingAhead ? "bg-green-600 hover:bg-green-600" : "")}>
-                              {isPacingAhead ? "+" : ""}{pacing.toFixed(1)}hrs
+                              {isPacingAhead ? "+" : ""}{pacing.toFixed(2)}hrs
                             </Badge>
                           </div>
                           <span className="text-sm text-muted-foreground">
-                            {progress.billedHours.toFixed(1)}b + {(progress.prebilledHours || 0).toFixed(1)}pb = {totalHours.toFixed(1)} / {progress.adjustedTarget.toFixed(1)} hrs ({progressPercent.toFixed(0)}%)
+                            {progress.billedHours.toFixed(2)}b + {(progress.prebilledHours || 0).toFixed(2)}pb = {totalHours.toFixed(2)} / {progress.adjustedTarget.toFixed(2)} hrs ({progressPercent.toFixed(0)}%)
                           </span>
                         </div>
                         <Progress value={progressPercent} className="h-2" />
@@ -1109,7 +1109,7 @@ export function QuotasTab() {
                             ${overageBonus.toFixed(0)}
                             {overageHours > 0 && (
                               <span className="text-xs text-muted-foreground ml-1">
-                                ({overageHours.toFixed(1)}hrs)
+                                ({overageHours.toFixed(2)}hrs)
                               </span>
                             )}
                           </TableCell>
@@ -1615,7 +1615,7 @@ export function QuotasTab() {
                                     <TableRow key={row.agencyId}>
                                       <TableCell>{row.name}</TableCell>
                                       <TableCell className="text-right">{row.targetHours}hrs</TableCell>
-                                      <TableCell className="text-right">{row.actualHours?.toFixed(1)}hrs</TableCell>
+                                      <TableCell className="text-right">{row.actualHours?.toFixed(2)}hrs</TableCell>
                                       <TableCell className="text-right">
                                         <Badge variant={row.percentComplete >= 100 ? "default" : "secondary"} 
                                                className={cn(row.percentComplete >= 100 && "bg-green-600 hover:bg-green-600")}>
@@ -1645,9 +1645,9 @@ export function QuotasTab() {
                                     <TableRow key={row.userId}>
                                       <TableCell>{row.name}</TableCell>
                                       <TableCell className="text-right">{row.targetHours}hrs</TableCell>
-                                      <TableCell className="text-right">{row.adjustedTarget?.toFixed(1)}hrs</TableCell>
+                                      <TableCell className="text-right">{row.adjustedTarget?.toFixed(2)}hrs</TableCell>
                                       <TableCell className="text-right">{row.billedHours?.toFixed(1)}hrs</TableCell>
-                                      <TableCell className="text-right">{row.prebilledHours?.toFixed(1)}hrs</TableCell>
+                                      <TableCell className="text-right">{row.prebilledHours?.toFixed(2)}hrs</TableCell>
                                       <TableCell className="text-right">
                                         <Badge variant={row.percentComplete >= 100 ? "default" : "secondary"}
                                                className={cn(row.percentComplete >= 100 && "bg-green-600 hover:bg-green-600")}>

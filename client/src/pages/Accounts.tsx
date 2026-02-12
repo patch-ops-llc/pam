@@ -372,8 +372,8 @@ export default function Accounts() {
       return {
         ...account,
         metrics: {
-          weeklyHours: Math.round(weeklyHours * 10) / 10,
-          monthlyHours: Math.round(monthlyHours * 10) / 10,
+          weeklyHours: Math.round(weeklyHours * 100) / 100,
+          monthlyHours: Math.round(monthlyHours * 100) / 100,
           efficiency: Math.round(efficiency),
           totalActualHours,
           totalBilledHours,
@@ -800,7 +800,7 @@ export default function Accounts() {
                     <div className="rounded-lg border p-3 space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Billed</span>
-                        <span className="font-medium">{selectedAccountData.metrics.totalBilledHours.toFixed(1)}h</span>
+                        <span className="font-medium">{selectedAccountData.metrics.totalBilledHours.toFixed(2)}h</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Actual</span>
@@ -861,7 +861,7 @@ export default function Accounts() {
                         {project.estimatedHours && projectHours[project.id] && (
                           <div className="space-y-1">
                             <div className="flex justify-between text-xs text-muted-foreground">
-                              <span>{projectHours[project.id]?.actual.toFixed(1)}h / {parseFloat(project.estimatedHours).toFixed(1)}h</span>
+                              <span>{projectHours[project.id]?.actual.toFixed(2)}h / {parseFloat(project.estimatedHours).toFixed(2)}h</span>
                               <span className="font-medium text-gold">
                                 {Math.round((projectHours[project.id]?.actual || 0) / parseFloat(project.estimatedHours) * 100)}%
                               </span>

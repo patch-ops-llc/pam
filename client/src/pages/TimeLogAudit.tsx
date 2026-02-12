@@ -740,7 +740,7 @@ export default function TimeLogAudit() {
                     <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
                     <p className="text-sm font-semibold truncate flex-1">{agencyName}</p>
                     <span className="text-xs text-muted-foreground shrink-0">
-                      {accounts.reduce((s, a) => s + a.totalActual, 0).toFixed(1)}h total
+                      {accounts.reduce((s, a) => s + a.totalActual, 0).toFixed(2)}h total
                     </span>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
@@ -748,7 +748,7 @@ export default function TimeLogAudit() {
                       {accounts.map(am => (
                         <div key={am.accountId} className="flex justify-between gap-4 min-w-0">
                           <span className="truncate text-sm">{am.accountName}</span>
-                          <span className="font-medium shrink-0 text-sm">{am.totalActual.toFixed(1)} actual / {am.totalBilled.toFixed(1)} billed</span>
+                          <span className="font-medium shrink-0 text-sm">{am.totalActual.toFixed(2)} actual / {am.totalBilled.toFixed(2)} billed</span>
                         </div>
                       ))}
                     </div>

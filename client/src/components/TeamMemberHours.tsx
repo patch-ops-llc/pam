@@ -288,7 +288,7 @@ export function TeamMemberHours() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Actual:</span>
                       <span className="font-semibold" data-testid={`text-actual-hours-${member.id}`}>
-                        {member.month.actual.toFixed(1)}h
+                        {member.month.actual.toFixed(2)}h
                       </span>
                     </div>
                     <div className="flex justify-between text-xs">
@@ -316,10 +316,10 @@ export function TeamMemberHours() {
                       />
                       <div className="flex justify-between text-xs">
                         <span className="font-medium" data-testid={`text-billed-utilization-${member.id}`}>
-                          {member.utilization.billedUtilizationPercent.toFixed(1)}% utilized
+                          {member.utilization.billedUtilizationPercent.toFixed(2)}% utilized
                         </span>
                         <span className="text-muted-foreground" data-testid={`text-billed-capacity-hours-${member.id}`}>
-                          {member.utilization.billedCapacityHoursRemaining.toFixed(1)}h remaining
+                          {member.utilization.billedCapacityHoursRemaining.toFixed(2)}h remaining
                         </span>
                       </div>
                     </div>
@@ -340,7 +340,7 @@ export function TeamMemberHours() {
                           {member.utilization.actualUtilizationPercent.toFixed(1)}% utilized
                         </span>
                         <span className="text-muted-foreground" data-testid={`text-actual-capacity-hours-${member.id}`}>
-                          {member.utilization.actualCapacityHoursRemaining.toFixed(1)}h remaining
+                          {member.utilization.actualCapacityHoursRemaining.toFixed(2)}h remaining
                         </span>
                       </div>
                     </div>

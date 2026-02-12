@@ -159,13 +159,13 @@ export function CustomPeriodClientTracker() {
                 <div className="p-3 rounded-md bg-muted/30">
                   <div className="text-xs text-muted-foreground">Actual Hours</div>
                   <div className="text-2xl font-bold" data-testid={`actual-hours-${client.id}`}>
-                    {hours.actual.toFixed(1)}
+                    {hours.actual.toFixed(2)}
                   </div>
                 </div>
                 <div className="p-3 rounded-md bg-muted/30">
                   <div className="text-xs text-muted-foreground">Billed Hours</div>
                   <div className="text-2xl font-bold" data-testid={`billed-hours-${client.id}`}>
-                    {hours.billed.toFixed(1)}
+                    {hours.billed.toFixed(2)}
                   </div>
                 </div>
                 <div className="p-3 rounded-md bg-muted/30">

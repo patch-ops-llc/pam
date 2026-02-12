@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, DollarSign, TrendingUp, Calculator, FolderKanban, Users } from "lucide-react";
+import { Lock, DollarSign, TrendingUp, Calculator, FolderKanban } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { FORECAST_PASSWORD, AUTH_KEY } from "./forecasting/utils";
 import { ExpensesTab } from "./forecasting/tabs/ExpensesTab";
@@ -14,7 +14,6 @@ import { InvoicesTab } from "./forecasting/tabs/InvoicesTab";
 import { ScenariosTab } from "./forecasting/tabs/ScenariosTab";
 import { AccountRevenueTab } from "./forecasting/tabs/AccountRevenueTab";
 import { ForecastOverview } from "./forecasting/tabs/ForecastOverview";
-import { CapacityTab } from "./forecasting/tabs/CapacityTab";
 
 export default function Forecasting() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -120,10 +119,6 @@ export default function Forecasting() {
             <DollarSign className="h-4 w-4 mr-2" />
             Expenses
           </TabsTrigger>
-          <TabsTrigger value="capacity" data-testid="tab-capacity">
-            <Users className="h-4 w-4 mr-2" />
-            Capacity
-          </TabsTrigger>
           <TabsTrigger value="scenarios" data-testid="tab-scenarios">
             <Calculator className="h-4 w-4 mr-2" />
             Scenarios
@@ -148,10 +143,6 @@ export default function Forecasting() {
 
         <TabsContent value="expenses">
           <ExpensesTab />
-        </TabsContent>
-
-        <TabsContent value="capacity">
-          <CapacityTab />
         </TabsContent>
 
         <TabsContent value="scenarios">

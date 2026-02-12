@@ -87,7 +87,6 @@ export const accounts = pgTable("accounts", {
   contactPhone: text("contact_phone"),
   richTextContent: text("rich_text_content"),
   monthlyQuotaHours: decimal("monthly_quota_hours", { precision: 8, scale: 2 }),
-  maxHoursPerWeek: decimal("max_hours_per_week", { precision: 8, scale: 2 }),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -954,47 +953,6 @@ export const holidays = pgTable(
   }),
 );
 
-// Capacity projections - projected hours per account per week
-export const capacityProjections = pgTable(
-  "capacity_projections",
-  {
-    id: varchar("id")
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    accountId: varchar("account_id")
-      .notNull()
-      .references(() => accounts.id, { onDelete: "cascade" }),
-    weekStart: date("week_start").notNull(), // Monday of the week
-    projectedActualHours: decimal("projected_actual_hours", {
-      precision: 8,
-      scale: 2,
-    })
-      .notNull()
-      .default("0"),
-    projectedBillableHours: decimal("projected_billable_hours", {
-      precision: 8,
-      scale: 2,
-    })
-      .notNull()
-      .default("0"),
-    notes: text("notes"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-  (table) => ({
-    accountIdIdx: index("capacity_projections_account_id_idx").on(
-      table.accountId,
-    ),
-    weekStartIdx: index("capacity_projections_week_start_idx").on(
-      table.weekStart,
-    ),
-    accountWeekUnique: unique("capacity_projections_account_week_unique").on(
-      table.accountId,
-      table.weekStart,
-    ),
-  }),
-);
-
 // Proposals - quotes and proposals for clients/prospects
 export const proposals = pgTable(
   "proposals",
@@ -1602,14 +1560,6 @@ export const insertAccountSchema = createInsertSchema(accounts)
         return isNaN(num) ? undefined : String(num);
       })
       .optional(),
-    maxHoursPerWeek: z
-      .union([z.number(), z.string()])
-      .transform((val) => {
-        if (val === undefined || val === null || val === "") return undefined;
-        const num = typeof val === "number" ? val : parseFloat(val);
-        return isNaN(num) ? undefined : String(num);
-      })
-      .optional(),
   });
 
 export const insertAccountNoteSchema = createInsertSchema(accountNotes).omit({
@@ -1923,14 +1873,6 @@ export const insertUserAvailabilitySchema = createInsertSchema(
 export const insertHolidaySchema = createInsertSchema(holidays).omit({
   id: true,
   createdAt: true,
-});
-
-export const insertCapacityProjectionSchema = createInsertSchema(
-  capacityProjections,
-).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
 });
 
 export const insertProposalSchema = createInsertSchema(proposals)
@@ -2250,11 +2192,6 @@ export type UserAvailability = typeof userAvailability.$inferSelect;
 
 export type InsertHoliday = z.infer<typeof insertHolidaySchema>;
 export type Holiday = typeof holidays.$inferSelect;
-
-export type InsertCapacityProjection = z.infer<
-  typeof insertCapacityProjectionSchema
->;
-export type CapacityProjection = typeof capacityProjections.$inferSelect;
 
 export type InsertProposal = z.infer<typeof insertProposalSchema>;
 export type Proposal = typeof proposals.$inferSelect;
@@ -2660,10 +2597,7 @@ export const trainingModuleSubmissions = pgTable(
   }),
 );
 
-export const insertTrainingModuleSubmissionSchema = createInsertSchema(trainingModuleSubmissions, {
-  submittedAt: z.coerce.date().optional().nullable(),
-  reviewedAt: z.coerce.date().optional().nullable(),
-}).omit({
+export const insertTrainingModuleSubmissionSchema = createInsertSchema(trainingModuleSubmissions).omit({
   id: true,
   createdAt: true,
 });
@@ -2690,4 +2624,3 @@ export type TrainingEnrollmentWithProgress = TrainingEnrollment & {
   totalModules: number;
   completedModules: number;
 };
-

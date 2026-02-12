@@ -79,7 +79,7 @@ export function ResourceQuotaTracker() {
 
   const formatPacingHours = (hours: number) => {
     const sign = hours >= 0 ? "+" : "";
-    return `${sign}${hours.toFixed(1)}h`;
+    return `${sign}${hours.toFixed(2)}h`;
   };
 
   const getPacingStatus = (pacingHours: number) => {
@@ -217,7 +217,8 @@ export function ResourceQuotaTracker() {
                     {item.user.firstName} {item.user.lastName}
                   </span>
                   <span className="text-muted-foreground shrink-0">
-                    {totalHours.toFixed(1)}h / {item.adjustedTarget.toFixed(1)}h
+                    {totalHours.toFixed(2)}h / {item.adjustedTarget.toFixed(2)}h
+                    <span className="ml-1.5 font-medium">{percent.toFixed(0)}%</span>
                     {remaining !== 0 && (
                       <span className="ml-2">
                         ({remaining > 0 ? remaining.toFixed(1) : `+${(-remaining).toFixed(1)}`}h {remaining > 0 ? "left" : "over"})
@@ -227,8 +228,8 @@ export function ResourceQuotaTracker() {
                 </div>
                 <Progress value={percent} className={cn("h-2", getProgressIndicatorClass(pacingStatus))} />
                 <div className="flex gap-3 text-xs text-muted-foreground">
-                  <span>Billed: {item.billedHours.toFixed(1)}h</span>
-                  <span>Prebilled: {item.prebilledHours.toFixed(1)}h</span>
+                  <span>Billed: {item.billedHours.toFixed(2)}h</span>
+                  <span>Prebilled: {item.prebilledHours.toFixed(2)}h</span>
                   <span>Pacing: {formatPacingHours(pacingHours)}</span>
                 </div>
               </div>

@@ -2,6 +2,7 @@ import { TargetProgress } from "@/components/TargetProgress";
 import { PenguinHoursTracker } from "@/components/PenguinHoursTracker";
 import { CustomPeriodClientTracker } from "@/components/CustomPeriodClientTracker";
 import { ResourceQuotaTracker } from "@/components/ResourceQuotaTracker";
+import { AccountHoursByWeekTracker } from "@/components/AccountHoursByWeekTracker";
 import { useAuth } from "@/hooks/use-auth";
 import { PageHeader } from "@/components/PageHeader";
 
@@ -37,6 +38,7 @@ export default function Dashboard() {
         <ResourceQuotaTracker />
         <PenguinHoursTracker />
         <CustomPeriodClientTracker />
+        <AccountHoursByWeekTracker />
       </div>
     </div>
   );

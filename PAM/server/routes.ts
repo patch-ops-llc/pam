@@ -1138,7 +1138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tier3BilledHours: 0,
       };
       
-      // Account-level breakdown: { [accountId]: { accountName, agencyId, agencyName, total, tier1, tier2, tier3, accountIsActive, agencyIsActive } }
+      // Account-level breakdown: { [accountId]: { accountName, agencyId, agencyName, total, tier1, tier2, tier3 } }
       const accountBreakdown: Record<string, {
         accountId: string;
         accountName: string;
@@ -1152,8 +1152,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tier2Billed: number;
         tier3Actual: number;
         tier3Billed: number;
-        accountIsActive: boolean;
-        agencyIsActive: boolean;
       }> = {};
       
       for (const log of timeLogs) {
@@ -1191,8 +1189,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             tier2Billed: 0,
             tier3Actual: 0,
             tier3Billed: 0,
-            accountIsActive: log.account?.isActive ?? true,
-            agencyIsActive: log.agency?.isActive ?? true,
           };
         }
         
@@ -1211,15 +1207,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Convert to array, filter out inactive clients/accounts, sort by agency then account name
-      const accountMetrics = Object.values(accountBreakdown)
-        .filter(am => am.agencyIsActive && am.accountIsActive)
-        .sort((a, b) => {
-          if (a.agencyName !== b.agencyName) {
-            return a.agencyName.localeCompare(b.agencyName);
-          }
-          return a.accountName.localeCompare(b.accountName);
-        });
+      // Convert to array and sort by agency then account name
+      const accountMetrics = Object.values(accountBreakdown).sort((a, b) => {
+        if (a.agencyName !== b.agencyName) {
+          return a.agencyName.localeCompare(b.agencyName);
+        }
+        return a.accountName.localeCompare(b.accountName);
+      });
       
       res.json({
         data: paginatedLogs,
@@ -2026,85 +2020,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching account quota tracker:", error);
       res.status(500).json({ error: "Failed to fetch account quota tracker" });
-    }
-  });
-
-  app.get("/api/analytics/account-hours-by-week", async (req, res) => {
-    try {
-      const weeks = req.query.weeks ? parseInt(req.query.weeks as string, 10) : 8;
-      const data = await storage.getAccountHoursByWeek(weeks);
-      res.json(data);
-    } catch (error) {
-      console.error("Error fetching account hours by week:", error);
-      res.status(500).json({ error: "Failed to fetch account hours by week" });
-    }
-  });
-
-  app.get("/api/analytics/capacity-worksheet", async (req, res) => {
-    try {
-      const weeks = req.query.weeks ? parseInt(req.query.weeks as string, 10) : 8;
-      const data = await storage.getCapacityWorksheet(weeks);
-      res.json(data);
-    } catch (error) {
-      console.error("Error fetching capacity worksheet:", error);
-      res.status(500).json({ error: "Failed to fetch capacity worksheet" });
-    }
-  });
-
-  // Capacity Projections
-  app.get("/api/capacity-projections", async (req, res) => {
-    try {
-      const accountId = req.query.accountId as string | undefined;
-      const weekStart = req.query.weekStart as string | undefined;
-      const weekEnd = req.query.weekEnd as string | undefined;
-      const projections = await storage.listCapacityProjections(accountId, weekStart, weekEnd);
-      res.json(projections);
-    } catch (error) {
-      console.error("Error fetching capacity projections:", error);
-      res.status(500).json({ error: "Failed to fetch capacity projections" });
-    }
-  });
-
-  app.post("/api/capacity-projections", async (req, res) => {
-    try {
-      const { accountId, weekStart, projectedActualHours, projectedBillableHours, notes } = req.body;
-      if (!accountId || !weekStart) {
-        return res.status(400).json({ error: "accountId and weekStart are required" });
-      }
-      const projection = await storage.upsertCapacityProjection(accountId, weekStart, {
-        projectedActualHours: projectedActualHours != null ? String(projectedActualHours) : undefined,
-        projectedBillableHours: projectedBillableHours != null ? String(projectedBillableHours) : undefined,
-        notes,
-      });
-      res.json(projection);
-    } catch (error) {
-      console.error("Error upserting capacity projection:", error);
-      res.status(500).json({ error: "Failed to save capacity projection" });
-    }
-  });
-
-  app.patch("/api/capacity-projections/:id", async (req, res) => {
-    try {
-      const { projectedActualHours, projectedBillableHours, notes } = req.body;
-      const projection = await storage.updateCapacityProjection(req.params.id, {
-        projectedActualHours: projectedActualHours != null ? String(projectedActualHours) : undefined,
-        projectedBillableHours: projectedBillableHours != null ? String(projectedBillableHours) : undefined,
-        notes,
-      });
-      res.json(projection);
-    } catch (error) {
-      console.error("Error updating capacity projection:", error);
-      res.status(500).json({ error: "Failed to update capacity projection" });
-    }
-  });
-
-  app.delete("/api/capacity-projections/:id", async (req, res) => {
-    try {
-      await storage.deleteCapacityProjection(req.params.id);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting capacity projection:", error);
-      res.status(500).json({ error: "Failed to delete capacity projection" });
     }
   });
 
@@ -8044,23 +7959,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/training/enrollments/:id", requireAuth, async (req, res) => {
-    try {
-      const user = req.user as any;
-      const enrollment = await storage.getTrainingEnrollment(req.params.id);
-      if (!enrollment) return res.status(404).json({ error: "Enrollment not found" });
-
-      const canDelete = enrollment.userId === user.id || user.role === "admin" || user.role === "manager";
-      if (!canDelete) return res.status(403).json({ error: "You don't have permission to delete this enrollment" });
-
-      await storage.deleteTrainingEnrollment(req.params.id);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting training enrollment:", error);
-      res.status(500).json({ error: "Failed to delete training enrollment" });
-    }
-  });
-
   // Training Module Submissions
   app.get("/api/training/enrollments/:enrollmentId/submissions", requireAuth, async (req, res) => {
     try {
@@ -8132,40 +8030,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error reviewing training submission:", error);
       res.status(500).json({ error: "Failed to review training submission" });
-    }
-  });
-
-  // Training AI Planning - returns clarifying questions
-  app.post("/api/training/generate-plan", requireAuth, async (req, res) => {
-    try {
-      const { prompt } = req.body;
-      if (!prompt || typeof prompt !== "string") {
-        return res.status(400).json({ error: "prompt is required" });
-      }
-      const result = await aiService.generateTrainingPlanQuestions(prompt.trim());
-      res.json(result);
-    } catch (error) {
-      console.error("Error generating planning questions:", error);
-      res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to generate planning questions",
-      });
-    }
-  });
-
-  // Training AI Generate endpoint - generates program structure from natural language
-  app.post("/api/training/generate", requireAuth, async (req, res) => {
-    try {
-      const { prompt, answers } = req.body;
-      if (!prompt || typeof prompt !== "string") {
-        return res.status(400).json({ error: "prompt is required" });
-      }
-      const result = await aiService.generateTrainingProgram(prompt.trim(), answers);
-      res.json(result);
-    } catch (error) {
-      console.error("Error generating training program:", error);
-      res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to generate training program",
-      });
     }
   });
 

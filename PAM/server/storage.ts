@@ -4,7 +4,7 @@ import {
   partnerBonusPolicies, individualQuotaBonusSettings, quotaPeriods,
   penguinHoursTracker, forecastInvoices, forecastExpenses, forecastPayrollMembers, forecastScenarios, forecastRetainers,
   forecastAccountRevenue, forecastSettings, forecastCapacityResources, forecastCapacityAllocations, forecastResources, resourceMonthlyCapacity, accountForecastAllocations,
-  projectTeamMembers, userAvailability, holidays, capacityProjections, proposals,
+  projectTeamMembers, userAvailability, holidays, proposals,
   proposalScopeItems, knowledgeBaseDocuments, guidanceSettings, chatTranscripts,
   pipelineStages, leads, deals, leadActivities, brandingConfig, apiKeys,
   uatSessions, uatGuests, uatSessionCollaborators, uatChecklistItems, uatResponses, uatItemComments,
@@ -42,7 +42,6 @@ import {
   type ProjectTeamMember, type InsertProjectTeamMember,
   type UserAvailability, type InsertUserAvailability,
   type Holiday, type InsertHoliday,
-  type CapacityProjection, type InsertCapacityProjection,
   type Proposal, type InsertProposal,
   type ProposalScopeItem, type InsertProposalScopeItem,
   type KnowledgeBaseDocument, type InsertKnowledgeBaseDocument,
@@ -281,31 +280,6 @@ export interface IStorage {
   }>>;
 
   // Analytics
-  getAccountHoursByWeek(weeks?: number): Promise<Array<{
-    accountId: string;
-    accountName: string;
-    agencyId: string;
-    agencyName: string;
-    maxHoursPerWeek: number | null;
-    weeks: Array<{ weekStart: string; weekEnd: string; hours: number }>;
-  }>>;
-  getCapacityWorksheet(weeks?: number): Promise<{
-    accounts: Array<{
-      accountId: string;
-      accountName: string;
-      agencyId: string;
-      agencyName: string;
-      weeks: Array<{
-        weekStart: string;
-        weekEnd: string;
-        projectedActual: number;
-        projectedBillable: number;
-        actualHours: number;
-        billableHours: number;
-      }>;
-    }>;
-    teamCapacityByWeek: Array<{ weekStart: string; weekEnd: string; capacityHours: number }>;
-  }>;
   getHoursSummaryByWeek(startDate: Date, endDate: Date): Promise<{ date: string; actualHours: number; billedHours: number }[]>;
   getHoursSummaryByMonth(startDate: Date, endDate: Date): Promise<{ month: string; actualHours: number; billedHours: number }[]>;
   getTargetProgressByAgency(): Promise<{ agency: Agency; weeklyActual: number; monthlyActual: number; weeklyBillable: number; monthlyBillable: number; weeklyPreBilled: number; monthlyPreBilled: number; weeklyTarget: number; monthlyTarget: number; showBillable: boolean; showPreBilled: boolean; noQuota: boolean }[]>;
@@ -428,14 +402,6 @@ export interface IStorage {
   getHolidaysByDateRange(startDate: Date, endDate: Date): Promise<Holiday[]>;
   updateHoliday(id: string, updates: Partial<InsertHoliday>): Promise<Holiday>;
   deleteHoliday(id: string): Promise<void>;
-
-  // Capacity Projections
-  createCapacityProjection(projection: InsertCapacityProjection): Promise<CapacityProjection>;
-  getCapacityProjection(id: string): Promise<CapacityProjection | undefined>;
-  listCapacityProjections(accountId?: string, weekStart?: string, weekEnd?: string): Promise<CapacityProjection[]>;
-  upsertCapacityProjection(accountId: string, weekStart: string, data: Partial<InsertCapacityProjection>): Promise<CapacityProjection>;
-  updateCapacityProjection(id: string, updates: Partial<InsertCapacityProjection>): Promise<CapacityProjection>;
-  deleteCapacityProjection(id: string): Promise<void>;
 
   // Proposals
   createProposal(proposal: InsertProposal): Promise<Proposal>;
@@ -616,7 +582,6 @@ export interface IStorage {
   getTrainingEnrollmentByUserAndProgram(userId: string, programId: string): Promise<TrainingEnrollment | undefined>;
   createTrainingEnrollment(enrollment: InsertTrainingEnrollment): Promise<TrainingEnrollment>;
   updateTrainingEnrollment(id: string, updates: Partial<InsertTrainingEnrollment>): Promise<TrainingEnrollment>;
-  deleteTrainingEnrollment(id: string): Promise<void>;
 
   // Training Module Submissions
   getTrainingModuleSubmissions(enrollmentId: string): Promise<TrainingModuleSubmission[]>;
@@ -1418,238 +1383,6 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(timeLogs.createdAt));
   }
 
-  async getAccountHoursByWeek(numWeeks: number = 8): Promise<Array<{
-    accountId: string;
-    accountName: string;
-    agencyId: string;
-    agencyName: string;
-    maxHoursPerWeek: number | null;
-    weeks: Array<{ weekStart: string; weekEnd: string; hours: number }>;
-  }>> {
-    const now = new Date();
-    const weekStarts: Date[] = [];
-    for (let i = 0; i < numWeeks; i++) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - d.getDay() - i * 7);
-      d.setHours(0, 0, 0, 0);
-      weekStarts.push(d);
-    }
-    const startDate = weekStarts[weekStarts.length - 1];
-    const endDate = new Date(now);
-    endDate.setHours(23, 59, 59, 999);
-
-    const results = await db
-      .select({
-        accountId: accounts.id,
-        accountName: accounts.name,
-        agencyId: agencies.id,
-        agencyName: agencies.name,
-        maxHoursPerWeek: accounts.maxHoursPerWeek,
-        logDate: timeLogs.logDate,
-        billedHours: timeLogs.billedHours,
-      })
-      .from(accounts)
-      .innerJoin(agencies, eq(accounts.agencyId, agencies.id))
-      .leftJoin(timeLogs, and(
-        eq(timeLogs.accountId, accounts.id),
-        gte(timeLogs.logDate, startDate),
-        lte(timeLogs.logDate, endDate)
-      ))
-      .where(and(eq(accounts.isActive, true), eq(agencies.isActive, true)));
-
-    const byAccount = new Map<string, {
-      accountId: string;
-      accountName: string;
-      agencyId: string;
-      agencyName: string;
-      maxHoursPerWeek: number | null;
-      weekHours: Map<string, number>;
-    }>();
-
-    for (const r of results) {
-      const key = r.accountId;
-      if (!byAccount.has(key)) {
-        byAccount.set(key, {
-          accountId: r.accountId,
-          accountName: r.accountName,
-          agencyId: r.agencyId,
-          agencyName: r.agencyName,
-          maxHoursPerWeek: r.maxHoursPerWeek ? parseFloat(r.maxHoursPerWeek) : null,
-          weekHours: new Map(),
-        });
-      }
-      const acc = byAccount.get(key)!;
-      if (r.logDate && r.billedHours != null) {
-        const logDate = new Date(r.logDate);
-        const weekStart = new Date(logDate);
-        weekStart.setDate(logDate.getDate() - logDate.getDay());
-        weekStart.setHours(0, 0, 0, 0);
-        const weekKey = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, "0")}-${String(weekStart.getDate()).padStart(2, "0")}`;
-        acc.weekHours.set(weekKey, (acc.weekHours.get(weekKey) || 0) + parseFloat(r.billedHours));
-      }
-    }
-
-    return Array.from(byAccount.values())
-      .filter((a) => a.maxHoursPerWeek != null || a.weekHours.size > 0)
-      .sort((a, b) => a.agencyName.localeCompare(b.agencyName) || a.accountName.localeCompare(b.accountName))
-      .map((a) => ({
-        accountId: a.accountId,
-        accountName: a.accountName,
-        agencyId: a.agencyId,
-        agencyName: a.agencyName,
-        maxHoursPerWeek: a.maxHoursPerWeek,
-        weeks: weekStarts.map((ws) => {
-          const weekKey = `${ws.getFullYear()}-${String(ws.getMonth() + 1).padStart(2, "0")}-${String(ws.getDate()).padStart(2, "0")}`;
-          const weekEnd = new Date(ws);
-          weekEnd.setDate(weekEnd.getDate() + 6);
-          const weekEndKey = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, "0")}-${String(weekEnd.getDate()).padStart(2, "0")}`;
-          return {
-            weekStart: weekKey,
-            weekEnd: weekEndKey,
-            hours: a.weekHours.get(weekKey) || 0,
-          };
-        }),
-      }));
-  }
-
-  async getCapacityWorksheet(numWeeks: number = 8): Promise<{
-    accounts: Array<{
-      accountId: string;
-      accountName: string;
-      agencyId: string;
-      agencyName: string;
-      weeks: Array<{
-        weekStart: string;
-        weekEnd: string;
-        projectedActual: number;
-        projectedBillable: number;
-        actualHours: number;
-        billableHours: number;
-      }>;
-    }>;
-    teamCapacityByWeek: Array<{ weekStart: string; weekEnd: string; capacityHours: number }>;
-  }> {
-    const now = new Date();
-    const currentMonday = new Date(now);
-    currentMonday.setDate(now.getDate() - now.getDay());
-    currentMonday.setHours(0, 0, 0, 0);
-    const weekStarts: Date[] = [];
-    for (let i = 0; i < numWeeks; i++) {
-      const d = new Date(currentMonday);
-      d.setDate(currentMonday.getDate() + i * 7);
-      weekStarts.push(d);
-    }
-    const startDate = weekStarts[0];
-    const endDate = new Date(weekStarts[weekStarts.length - 1]);
-    endDate.setDate(endDate.getDate() + 6);
-    endDate.setHours(23, 59, 59, 999);
-
-    const weekStartStr = startDate.toISOString().split("T")[0];
-    const weekEndStr = endDate.toISOString().split("T")[0];
-
-    const projections = await this.listCapacityProjections(undefined, weekStartStr, weekEndStr);
-    const projectionMap = new Map<string, { projectedActual: number; projectedBillable: number }>();
-    for (const p of projections) {
-      const key = `${p.accountId}|${p.weekStart}`;
-      projectionMap.set(key, {
-        projectedActual: parseFloat(p.projectedActualHours || "0"),
-        projectedBillable: parseFloat(p.projectedBillableHours || "0"),
-      });
-    }
-
-    const accountsList = await db
-      .select({
-        accountId: accounts.id,
-        accountName: accounts.name,
-        agencyId: agencies.id,
-        agencyName: agencies.name,
-      })
-      .from(accounts)
-      .innerJoin(agencies, eq(accounts.agencyId, agencies.id))
-      .where(and(eq(accounts.isActive, true), eq(agencies.isActive, true)))
-      .orderBy(agencies.name, accounts.name);
-
-    const timeLogResults = await db
-      .select({
-        accountId: timeLogs.accountId,
-        logDate: timeLogs.logDate,
-        actualHours: timeLogs.actualHours,
-        billedHours: timeLogs.billedHours,
-      })
-      .from(timeLogs)
-      .where(
-        and(
-          gte(timeLogs.logDate, startDate),
-          lte(timeLogs.logDate, endDate)
-        )
-      );
-
-    const accountWeekActual = new Map<string, number>();
-    const accountWeekBillable = new Map<string, number>();
-    for (const r of timeLogResults) {
-      if (!r.accountId || !r.logDate) continue;
-      const logDate = new Date(r.logDate);
-      const weekStart = new Date(logDate);
-      weekStart.setDate(logDate.getDate() - logDate.getDay());
-      weekStart.setHours(0, 0, 0, 0);
-      const weekKey = weekStart.toISOString().split("T")[0];
-      const accKey = `${r.accountId}|${weekKey}`;
-      accountWeekActual.set(accKey, (accountWeekActual.get(accKey) || 0) + parseFloat(r.actualHours || "0"));
-      accountWeekBillable.set(accKey, (accountWeekBillable.get(accKey) || 0) + parseFloat(r.billedHours || "0"));
-    }
-
-    const allQuotas = await this.getAllResourceQuotas();
-    const allUsers = await this.getUsers();
-    const usersWithQuotas = allUsers.filter((u) =>
-      allQuotas.some((q) => q.userId === u.id && q.isActive)
-    );
-    const totalMonthlyTarget = usersWithQuotas.reduce((sum, u) => {
-      const q = allQuotas.find((qu) => qu.userId === u.id);
-      return sum + parseFloat(q?.monthlyTarget || "160");
-    }, 0);
-    const weeklyCapacityEstimate = totalMonthlyTarget / 4.33;
-
-    const teamCapacityByWeek = weekStarts.map((ws) => {
-      const weekKey = ws.toISOString().split("T")[0];
-      const we = new Date(ws);
-      we.setDate(we.getDate() + 6);
-      const weekEndKey = we.toISOString().split("T")[0];
-      return {
-        weekStart: weekKey,
-        weekEnd: weekEndKey,
-        capacityHours: weeklyCapacityEstimate,
-      };
-    });
-
-    const accountsData = accountsList.map((a) => ({
-      accountId: a.accountId,
-      accountName: a.accountName,
-      agencyId: a.agencyId,
-      agencyName: a.agencyName,
-      weeks: weekStarts.map((ws) => {
-        const weekKey = ws.toISOString().split("T")[0];
-        const we = new Date(ws);
-        we.setDate(we.getDate() + 6);
-        const weekEndKey = we.toISOString().split("T")[0];
-        const proj = projectionMap.get(`${a.accountId}|${weekKey}`);
-        const accKey = `${a.accountId}|${weekKey}`;
-        return {
-          weekStart: weekKey,
-          weekEnd: weekEndKey,
-          projectedActual: proj?.projectedActual ?? 0,
-          projectedBillable: proj?.projectedBillable ?? 0,
-          actualHours: accountWeekActual.get(accKey) ?? 0,
-          billableHours: accountWeekBillable.get(accKey) ?? 0,
-        };
-      }),
-    }));
-
-    return {
-      accounts: accountsData,
-      teamCapacityByWeek,
-    };
-  }
-
   async getMonthlyTimeLogReport(year: number, month: number): Promise<Array<{
     agencyId: string;
     agencyName: string;
@@ -2346,8 +2079,8 @@ export class DatabaseStorage implements IStorage {
       return {
         user,
         monthlyTarget,
-        adjustedTarget: Math.round(adjustedTarget * 100) / 100,
-        expectedHours: Math.round(expectedHours * 100) / 100,
+        adjustedTarget: Math.round(adjustedTarget * 10) / 10,
+        expectedHours: Math.round(expectedHours * 10) / 10,
         billedHours,
         prebilledHours,
         percentageComplete: Math.round(percentageComplete * 10) / 10,
@@ -2469,8 +2202,8 @@ export class DatabaseStorage implements IStorage {
           agency,
           monthlyTarget,
           billedHours,
-          expectedHours: Math.round(expectedHours * 100) / 100,
-          percentageComplete: Math.round(percentageComplete * 100) / 100,
+          expectedHours: Math.round(expectedHours * 10) / 10,
+          percentageComplete: Math.round(percentageComplete * 10) / 10,
         };
       });
   }
@@ -2570,8 +2303,8 @@ export class DatabaseStorage implements IStorage {
           agency,
           monthlyTarget,
           billedHours,
-          expectedHours: Math.round(expectedHours * 100) / 100,
-          percentageComplete: Math.round(percentageComplete * 100) / 100,
+          expectedHours: Math.round(expectedHours * 10) / 10,
+          percentageComplete: Math.round(percentageComplete * 10) / 10,
         };
       });
   }
@@ -3586,95 +3319,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteHoliday(id: string): Promise<void> {
     await db.delete(holidays).where(eq(holidays.id, id));
-  }
-
-  // Capacity Projections
-  async createCapacityProjection(projection: InsertCapacityProjection): Promise<CapacityProjection> {
-    const [created] = await db.insert(capacityProjections).values(projection).returning();
-    return created;
-  }
-
-  async getCapacityProjection(id: string): Promise<CapacityProjection | undefined> {
-    const [p] = await db
-      .select()
-      .from(capacityProjections)
-      .where(eq(capacityProjections.id, id))
-      .limit(1);
-    return p;
-  }
-
-  async listCapacityProjections(
-    accountId?: string,
-    weekStart?: string,
-    weekEnd?: string
-  ): Promise<CapacityProjection[]> {
-    const conditions = [];
-    if (accountId) {
-      conditions.push(eq(capacityProjections.accountId, accountId));
-    }
-    if (weekStart) {
-      conditions.push(gte(capacityProjections.weekStart, weekStart));
-    }
-    if (weekEnd) {
-      conditions.push(lte(capacityProjections.weekStart, weekEnd));
-    }
-    return await db
-      .select()
-      .from(capacityProjections)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(capacityProjections.weekStart, capacityProjections.accountId);
-  }
-
-  async upsertCapacityProjection(
-    accountId: string,
-    weekStart: string,
-    data: Partial<InsertCapacityProjection>
-  ): Promise<CapacityProjection> {
-    const existing = await db
-      .select()
-      .from(capacityProjections)
-      .where(
-        and(
-          eq(capacityProjections.accountId, accountId),
-          eq(capacityProjections.weekStart, weekStart)
-        )
-      )
-      .limit(1);
-    if (existing.length > 0) {
-      const [updated] = await db
-        .update(capacityProjections)
-        .set({
-          ...data,
-          updatedAt: new Date(),
-        })
-        .where(eq(capacityProjections.id, existing[0].id))
-        .returning();
-      return updated;
-    }
-    const [created] = await db
-      .insert(capacityProjections)
-      .values({
-        accountId,
-        weekStart,
-        projectedActualHours: data.projectedActualHours ?? "0",
-        projectedBillableHours: data.projectedBillableHours ?? "0",
-        notes: data.notes,
-      })
-      .returning();
-    return created;
-  }
-
-  async updateCapacityProjection(id: string, updates: Partial<InsertCapacityProjection>): Promise<CapacityProjection> {
-    const [updated] = await db
-      .update(capacityProjections)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(capacityProjections.id, id))
-      .returning();
-    return updated;
-  }
-
-  async deleteCapacityProjection(id: string): Promise<void> {
-    await db.delete(capacityProjections).where(eq(capacityProjections.id, id));
   }
 
   // Proposals
@@ -4747,10 +4391,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(trainingEnrollments.id, id))
       .returning();
     return updated;
-  }
-
-  async deleteTrainingEnrollment(id: string): Promise<void> {
-    await db.delete(trainingEnrollments).where(eq(trainingEnrollments.id, id));
   }
 
   // Training Module Submissions

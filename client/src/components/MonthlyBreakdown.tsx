@@ -149,7 +149,7 @@ export function MonthlyBreakdown() {
           <div className="flex gap-4">
             <Badge variant="outline" className="gap-1">
               <Target className="h-3 w-3" />
-              Actual: {totalActualHours.toFixed(1)}h
+              Actual: {totalActualHours.toFixed(2)}h
             </Badge>
             <Badge variant="outline" className="gap-1">
               <Target className="h-3 w-3" />
@@ -157,7 +157,7 @@ export function MonthlyBreakdown() {
             </Badge>
             <Badge variant={efficiency >= 100 ? "default" : "secondary"} className="gap-1">
               <Target className="h-3 w-3" />
-              {efficiency.toFixed(1)}% Efficiency
+              {efficiency.toFixed(2)}% Efficiency
             </Badge>
           </div>
         </div>
@@ -214,7 +214,7 @@ export function MonthlyBreakdown() {
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <span className="text-muted-foreground">Billed:</span>
-                                      <span className="font-medium">{userItem.billedHours.toFixed(1)}h</span>
+                                      <span className="font-medium">{userItem.billedHours.toFixed(2)}h</span>
                                     </div>
                                     <Badge 
                                       variant={

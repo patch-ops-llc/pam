@@ -594,7 +594,7 @@ export default function TimeLogging() {
                             <span className="font-semibold">{agency.name}</span>
                             {(agencyActualTotal > 0 || agencyBilledTotal > 0) && (
                               <span className="text-xs text-muted-foreground">
-                                ({agencyActualTotal.toFixed(1)}h actual / {agencyBilledTotal.toFixed(1)}h billed)
+                                ({agencyActualTotal.toFixed(2)}h actual / {agencyBilledTotal.toFixed(2)}h billed)
                               </span>
                             )}
                           </div>
@@ -617,7 +617,7 @@ export default function TimeLogging() {
                                     <span className="font-medium">{account.name}</span>
                                     {(accountActualTotal > 0 || accountBilledTotal > 0) && (
                                       <span className="text-xs text-muted-foreground">
-                                        ({accountActualTotal.toFixed(1)}h actual / {accountBilledTotal.toFixed(1)}h billed)
+                                        ({accountActualTotal.toFixed(2)}h actual / {accountBilledTotal.toFixed(2)}h billed)
                                       </span>
                                     )}
                                   </div>
@@ -695,10 +695,10 @@ export default function TimeLogging() {
                                                                       )}
                                                                     </div>
                                                                     <div className="text-muted-foreground">
-                                                                      {logs.reduce((sum, log) => sum + Number(log.actualHours || 0), 0).toFixed(1)}h actual
+                                                                      {logs.reduce((sum, log) => sum + Number(log.actualHours || 0), 0).toFixed(2)}h actual
                                                                     </div>
                                                                     <div className="font-medium">
-                                                                      {logs.reduce((sum, log) => sum + Number(log.billedHours || 0), 0).toFixed(1)}h billed
+                                                                      {logs.reduce((sum, log) => sum + Number(log.billedHours || 0), 0).toFixed(2)}h billed
                                                                     </div>
                                                                   </div>
                                                                 </PopoverTrigger>
@@ -750,7 +750,7 @@ export default function TimeLogging() {
                                                             {taskActualTotal.toFixed(1)}h actual
                                                           </div>
                                                           <div className="font-semibold">
-                                                            {taskBilledTotal.toFixed(1)}h billed
+                                                            {taskBilledTotal.toFixed(2)}h billed
                                                           </div>
                                                         </div>
                                                       ) : (

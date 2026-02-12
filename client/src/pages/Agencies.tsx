@@ -66,7 +66,7 @@ export default function Agencies() {
       activeAccounts: agencyAccounts.length,
       activeProjects: agencyProjects.length,
       activeTasks: agencyTasks.length,
-      monthlyHours: Math.round(monthlyHours * 10) / 10,
+      monthlyHours: Math.round(monthlyHours * 100) / 100,
     };
   };
 

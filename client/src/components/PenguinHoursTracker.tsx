@@ -151,7 +151,7 @@ export function PenguinHoursTracker() {
               Started: {format(new Date(trackerData.startDate), "MMM d, yyyy")}
             </span>
             <span className="font-medium" data-testid="text-hours-remaining">
-              {hoursRemaining.toFixed(1)}h remaining
+              {hoursRemaining.toFixed(2)}h remaining
             </span>
           </div>
           <Progress value={progressPercentage} className="h-2" data-testid="progress-hours" />
@@ -176,7 +176,7 @@ export function PenguinHoursTracker() {
         {hoursRemaining <= 0 && (
           <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md p-3">
             <p className="text-sm text-red-800 dark:text-red-200">
-              Hour bank depleted! {Math.abs(hoursRemaining).toFixed(1)} hours over limit
+              Hour bank depleted! {Math.abs(hoursRemaining).toFixed(2)} hours over limit
             </p>
           </div>
         )}

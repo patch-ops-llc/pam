@@ -1,4 +1,4 @@
-import { useState, useMemo, Fragment } from "react";
+import { useState, useMemo, Fragment, useEffect } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,6 +126,7 @@ export default function ClientsAndAccounts() {
   const [selectedAccount, setSelectedAccount] = useState<AccountWithAgency | null>(null);
   const [selectedProjectToEdit, setSelectedProjectToEdit] = useState<Project | null>(null);
   const [isCreateAccountDialogOpen, setIsCreateAccountDialogOpen] = useState(false);
+  const [isEditAccountDialogOpen, setIsEditAccountDialogOpen] = useState(false);
   const [accountAgencyId, setAccountAgencyId] = useState<string | null>(null);
   const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
   const [newClientName, setNewClientName] = useState("");
@@ -194,7 +195,7 @@ export default function ClientsAndAccounts() {
     return {
       activeAccounts: agencyAccounts.length,
       activeProjects: agencyProjects.length,
-      monthlyHours: Math.round(monthlyHours * 10) / 10,
+      monthlyHours: Math.round(monthlyHours * 100) / 100,
     };
   };
 
@@ -236,8 +237,8 @@ export default function ClientsAndAccounts() {
       return {
         ...account,
         metrics: {
-          weeklyHours: Math.round(weeklyHours * 10) / 10,
-          monthlyHours: Math.round(monthlyHours * 10) / 10,
+          weeklyHours: Math.round(weeklyHours * 100) / 100,
+          monthlyHours: Math.round(monthlyHours * 100) / 100,
           efficiency: Math.round(efficiency),
           totalActualHours,
           totalBilledHours,
@@ -278,6 +279,15 @@ export default function ClientsAndAccounts() {
     );
     return { ...account, agency, projects: accountProjects, unassignedTasks };
   }, [selectedAccountId, accountMetrics, agencies, projects, tasks]);
+
+  useEffect(() => {
+    if (isEditAccountDialogOpen && selectedAccountData) {
+      editAccountForm.reset({
+        monthlyQuotaHours: selectedAccountData.monthlyQuotaHours ?? "",
+        maxHoursPerWeek: selectedAccountData.maxHoursPerWeek ?? "",
+      });
+    }
+  }, [isEditAccountDialogOpen, selectedAccountData]);
 
   const projectHours = useMemo(() => {
     const hours: Record<string, { actual: number; billed: number }> = {};
@@ -381,6 +391,13 @@ export default function ClientsAndAccounts() {
       description: "",
       isActive: true,
     },
+  });
+
+  const editAccountForm = useForm<{
+    monthlyQuotaHours?: string;
+    maxHoursPerWeek?: string;
+  }>({
+    defaultValues: { monthlyQuotaHours: "", maxHoursPerWeek: "" },
   });
 
   const createAccountMutation = useMutation({
@@ -504,6 +521,8 @@ export default function ClientsAndAccounts() {
       id: string;
       richTextContent?: string;
       isActive?: boolean;
+      monthlyQuotaHours?: string;
+      maxHoursPerWeek?: string;
     }) => apiRequest(`/api/accounts/${id}`, "PATCH", updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
@@ -604,6 +623,23 @@ export default function ClientsAndAccounts() {
       id: account.id,
       isActive: !account.isActive,
     });
+  };
+
+  const handleEditAccountLimits = (data: { monthlyQuotaHours?: string; maxHoursPerWeek?: string }) => {
+    if (!selectedAccountData) return;
+    updateAccountMutation.mutate(
+      {
+        id: selectedAccountData.id,
+        monthlyQuotaHours: data.monthlyQuotaHours || undefined,
+        maxHoursPerWeek: data.maxHoursPerWeek || undefined,
+      },
+      {
+        onSuccess: () => {
+          setIsEditAccountDialogOpen(false);
+          toast({ title: "Success", description: "Account limits updated" });
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -1029,6 +1065,38 @@ export default function ClientsAndAccounts() {
                       <p className="text-xs text-muted-foreground">logs (30d)</p>
                     </div>
                   </div>
+                  {(selectedAccountData.monthlyQuotaHours || selectedAccountData.maxHoursPerWeek) && (
+                    <div className="rounded-lg border p-3 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Account limits</p>
+                      <div className="flex gap-4 text-sm">
+                        {selectedAccountData.monthlyQuotaHours && (
+                          <span>Monthly: {parseFloat(selectedAccountData.monthlyQuotaHours).toFixed(2)}h</span>
+                        )}
+                        {selectedAccountData.maxHoursPerWeek && (
+                          <span>Max/week: {parseFloat(selectedAccountData.maxHoursPerWeek).toFixed(1)}h</span>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => setIsEditAccountDialogOpen(true)}
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit limits
+                      </Button>
+                    </div>
+                  )}
+                  {(!selectedAccountData.monthlyQuotaHours && !selectedAccountData.maxHoursPerWeek) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsEditAccountDialogOpen(true)}
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Set account limits
+                    </Button>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="projects" className="mt-4 space-y-3">
@@ -1100,10 +1168,10 @@ export default function ClientsAndAccounts() {
                             <div className="space-y-1">
                               <div className="flex justify-between text-xs text-muted-foreground">
                                 <span>
-                                  {projectHours[project.id]?.actual.toFixed(1)}h /{" "}
+                                  {projectHours[project.id]?.actual.toFixed(2)}h /{" "}
                                   {parseFloat(
                                     project.estimatedHours
-                                  ).toFixed(1)}
+                                  ).toFixed(2)}
                                   h
                                 </span>
                                 <span className="font-medium text-gold">
@@ -1427,6 +1495,46 @@ export default function ClientsAndAccounts() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={accountForm.control}
+                name="monthlyQuotaHours"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monthly Quota (Hours)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        placeholder="Optional"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value ? e.target.value : undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={accountForm.control}
+                name="maxHoursPerWeek"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max Hours Per Week</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        placeholder="Optional - cap hours per client per week"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value ? e.target.value : undefined)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <DialogFooter>
                 <Button
                   type="button"
@@ -1440,6 +1548,78 @@ export default function ClientsAndAccounts() {
                   disabled={createAccountMutation.isPending}
                 >
                   {createAccountMutation.isPending ? "Creating..." : "Create Account"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Account Limits Dialog */}
+      <Dialog
+        open={isEditAccountDialogOpen}
+        onOpenChange={setIsEditAccountDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Account Limits</DialogTitle>
+            <DialogDescription>
+              Set max hours per week to avoid exceeding client caps. {selectedAccountData && `Editing ${selectedAccountData.name}`}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editAccountForm}>
+            <form
+              onSubmit={editAccountForm.handleSubmit(handleEditAccountLimits)}
+              className="space-y-4"
+            >
+              <FormField
+                control={editAccountForm.control}
+                name="monthlyQuotaHours"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monthly Quota (Hours)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        placeholder="Optional"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value ? e.target.value : undefined)}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editAccountForm.control}
+                name="maxHoursPerWeek"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max Hours Per Week</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        placeholder="Cap hours per client per week"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value ? e.target.value : undefined)}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditAccountDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateAccountMutation.isPending}>
+                  {updateAccountMutation.isPending ? "Saving..." : "Save"}
                 </Button>
               </DialogFooter>
             </form>

@@ -156,7 +156,7 @@ export function AnalyticsDashboard() {
             )}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{weeklyComparison.thisWeek.toFixed(1)}h</div>
+            <div className="text-2xl font-bold">{weeklyComparison.thisWeek.toFixed(2)}h</div>
             <div className={`text-xs flex items-center gap-1 ${weeklyComparison.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {weeklyComparison.change >= 0 ? '+' : ''}{weeklyComparison.change.toFixed(1)}%
               <span className="text-muted-foreground">from last week</span>
@@ -174,7 +174,7 @@ export function AnalyticsDashboard() {
             )}
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{monthlyComparison.thisMonth.toFixed(1)}h</div>
+            <div className="text-2xl font-bold">{monthlyComparison.thisMonth.toFixed(2)}h</div>
             <div className={`text-xs flex items-center gap-1 ${monthlyComparison.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {monthlyComparison.change >= 0 ? '+' : ''}{monthlyComparison.change.toFixed(1)}%
               <span className="text-muted-foreground">from last month</span>
@@ -202,7 +202,7 @@ export function AnalyticsDashboard() {
                 <Tooltip 
                   labelFormatter={(value) => format(new Date(value), 'MMM dd, yyyy')}
                   formatter={(value: number, name: string) => [
-                    `${value.toFixed(1)}h`,
+                    `${value.toFixed(2)}h`,
                     name === 'actualHours' ? 'Actual Hours' : 'Billed Hours'
                   ]}
                 />
@@ -241,7 +241,7 @@ export function AnalyticsDashboard() {
                 <YAxis />
                 <Tooltip 
                   formatter={(value: number, name: string) => [
-                    `${value.toFixed(1)}h`,
+                    `${value.toFixed(2)}h`,
                     name === 'actualHours' ? 'Actual Hours' : 'Billed Hours'
                   ]}
                 />

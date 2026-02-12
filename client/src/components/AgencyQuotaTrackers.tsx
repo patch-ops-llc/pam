@@ -114,7 +114,7 @@ export function AgencyQuotaTrackers() {
                   <div className="flex items-center gap-3 flex-shrink-0">
                     {agency.showBillable && (
                       <Badge variant="outline" data-testid={`badge-billable-${agency.id}`}>
-                        Billable: {billableHours.toFixed(1)}h
+                        Billable: {billableHours.toFixed(2)}h
                       </Badge>
                     )}
                     {agency.showPreBilled && (
@@ -126,7 +126,7 @@ export function AgencyQuotaTrackers() {
                       variant={totalHours >= target ? "default" : "secondary"}
                       data-testid={`badge-total-${agency.id}`}
                     >
-                      {totalHours.toFixed(1)}h / {target}h
+                      {totalHours.toFixed(2)}h / {target}h
                     </Badge>
                   </div>
                 </div>
@@ -151,7 +151,7 @@ export function AgencyQuotaTrackers() {
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Pre-billed Hours</span>
                         <span className="font-medium">
-                          {preBilledHours.toFixed(1)}h / {target}h
+                          {preBilledHours.toFixed(2)}h / {target}h
                         </span>
                       </div>
                       <Progress 
