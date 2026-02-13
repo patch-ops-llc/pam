@@ -1515,7 +1515,10 @@ export class DatabaseStorage implements IStorage {
   }> {
     const now = new Date();
     const currentMonday = new Date(now);
-    currentMonday.setDate(now.getDate() - now.getDay());
+    // getDay(): 0=Sun, 1=Mon ... 6=Sat  →  offset to Monday
+    const dayOfWeek = currentMonday.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    currentMonday.setDate(now.getDate() + mondayOffset);
     currentMonday.setHours(0, 0, 0, 0);
     const weekStarts: Date[] = [];
     for (let i = 0; i < numWeeks; i++) {
@@ -1531,14 +1534,19 @@ export class DatabaseStorage implements IStorage {
     const weekStartStr = startDate.toISOString().split("T")[0];
     const weekEndStr = endDate.toISOString().split("T")[0];
 
-    const projections = await this.listCapacityProjections(undefined, weekStartStr, weekEndStr);
+    // Gracefully handle capacity_projections table potentially not existing
     const projectionMap = new Map<string, { projectedActual: number; projectedBillable: number }>();
-    for (const p of projections) {
-      const key = `${p.accountId}|${p.weekStart}`;
-      projectionMap.set(key, {
-        projectedActual: parseFloat(p.projectedActualHours || "0"),
-        projectedBillable: parseFloat(p.projectedBillableHours || "0"),
-      });
+    try {
+      const projections = await this.listCapacityProjections(undefined, weekStartStr, weekEndStr);
+      for (const p of projections) {
+        const key = `${p.accountId}|${p.weekStart}`;
+        projectionMap.set(key, {
+          projectedActual: parseFloat(p.projectedActualHours || "0"),
+          projectedBillable: parseFloat(p.projectedBillableHours || "0"),
+        });
+      }
+    } catch (err) {
+      console.error("Warning: could not load capacity projections (table may not exist yet):", (err as Error).message);
     }
 
     const accountsList = await db
@@ -1574,7 +1582,10 @@ export class DatabaseStorage implements IStorage {
       if (!r.accountId || !r.logDate) continue;
       const logDate = new Date(r.logDate);
       const weekStart = new Date(logDate);
-      weekStart.setDate(logDate.getDate() - logDate.getDay());
+      // Align to Monday (same offset logic)
+      const logDayOfWeek = weekStart.getDay();
+      const logMondayOffset = logDayOfWeek === 0 ? -6 : 1 - logDayOfWeek;
+      weekStart.setDate(logDate.getDate() + logMondayOffset);
       weekStart.setHours(0, 0, 0, 0);
       const weekKey = weekStart.toISOString().split("T")[0];
       const accKey = `${r.accountId}|${weekKey}`;
@@ -1582,16 +1593,22 @@ export class DatabaseStorage implements IStorage {
       accountWeekBillable.set(accKey, (accountWeekBillable.get(accKey) || 0) + parseFloat(r.billedHours || "0"));
     }
 
-    const allQuotas = await this.getAllResourceQuotas();
-    const allUsers = await this.getUsers();
-    const usersWithQuotas = allUsers.filter((u) =>
-      allQuotas.some((q) => q.userId === u.id && q.isActive)
-    );
-    const totalMonthlyTarget = usersWithQuotas.reduce((sum, u) => {
-      const q = allQuotas.find((qu) => qu.userId === u.id);
-      return sum + parseFloat(q?.monthlyTarget || "160");
-    }, 0);
-    const weeklyCapacityEstimate = totalMonthlyTarget / 4.33;
+    // Gracefully handle resource_quotas table potentially not existing
+    let weeklyCapacityEstimate = 0;
+    try {
+      const allQuotas = await this.getAllResourceQuotas();
+      const allUsers = await this.getUsers();
+      const usersWithQuotas = allUsers.filter((u) =>
+        allQuotas.some((q) => q.userId === u.id && q.isActive)
+      );
+      const totalMonthlyTarget = usersWithQuotas.reduce((sum, u) => {
+        const q = allQuotas.find((qu) => qu.userId === u.id);
+        return sum + parseFloat(q?.monthlyTarget || "160");
+      }, 0);
+      weeklyCapacityEstimate = totalMonthlyTarget / 4.33;
+    } catch (err) {
+      console.error("Warning: could not load resource quotas for capacity calc:", (err as Error).message);
+    }
 
     const teamCapacityByWeek = weekStarts.map((ws) => {
       const weekKey = ws.toISOString().split("T")[0];
