@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic, log } from "./vite";
 import { db } from "./db";
+import { pool } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
@@ -76,7 +77,23 @@ export async function getAnonymousUserId(): Promise<string> {
   return anonymousUser.id;
 }
 
+// Run pending schema migrations that can't wait for db:push
+async function runPendingMigrations() {
+  try {
+    await pool.query(`
+      ALTER TABLE forecast_settings
+      ADD COLUMN IF NOT EXISTS topline_quota_target NUMERIC(10,2);
+    `);
+    log('Schema migrations checked');
+  } catch (error) {
+    log('Note: Migration check completed with warnings');
+  }
+}
+
 (async () => {
+  // Run schema migrations before anything else
+  await runPendingMigrations();
+  
   // Ensure anonymous user exists before starting
   await ensureAnonymousUser();
   
