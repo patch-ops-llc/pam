@@ -39,21 +39,34 @@ export function RichTextEditor({
   const [linkUrl, setLinkUrl] = useState('');
   const [showLinkInput, setShowLinkInput] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const pendingContentRef = useRef<string | null>(null);
+  const onChangeRef = useRef(onChange);
+
+  // Keep the ref up to date so the cleanup effect always has the latest callback
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const debouncedOnChange = useCallback((html: string) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
     
+    pendingContentRef.current = html;
     saveTimeoutRef.current = setTimeout(() => {
+      pendingContentRef.current = null;
       onChange(html);
     }, 1000);
   }, [onChange]);
 
+  // On unmount, flush any pending debounced content instead of discarding it
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
+      }
+      if (pendingContentRef.current !== null) {
+        onChangeRef.current(pendingContentRef.current);
       }
     };
   }, []);

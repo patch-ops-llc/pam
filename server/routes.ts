@@ -738,6 +738,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           z.union([z.string().refine(val => !val || Number(val) >= 0, { message: "Estimated hours must be non-negative" }), z.null()]).optional()
         ),
+        assignedToUserId: z.union([z.string(), z.null()]).optional(),
         startDate: z.string().optional(),
         dueDate: z.union([z.string(), z.null()]).optional(),
         labelIds: z.array(z.string()).optional(),

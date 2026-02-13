@@ -1059,19 +1059,35 @@ export class DatabaseStorage implements IStorage {
           isActive: agencies.isActive,
           createdAt: agencies.createdAt,
         },
-        project: projects || undefined
+        project: projects || undefined,
+        assignedToUser: {
+          id: users.id,
+          username: users.username,
+          password: users.password,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          employmentType: users.employmentType,
+          isActive: users.isActive,
+          googleId: users.googleId,
+          profileImageUrl: users.profileImageUrl,
+          createdAt: users.createdAt,
+        },
       })
       .from(tasks)
       .leftJoin(accounts, eq(tasks.accountId, accounts.id))
       .leftJoin(agencies, eq(tasks.agencyId, agencies.id))
       .leftJoin(projects, eq(tasks.projectId, projects.id))
+      .leftJoin(users, eq(tasks.assignedToUserId, users.id))
       .where(and(eq(tasks.isActive, true), isNull(tasks.deletedAt)));
 
-    // Normalize null joins (tasks without agency/account) to undefined for type consistency
+    // Normalize null joins (tasks without agency/account/user) to undefined for type consistency
     return rows.map((row) => ({
       ...row,
       account: row.account?.id ? row.account : null,
       agency: row.agency?.id ? row.agency : null,
+      assignedToUser: row.assignedToUser?.id ? row.assignedToUser : undefined,
     })) as TaskWithRelations[];
   }
 

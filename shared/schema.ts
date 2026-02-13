@@ -1592,6 +1592,8 @@ export const insertAccountSchema = createInsertSchema(accounts)
     createdAt: true,
   })
   .extend({
+    agencyId: z.string().min(1, "Client (agency) is required"),
+    name: z.string().min(1, "Account name is required"),
     contactEmail: z.string().optional(),
     contactPhone: z.string().optional(),
     monthlyQuotaHours: z
