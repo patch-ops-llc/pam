@@ -264,6 +264,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/accounts", async (req, res) => {
     try {
       const accountData = insertAccountSchema.parse(req.body);
+      if (!accountData.agencyId) {
+        return res.status(400).json({ error: "agencyId is required" });
+      }
       const account = await storage.createAccount(accountData);
       res.status(201).json(account);
     } catch (error) {
@@ -271,7 +274,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid account data", details: error.errors });
       }
       console.error("Error creating account:", error);
-      res.status(500).json({ error: "Failed to create account" });
+      const message = error instanceof Error ? error.message : "Failed to create account";
+      res.status(500).json({ error: message });
     }
   });
 
