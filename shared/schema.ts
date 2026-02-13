@@ -732,6 +732,7 @@ export const forecastSettings = pgTable("forecast_settings", {
   blendedRate: decimal("blended_rate", { precision: 10, scale: 2 })
     .notNull()
     .default("90"),
+  toplineQuotaTarget: decimal("topline_quota_target", { precision: 10, scale: 2 }),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

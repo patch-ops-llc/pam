@@ -128,6 +128,13 @@ const BONUS_POLICY = {
   partners: ['Domestique', 'New Edge', 'Instrumental'],
 };
 
+type ForecastSettings = {
+  id: string;
+  blendedRate: string;
+  toplineQuotaTarget: string | null;
+  updatedAt: string;
+};
+
 export function QuotasTab() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -149,6 +156,9 @@ export function QuotasTab() {
   const resourceSaveTimers = useRef<Record<string, NodeJS.Timeout>>({});
   const configsRef = useRef<Record<string, Partial<QuotaConfig>>>({});
   const resourceQuotasRef = useRef<Record<string, Partial<ResourceQuota>>>({});
+  const [toplineQuotaInput, setToplineQuotaInput] = useState<string>("");
+  const [savingTopline, setSavingTopline] = useState(false);
+  const [savedTopline, setSavedTopline] = useState(false);
   
   const [selectedMonth, setSelectedMonth] = useState<'current' | 'previous'>('current');
   const currentMonth = useMemo(() => format(new Date(), 'yyyy-MM'), []);
@@ -201,6 +211,45 @@ export function QuotasTab() {
 
   const { data: quotaPeriods = [], isLoading: quotaPeriodsLoading } = useQuery<QuotaPeriod[]>({
     queryKey: ["/api/quota-periods"],
+  });
+
+  const { data: forecastSettings } = useQuery<ForecastSettings>({
+    queryKey: ["/api/forecast/settings"],
+    queryFn: async () => {
+      const res = await fetch('/api/forecast/settings');
+      if (!res.ok) throw new Error('Failed to fetch forecast settings');
+      return res.json();
+    },
+  });
+
+  // Initialize topline quota input from settings
+  useEffect(() => {
+    if (forecastSettings?.toplineQuotaTarget && !toplineQuotaInput) {
+      setToplineQuotaInput(forecastSettings.toplineQuotaTarget);
+    }
+  }, [forecastSettings?.toplineQuotaTarget]);
+
+  const updateToplineQuotaMutation = useMutation({
+    mutationFn: async (target: string) => {
+      setSavingTopline(true);
+      setSavedTopline(false);
+      const response = await apiRequest(`/api/forecast/settings`, "PUT", {
+        blendedRate: forecastSettings?.blendedRate || "90",
+        toplineQuotaTarget: target || null,
+      });
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/forecast/settings"] });
+      setSavingTopline(false);
+      setSavedTopline(true);
+      setTimeout(() => setSavedTopline(false), 2000);
+      toast({ title: "Saved", description: "Topline quota target updated." });
+    },
+    onError: (error: any) => {
+      setSavingTopline(false);
+      toast({ title: "Error", description: error.message || "Failed to update topline quota", variant: "destructive" });
+    },
   });
 
   const { data: clientQuotaProgress = [], isLoading: clientProgressLoading } = useQuery<ClientQuotaProgress[]>({
@@ -745,6 +794,145 @@ export function QuotasTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Topline Quota Target & Worksheet Calculator */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-blue-600" />
+              Topline Quota Target
+            </CardTitle>
+            <CardDescription>
+              Set a single aggregate monthly hours target for the entire company. This number populates the dashboard and is used in forecasting calculations.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-end gap-4">
+              <div className="space-y-2 flex-1 max-w-xs">
+                <Label htmlFor="toplineQuota">Monthly Hours Target</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="toplineQuota"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={toplineQuotaInput}
+                    onChange={(e) => setToplineQuotaInput(e.target.value)}
+                    placeholder="e.g. 800"
+                    className="w-40"
+                    data-testid="input-topline-quota"
+                  />
+                  <span className="text-sm text-muted-foreground">hrs/month</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={() => updateToplineQuotaMutation.mutate(toplineQuotaInput)}
+                  disabled={savingTopline}
+                  size="sm"
+                  data-testid="button-save-topline"
+                >
+                  {savingTopline ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                  Save Target
+                </Button>
+                {savedTopline && (
+                  <Badge variant="default" className="bg-green-600 hover:bg-green-600">
+                    <Check className="h-3 w-3 mr-1" />
+                    Saved
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {/* Worksheet Calculator */}
+            {(() => {
+              const topline = parseFloat(toplineQuotaInput) || 0;
+              const agencySum = Object.values(configs).reduce((sum, cfg) => {
+                if (cfg.noQuota) return sum;
+                return sum + (parseFloat(cfg.monthlyTarget || "0") || 0);
+              }, 0);
+              const delta = topline - agencySum;
+              const blendedRate = parseFloat(forecastSettings?.blendedRate || "90");
+
+              return (
+                <div className="border rounded-lg p-4 bg-muted/20 space-y-4">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Quota Feasibility Worksheet
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Compare your topline target against the sum of individual agency allocations below to see if it's realistic.
+                  </p>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-3 rounded-md border bg-background">
+                      <div className="text-xs text-muted-foreground">Topline Target</div>
+                      <div className="text-xl font-bold">{topline > 0 ? `${topline}h` : '—'}</div>
+                      {topline > 0 && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          ${(topline * blendedRate).toLocaleString()}/mo @ ${blendedRate}/hr
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3 rounded-md border bg-background">
+                      <div className="text-xs text-muted-foreground">Sum of Agency Targets</div>
+                      <div className="text-xl font-bold">{agencySum}h</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        ${(agencySum * blendedRate).toLocaleString()}/mo @ ${blendedRate}/hr
+                      </div>
+                    </div>
+                    <div className={cn("p-3 rounded-md border bg-background", 
+                      topline > 0 && delta !== 0 ? (delta > 0 ? "border-amber-300 dark:border-amber-700" : "border-green-300 dark:border-green-700") : ""
+                    )}>
+                      <div className="text-xs text-muted-foreground">Gap</div>
+                      <div className={cn("text-xl font-bold",
+                        topline > 0 && delta > 0 ? "text-amber-600" : topline > 0 && delta < 0 ? "text-green-600" : ""
+                      )}>
+                        {topline > 0 ? `${delta > 0 ? '+' : ''}${delta}h` : '—'}
+                      </div>
+                      {topline > 0 && delta !== 0 && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {delta > 0 ? "Need more agency allocation" : "Agencies exceed target"}
+                        </div>
+                      )}
+                      {topline > 0 && delta === 0 && (
+                        <div className="text-xs text-green-600 mt-1 font-medium">Perfectly allocated</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Agency breakdown within calculator */}
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-muted-foreground mb-2">Agency Allocation Breakdown</div>
+                    {activeAgencies.filter(a => !configs[a.id]?.noQuota).map(agency => {
+                      const target = parseFloat(configs[agency.id]?.monthlyTarget || "0") || 0;
+                      const pctOfTopline = topline > 0 ? ((target / topline) * 100) : 0;
+                      return (
+                        <div key={agency.id} className="flex items-center justify-between py-1.5 px-2 rounded text-sm hover:bg-background">
+                          <span>{agency.name}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-muted-foreground">{target}h</span>
+                            {topline > 0 && (
+                              <Badge variant="outline" className="text-xs min-w-[50px] justify-center">
+                                {pctOfTopline.toFixed(0)}%
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {topline > 0 && agencySum > 0 && (
+                    <Progress value={Math.min((agencySum / topline) * 100, 100)} className="h-2" />
+                  )}
+                </div>
+              );
+            })()}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Team Progress & Client Quotas */}
           {/* Team/Partner Progress Tracking */}

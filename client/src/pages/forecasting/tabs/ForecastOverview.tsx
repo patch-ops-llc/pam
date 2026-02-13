@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { TrendingUp, DollarSign } from "lucide-react";
+import { TrendingUp, DollarSign, Calculator } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { ForecastInvoice, ForecastExpense, ForecastRetainer, ForecastPayrollMember } from "@shared/schema";
 
 // Helper function to parse date string as local date (not UTC)
@@ -732,7 +733,7 @@ export function ForecastOverview() {
                 <div className="space-y-3">
                   {allClients.map(([agencyId, data]) => {
                     // For prospects, use prospectMonthlyBreakdown; for agencies, use monthlyBreakdown
-                    const isProspect = 'isProspect' in data && data.isProspect;
+                    const isProspect = 'isProspect' in data && !!(data as any).isProspect;
                     const prospectName = isProspect ? data.name : null;
                     const monthlyData = isProspect && prospectName
                       ? prospectMonthlyBreakdown[prospectName]
@@ -859,6 +860,18 @@ export function ForecastOverview() {
         </CardContent>
       </Card>
 
+      {/* Quota Impact Calculator */}
+      <QuotaImpactCalculator
+        currentQuotaRevenue={forecast.quotaRevenue}
+        currentExpenses={forecast.expenses}
+        currentTotalRevenue={forecast.revenue}
+        currentNet={forecast.net}
+        blendedRate={BLENDED_RATE}
+        actualForecastMonths={actualForecastMonths}
+        quotaBreakdown={quotaBreakdown}
+        forecastPeriodText={getForecastPeriodText()}
+      />
+
       {/* Project Revenue by Agency & Client (detailed view with monthly breakdown) */}
       {forecast.projectRevenue > 0 && (
         <Card>
@@ -936,5 +949,134 @@ export function ForecastOverview() {
         </Card>
       )}
     </div>
+  );
+}
+
+// Quota Impact Calculator component
+function QuotaImpactCalculator({
+  currentQuotaRevenue,
+  currentExpenses,
+  currentTotalRevenue,
+  currentNet,
+  blendedRate,
+  actualForecastMonths,
+  quotaBreakdown,
+  forecastPeriodText,
+}: {
+  currentQuotaRevenue: number;
+  currentExpenses: number;
+  currentTotalRevenue: number;
+  currentNet: number;
+  blendedRate: number;
+  actualForecastMonths: number;
+  quotaBreakdown: { [agencyId: string]: number };
+  forecastPeriodText: string;
+}) {
+  const [quotaHoursInput, setQuotaHoursInput] = useState<string>("");
+
+  // Calculate current total quota hours from breakdown
+  const currentTotalQuotaHours = useMemo(() => {
+    // Reverse-engineer: currentQuotaRevenue / blendedRate = total hours across all months
+    // But we want monthly hours, so divide by forecast months
+    return blendedRate > 0 ? currentQuotaRevenue / blendedRate / actualForecastMonths : 0;
+  }, [currentQuotaRevenue, blendedRate, actualForecastMonths]);
+
+  const whatIfQuotaHours = parseFloat(quotaHoursInput) || 0;
+  const whatIfQuotaRevenue = whatIfQuotaHours * blendedRate * actualForecastMonths;
+  const revenueDelta = whatIfQuotaRevenue - currentQuotaRevenue;
+  const whatIfTotalRevenue = currentTotalRevenue + revenueDelta;
+  const whatIfNet = whatIfTotalRevenue - currentExpenses;
+  const netDelta = whatIfNet - currentNet;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Calculator className="h-5 w-5" />
+          Quota Impact Calculator
+        </CardTitle>
+        <CardDescription>
+          See how changing your monthly quota hours affects projected revenue and net income for {forecastPeriodText}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex items-end gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="whatIfQuota">What-If Monthly Quota Hours</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="whatIfQuota"
+                type="number"
+                min="0"
+                step="10"
+                value={quotaHoursInput}
+                onChange={(e) => setQuotaHoursInput(e.target.value)}
+                placeholder={`Current: ${Math.round(currentTotalQuotaHours)}h`}
+                className="w-48"
+                data-testid="input-whatif-quota"
+              />
+              <span className="text-sm text-muted-foreground">hrs/month</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Current agency total: ~{Math.round(currentTotalQuotaHours)}h/mo @ ${blendedRate}/hr
+            </p>
+          </div>
+        </div>
+
+        {whatIfQuotaHours > 0 && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="p-4 rounded-lg border bg-muted/20">
+              <div className="text-xs text-muted-foreground">Quota Revenue</div>
+              <div className="text-lg font-bold mt-1">
+                ${whatIfQuotaRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+              <div className={cn("text-sm mt-1", revenueDelta >= 0 ? "text-green-600" : "text-red-600")}>
+                {revenueDelta >= 0 ? '+' : ''}{revenueDelta.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })} vs current
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {whatIfQuotaHours}h x ${blendedRate} x {actualForecastMonths}mo
+              </div>
+            </div>
+
+            <div className="p-4 rounded-lg border bg-muted/20">
+              <div className="text-xs text-muted-foreground">Total Revenue</div>
+              <div className="text-lg font-bold mt-1">
+                ${whatIfTotalRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+              <div className={cn("text-sm mt-1", revenueDelta >= 0 ? "text-green-600" : "text-red-600")}>
+                {revenueDelta >= 0 ? '+' : ''}{revenueDelta.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })} vs current
+              </div>
+            </div>
+
+            <div className="p-4 rounded-lg border bg-muted/20">
+              <div className="text-xs text-muted-foreground">Expenses (unchanged)</div>
+              <div className="text-lg font-bold mt-1">
+                ${currentExpenses.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Same as current forecast
+              </div>
+            </div>
+
+            <div className={cn("p-4 rounded-lg border", whatIfNet >= 0 ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800")}>
+              <div className="text-xs text-muted-foreground">Net Projection</div>
+              <div className={cn("text-xl font-bold mt-1", whatIfNet >= 0 ? "text-green-600" : "text-red-600")}>
+                ${whatIfNet.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+              <div className={cn("text-sm font-medium mt-1", netDelta >= 0 ? "text-green-600" : "text-red-600")}>
+                {netDelta >= 0 ? '+' : ''}{netDelta.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })} vs current net
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!whatIfQuotaHours && (
+          <div className="text-sm text-muted-foreground italic p-4 bg-muted/20 rounded-lg border border-dashed">
+            Enter a monthly quota target above to see how it would affect your revenue and net projections.
+            Current quota-based revenue: ${currentQuotaRevenue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} across {actualForecastMonths} month{actualForecastMonths !== 1 ? 's' : ''}.
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

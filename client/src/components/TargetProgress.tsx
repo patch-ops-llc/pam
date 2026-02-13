@@ -84,6 +84,16 @@ export function TargetProgress() {
     queryKey: ["/api/holidays"],
   });
 
+  // Fetch forecast settings for topline quota target
+  const { data: forecastSettings } = useQuery<{ id: string; blendedRate: string; toplineQuotaTarget: string | null }>({
+    queryKey: ["/api/forecast/settings"],
+    queryFn: async () => {
+      const res = await fetch('/api/forecast/settings');
+      if (!res.ok) throw new Error('Failed to fetch forecast settings');
+      return res.json();
+    },
+  });
+
   // Helper to check if a date is a holiday
   const isHoliday = (date: Date, holidayList: Holiday[]) => {
     return holidayList.some(holiday => {
@@ -159,7 +169,7 @@ export function TargetProgress() {
     
     const expected = target * timeProgress;
     const difference = actual - expected;
-    const isPacing = difference > 0.5 ? 'ahead' : difference < -0.5 ? 'behind' : 'on-pace';
+    const isPacing = (difference > 0.5 ? 'ahead' : difference < -0.5 ? 'behind' : 'on-pace') as 'ahead' | 'behind' | 'on-pace';
     
     return { expected, difference, isPacing };
   };
@@ -256,18 +266,24 @@ export function TargetProgress() {
       : targetProgress;
   }, [selectedAgencies, targetProgress]);
 
-  // Aggregate totals for headline: single monthly quota (sum of agency targets) and progress to it
+  // Aggregate totals for headline: use topline quota if set, otherwise sum of agency targets
   const totals = useMemo(() => {
     let totalBillable = 0;
-    let totalTarget = 0;
+    let agencyTargetSum = 0;
     filteredProgress.forEach((p: TargetProgressData) => {
       if (!p.noQuota) {
         totalBillable += Number(p.monthlyBillable) || 0;
-        totalTarget += Number(p.monthlyTarget) || 0;
+        agencyTargetSum += Number(p.monthlyTarget) || 0;
       }
     });
-    return { totalBillable, totalTarget };
-  }, [filteredProgress]);
+    
+    // Use topline quota target if set and all agencies are selected (not filtered)
+    const toplineQuota = forecastSettings?.toplineQuotaTarget ? parseFloat(forecastSettings.toplineQuotaTarget) : 0;
+    const allAgenciesSelected = selectedAgencies.length === targetProgress.length || selectedAgencies.length === 0;
+    const totalTarget = (toplineQuota > 0 && allAgenciesSelected) ? toplineQuota : agencyTargetSum;
+    
+    return { totalBillable, totalTarget, agencyTargetSum, toplineQuota, usingTopline: toplineQuota > 0 && allAgenciesSelected };
+  }, [filteredProgress, forecastSettings?.toplineQuotaTarget, selectedAgencies.length, targetProgress.length]);
 
   if (isLoading) {
     return (

@@ -186,6 +186,55 @@ export default function TrainingReview() {
                   </Card>
                 )}
 
+                {/* Checklist Progress */}
+                {selectedReview.module.checklist && selectedReview.module.checklist.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <ClipboardCheck className="h-4 w-4" />
+                        Checklist Progress
+                        <Badge variant="outline" className="ml-auto text-xs">
+                          {selectedReview.module.checklist.filter((item: { id: string }) => 
+                            (selectedReview.checklistProgress as Record<string, { completed: boolean; notes: string }> | null)?.[item.id]?.completed
+                          ).length} / {selectedReview.module.checklist.length} complete
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {selectedReview.module.checklist.map((item: { id: string; text: string }) => {
+                          const progress = (selectedReview.checklistProgress as Record<string, { completed: boolean; notes: string }> | null)?.[item.id];
+                          const isCompleted = progress?.completed || false;
+                          const notes = progress?.notes || "";
+
+                          return (
+                            <div
+                              key={item.id}
+                              className={`rounded-lg border p-3 text-sm ${isCompleted ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900" : "bg-muted/30"}`}
+                            >
+                              <div className="flex items-start gap-2">
+                                <span className={`mt-0.5 ${isCompleted ? "text-green-600" : "text-muted-foreground"}`}>
+                                  {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <p className={isCompleted ? "line-through text-muted-foreground" : "font-medium"}>
+                                    {item.text}
+                                  </p>
+                                  {notes && (
+                                    <div className="mt-2 p-2 rounded bg-background border text-muted-foreground whitespace-pre-wrap">
+                                      {notes}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Module Info */}
                 <Card>
                   <CardHeader className="pb-2">
