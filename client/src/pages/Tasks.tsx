@@ -79,6 +79,7 @@ const createTaskFormSchema = insertTaskSchema.extend({
   name: z.string().min(1, "Task name is required"),
   agencyId: z.string().optional(),
   accountId: z.string().optional(),
+  startDate: z.string().nullable().optional(),
   dueDate: z.string().nullable().optional(),
   labelIds: z.array(z.string()).optional(),
   collaboratorIds: z.array(z.string()).optional(),
@@ -112,7 +113,9 @@ export default function Tasks() {
   const [inlineTaskDescription, setInlineTaskDescription] = useState("");
   const [inlineTaskPriority, setInlineTaskPriority] = useState("medium");
   const [inlineTaskDueDate, setInlineTaskDueDate] = useState<Date | undefined>(undefined);
+  const [createStartDateOpen, setCreateStartDateOpen] = useState(false);
   const [createDueDateOpen, setCreateDueDateOpen] = useState(false);
+  const [editStartDateOpen, setEditStartDateOpen] = useState(false);
   const [editDueDateOpen, setEditDueDateOpen] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -131,6 +134,7 @@ export default function Tasks() {
       projectId: undefined,
       agencyId: undefined,
       accountId: undefined,
+      startDate: undefined,
       dueDate: undefined,
       isActive: true,
     },
@@ -640,6 +644,8 @@ export default function Tasks() {
       agencyId: task.agencyId || undefined,
       accountId: task.accountId || undefined,
       projectId: task.projectId || undefined,
+      assignedToUserId: task.assignedToUserId || undefined,
+      startDate: task.startDate || undefined,
       dueDate: task.dueDate || undefined
     });
     setIsEditSheetOpen(true);
@@ -655,6 +661,7 @@ export default function Tasks() {
     const updates: Partial<TaskWithRelations> & { labelIds?: string[]; collaboratorIds?: string[] } = {
       name: data.name,
       description: data.description || undefined,
+      notes: data.notes || undefined,
       status: data.status,
       priority: data.priority,
       size: data.size || "medium",
@@ -665,6 +672,7 @@ export default function Tasks() {
       accountId: data.accountId,
       projectId: data.projectId || undefined,
       assignedToUserId: data.assignedToUserId || undefined,
+      startDate: data.startDate || undefined,
       dueDate: data.dueDate || undefined,
       isActive: data.isActive,
       labelIds,
@@ -740,16 +748,17 @@ export default function Tasks() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {task.dueDate && (
+            {task.startDate && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <CalendarIcon className="h-3 w-3" />
-                {format(new Date(task.dueDate + "T00:00:00"), "MMM d, yyyy")}
+                {format(new Date(task.startDate + "T00:00:00"), "MMM d")}
+                {task.dueDate && ` - ${format(new Date(task.dueDate + "T00:00:00"), "MMM d")}`}
               </div>
             )}
-            {task.startDate && !task.dueDate && (
+            {!task.startDate && task.dueDate && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <CalendarIcon className="h-3 w-3" />
-                Started {format(new Date(task.startDate + "T00:00:00"), "MMM d, yyyy")}
+                Due {format(new Date(task.dueDate + "T00:00:00"), "MMM d, yyyy")}
               </div>
             )}
             {task.estimatedHours && (
@@ -1523,46 +1532,89 @@ export default function Tasks() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Due Date (Optional)</FormLabel>
-                      <Popover open={createDueDateOpen} onOpenChange={setCreateDueDateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                            data-testid="button-new-task-due-date"
-                          >
-                            {field.value ? (
-                              format(new Date(field.value), "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value ? new Date(field.value) : undefined}
-                            onSelect={(date) => {
-                              field.onChange(date ? format(date, "yyyy-MM-dd") : undefined);
-                              setCreateDueDateOpen(false);
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Start Date (Optional)</FormLabel>
+                        <Popover open={createStartDateOpen} onOpenChange={setCreateStartDateOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              data-testid="button-new-task-start-date"
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ? new Date(field.value) : undefined}
+                              onSelect={(date) => {
+                                field.onChange(date ? format(date, "yyyy-MM-dd") : undefined);
+                                setCreateStartDateOpen(false);
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="dueDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Due Date (Optional)</FormLabel>
+                        <Popover open={createDueDateOpen} onOpenChange={setCreateDueDateOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              data-testid="button-new-task-due-date"
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ? new Date(field.value) : undefined}
+                              onSelect={(date) => {
+                                field.onChange(date ? format(date, "yyyy-MM-dd") : undefined);
+                                setCreateDueDateOpen(false);
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
@@ -2331,46 +2383,89 @@ export default function Tasks() {
                   )}
                 />
 
-                <FormField
-                  control={editForm.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Due Date (Optional)</FormLabel>
-                      <Popover open={editDueDateOpen} onOpenChange={setEditDueDateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                            data-testid="button-edit-task-due-date"
-                          >
-                            {field.value ? (
-                              format(new Date(field.value), "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value ? new Date(field.value) : undefined}
-                            onSelect={(date) => {
-                              field.onChange(date ? format(date, "yyyy-MM-dd") : undefined);
-                              setEditDueDateOpen(false);
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="startDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Start Date (Optional)</FormLabel>
+                        <Popover open={editStartDateOpen} onOpenChange={setEditStartDateOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              data-testid="button-edit-task-start-date"
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ? new Date(field.value) : undefined}
+                              onSelect={(date) => {
+                                field.onChange(date ? format(date, "yyyy-MM-dd") : undefined);
+                                setEditStartDateOpen(false);
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="dueDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Due Date (Optional)</FormLabel>
+                        <Popover open={editDueDateOpen} onOpenChange={setEditDueDateOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              data-testid="button-edit-task-due-date"
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ? new Date(field.value) : undefined}
+                              onSelect={(date) => {
+                                field.onChange(date ? format(date, "yyyy-MM-dd") : undefined);
+                                setEditDueDateOpen(false);
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField

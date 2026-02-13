@@ -592,6 +592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectId, 
         name, 
         description,
+        notes,
         status = "todo",
         priority = "medium",
         estimatedHours,
@@ -615,6 +616,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectId: projectId || null,
         name,
         description: description || null,
+        notes: notes || null,
         status,
         priority,
         estimatedHours: estimatedHours || null,
@@ -725,6 +727,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateTaskSchema = z.object({
         name: z.string().min(1, "Name is required").optional(),
         description: z.preprocess(
+          v => v === "" ? null : v,
+          z.string().nullable().optional()
+        ),
+        notes: z.preprocess(
           v => v === "" ? null : v,
           z.string().nullable().optional()
         ),
