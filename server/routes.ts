@@ -734,8 +734,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           v => v === "" ? null : v,
           z.string().nullable().optional()
         ),
-        status: z.enum(["todo", "in-progress", "completed", "cancelled"]).optional(),
+        status: z.enum(["todo", "in_progress", "waiting_on_client", "waiting_on_internal_review", "complete", "cancelled"]).optional(),
         priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+        size: z.enum(["small", "medium", "large", "xlarge"]).optional(),
+        category: z.enum(["standard", "recurring"]).optional(),
+        billingType: z.enum(["billable", "prebilled"]).optional(),
         estimatedHours: z.preprocess(
           v => {
             if (v === "" || v === null || v === undefined) return null;
@@ -744,6 +747,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           z.union([z.string().refine(val => !val || Number(val) >= 0, { message: "Estimated hours must be non-negative" }), z.null()]).optional()
         ),
+        agencyId: z.union([z.string(), z.null()]).optional(),
+        accountId: z.union([z.string(), z.null()]).optional(),
+        projectId: z.union([z.string(), z.null()]).optional(),
         assignedToUserId: z.union([z.string(), z.null()]).optional(),
         startDate: z.string().optional(),
         dueDate: z.union([z.string(), z.null()]).optional(),
@@ -761,7 +767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { labelIds, collaboratorIds, ...updateData } = validationResult.data;
       
-      // Get the task before updating to check if status is changing to completed
+      // Get the task before updating to check if status is changing to complete
       const taskBefore = await storage.getTask(id);
       const updatedTask = await storage.updateTask(id, updateData);
       
@@ -794,7 +800,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Send Slack notifications for task_completed event
-      if (updateData.status === 'completed' && taskBefore?.status !== 'completed') {
+      if (updateData.status === 'complete' && taskBefore?.status !== 'complete') {
         try {
           const users = await storage.getUsers();
           if (users.length > 0) {
@@ -896,9 +902,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "taskIds array is required" });
       }
 
-      // Update all tasks to completed status
+      // Update all tasks to complete status
       for (const taskId of taskIds) {
-        await storage.updateTask(taskId, { status: "completed" });
+        await storage.updateTask(taskId, { status: "complete" });
       }
 
       res.json({ message: `${taskIds.length} tasks marked as complete` });
