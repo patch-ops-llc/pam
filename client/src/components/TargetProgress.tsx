@@ -87,11 +87,6 @@ export function TargetProgress() {
   // Fetch forecast settings for topline quota target
   const { data: forecastSettings } = useQuery<{ id: string; blendedRate: string; toplineQuotaTarget: string | null }>({
     queryKey: ["/api/forecast/settings"],
-    queryFn: async () => {
-      const res = await fetch('/api/forecast/settings');
-      if (!res.ok) throw new Error('Failed to fetch forecast settings');
-      return res.json();
-    },
   });
 
   // Helper to check if a date is a holiday
@@ -277,13 +272,12 @@ export function TargetProgress() {
       }
     });
     
-    // Use topline quota target if set and all agencies are selected (not filtered)
+    // Use topline quota target if set — always drives the headline number
     const toplineQuota = forecastSettings?.toplineQuotaTarget ? parseFloat(forecastSettings.toplineQuotaTarget) : 0;
-    const allAgenciesSelected = selectedAgencies.length === targetProgress.length || selectedAgencies.length === 0;
-    const totalTarget = (toplineQuota > 0 && allAgenciesSelected) ? toplineQuota : agencyTargetSum;
+    const totalTarget = toplineQuota > 0 ? toplineQuota : agencyTargetSum;
     
-    return { totalBillable, totalTarget, agencyTargetSum, toplineQuota, usingTopline: toplineQuota > 0 && allAgenciesSelected };
-  }, [filteredProgress, forecastSettings?.toplineQuotaTarget, selectedAgencies.length, targetProgress.length]);
+    return { totalBillable, totalTarget, agencyTargetSum, toplineQuota, usingTopline: toplineQuota > 0 };
+  }, [filteredProgress, forecastSettings?.toplineQuotaTarget]);
 
   if (isLoading) {
     return (
