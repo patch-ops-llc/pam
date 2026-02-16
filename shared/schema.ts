@@ -483,70 +483,6 @@ export const resourceQuotas = pgTable(
   }),
 );
 
-// Partner bonus policies - Team bonuses when partner quotas are hit
-export const partnerBonusPolicies = pgTable(
-  "partner_bonus_policies",
-  {
-    id: varchar("id")
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    agencyId: varchar("agency_id")
-      .notNull()
-      .references(() => agencies.id, { onDelete: "cascade" }),
-    name: text("name").notNull(), // Display name (e.g., "Domestique", "New Edge")
-    monthlyTargetHours: decimal("monthly_target_hours", {
-      precision: 8,
-      scale: 2,
-    }).notNull(),
-    bonusFullTime: decimal("bonus_full_time", { precision: 10, scale: 2 })
-      .notNull()
-      .default("150"), // FT bonus when hit
-    bonusPartTime: decimal("bonus_part_time", { precision: 10, scale: 2 })
-      .notNull()
-      .default("75"), // PT bonus when hit
-    overageRate: decimal("overage_rate", { precision: 10, scale: 2 })
-      .notNull()
-      .default("2.50"), // Rate increase per hour over
-    isActive: boolean("is_active").notNull().default(true),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-  (table) => ({
-    agencyIdIdx: index("partner_bonus_policies_agency_id_idx").on(
-      table.agencyId,
-    ),
-    agencyIdUnique: unique("partner_bonus_policies_agency_id_key").on(
-      table.agencyId,
-    ),
-  }),
-);
-
-// Individual quota bonus settings - Bonus for hitting personal quota and overage
-export const individualQuotaBonusSettings = pgTable(
-  "individual_quota_bonus_settings",
-  {
-    id: varchar("id")
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    employmentType: text("employment_type").notNull(), // full-time, part-time
-    monthlyTargetHours: decimal("monthly_target_hours", {
-      precision: 8,
-      scale: 2,
-    }).notNull(),
-    quotaBonus: decimal("quota_bonus", { precision: 10, scale: 2 }).notNull(), // $300 FT, $150 PT
-    overageRate: decimal("overage_rate", { precision: 10, scale: 2 })
-      .notNull()
-      .default("5"), // $5/hour overage
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-  (table) => ({
-    employmentTypeUnique: unique("individual_quota_bonus_settings_type_key").on(
-      table.employmentType,
-    ),
-  }),
-);
-
 // Monthly quota periods - Snapshot of quota calculations per month
 export const quotaPeriods = pgTable(
   "quota_periods",
@@ -1711,36 +1647,6 @@ export const insertResourceQuotaSchema = createInsertSchema(
   updatedAt: true,
 });
 
-export const insertPartnerBonusPolicySchema = createInsertSchema(
-  partnerBonusPolicies,
-)
-  .omit({
-    id: true,
-    createdAt: true,
-    updatedAt: true,
-  })
-  .extend({
-    monthlyTargetHours: z.coerce.number().min(0),
-    bonusFullTime: z.coerce.number().min(0),
-    bonusPartTime: z.coerce.number().min(0),
-    overageRate: z.coerce.number().min(0),
-  });
-
-export const insertIndividualQuotaBonusSettingsSchema = createInsertSchema(
-  individualQuotaBonusSettings,
-)
-  .omit({
-    id: true,
-    createdAt: true,
-    updatedAt: true,
-  })
-  .extend({
-    employmentType: z.enum(["full-time", "part-time"]),
-    monthlyTargetHours: z.coerce.number().min(0),
-    quotaBonus: z.coerce.number().min(0),
-    overageRate: z.coerce.number().min(0),
-  });
-
 export const insertQuotaPeriodSchema = createInsertSchema(quotaPeriods).omit({
   id: true,
   createdAt: true,
@@ -2113,17 +2019,6 @@ export type SlackConfiguration = typeof slackConfigurations.$inferSelect;
 
 export type InsertResourceQuota = z.infer<typeof insertResourceQuotaSchema>;
 export type ResourceQuota = typeof resourceQuotas.$inferSelect;
-
-export type InsertPartnerBonusPolicy = z.infer<
-  typeof insertPartnerBonusPolicySchema
->;
-export type PartnerBonusPolicy = typeof partnerBonusPolicies.$inferSelect;
-
-export type InsertIndividualQuotaBonusSettings = z.infer<
-  typeof insertIndividualQuotaBonusSettingsSchema
->;
-export type IndividualQuotaBonusSettings =
-  typeof individualQuotaBonusSettings.$inferSelect;
 
 export type InsertQuotaPeriod = z.infer<typeof insertQuotaPeriodSchema>;
 export type QuotaPeriod = typeof quotaPeriods.$inferSelect;

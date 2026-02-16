@@ -1,7 +1,7 @@
 import { 
   users, agencies, accounts, accountNotes, projects, projectAttachments, tasks, taskLabels, taskLabelAssignments, taskCollaborators, timeLogs,
   calendarConnections, calendars, calendarEvents, slackConfigurations, resourceQuotas,
-  partnerBonusPolicies, individualQuotaBonusSettings, quotaPeriods,
+  quotaPeriods,
   penguinHoursTracker, forecastInvoices, forecastExpenses, forecastPayrollMembers, forecastScenarios, forecastRetainers,
   forecastAccountRevenue, forecastSettings, forecastCapacityResources, forecastCapacityAllocations, forecastResources, resourceMonthlyCapacity, accountForecastAllocations,
   projectTeamMembers, userAvailability, holidays, capacityProjections, proposals,
@@ -22,8 +22,6 @@ import {
   type CalendarEvent, type InsertCalendarEvent,
   type SlackConfiguration, type InsertSlackConfiguration,
   type ResourceQuota, type InsertResourceQuota,
-  type PartnerBonusPolicy, type InsertPartnerBonusPolicy,
-  type IndividualQuotaBonusSettings, type InsertIndividualQuotaBonusSettings,
   type QuotaPeriod, type InsertQuotaPeriod,
   type PenguinHoursTracker, type InsertPenguinHoursTracker,
   type ForecastInvoice, type InsertForecastInvoice,
@@ -219,18 +217,6 @@ export interface IStorage {
   updateResourceQuota(id: string, updates: Partial<InsertResourceQuota>): Promise<ResourceQuota>;
   deleteResourceQuota(id: string): Promise<void>;
 
-  // Partner Bonus Policies
-  getPartnerBonusPolicies(): Promise<PartnerBonusPolicy[]>;
-  getPartnerBonusPolicyByAgency(agencyId: string): Promise<PartnerBonusPolicy | undefined>;
-  createPartnerBonusPolicy(policy: InsertPartnerBonusPolicy): Promise<PartnerBonusPolicy>;
-  updatePartnerBonusPolicy(id: string, updates: Partial<InsertPartnerBonusPolicy>): Promise<PartnerBonusPolicy>;
-  deletePartnerBonusPolicy(id: string): Promise<void>;
-
-  // Individual Quota Bonus Settings
-  getIndividualQuotaBonusSettings(): Promise<IndividualQuotaBonusSettings[]>;
-  getIndividualQuotaBonusByType(employmentType: string): Promise<IndividualQuotaBonusSettings | undefined>;
-  updateIndividualQuotaBonusSettings(id: string, updates: Partial<InsertIndividualQuotaBonusSettings>): Promise<IndividualQuotaBonusSettings>;
-
   // Quota Periods
   getQuotaPeriods(): Promise<QuotaPeriod[]>;
   getQuotaPeriodByMonth(yearMonth: string): Promise<QuotaPeriod | undefined>;
@@ -246,12 +232,6 @@ export interface IStorage {
     billedHours: number;
     percentageComplete: number;
   }>>;
-  // Partner hours by agency (for bonus calculations)
-  getPartnerHoursByAgency(month: string): Promise<Array<{
-    agencyId: string;
-    totalBilledHours: number;
-  }>>;
-
   // Analytics
   getAccountHoursByWeek(weeks?: number): Promise<Array<{
     accountId: string;
@@ -282,6 +262,17 @@ export interface IStorage {
   getHoursSummaryByMonth(startDate: Date, endDate: Date): Promise<{ month: string; actualHours: number; billedHours: number }[]>;
   getEfficiencyRatesByAccount(): Promise<{ account: Account; agency: Agency; actualHours: number; billedHours: number; efficiency: number }[]>;
   getEfficiencyRatesByAgency(): Promise<{ agency: Agency; actualHours: number; billedHours: number; efficiency: number }[]>;
+  getMonthlyBillableSummary(month: string): Promise<{
+    totalBilledHours: number;
+    totalActualHours: number;
+    byAgency: Array<{
+      agencyId: string;
+      agencyName: string;
+      billedHours: number;
+      actualHours: number;
+      percentage: number;
+    }>;
+  }>;
   // Penguin Hours Tracker
   getPenguinHoursTracker(agencyId: string): Promise<PenguinHoursTracker | undefined>;
   createPenguinHoursTracker(tracker: InsertPenguinHoursTracker): Promise<PenguinHoursTracker>;
@@ -1984,71 +1975,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(resourceQuotas.id, id));
   }
 
-  // Partner Bonus Policy methods
-  async getPartnerBonusPolicies(): Promise<PartnerBonusPolicy[]> {
-    return await db
-      .select()
-      .from(partnerBonusPolicies)
-      .where(eq(partnerBonusPolicies.isActive, true))
-      .orderBy(partnerBonusPolicies.name);
-  }
-
-  async getPartnerBonusPolicyByAgency(agencyId: string): Promise<PartnerBonusPolicy | undefined> {
-    const [policy] = await db
-      .select()
-      .from(partnerBonusPolicies)
-      .where(eq(partnerBonusPolicies.agencyId, agencyId));
-    return policy;
-  }
-
-  async createPartnerBonusPolicy(policy: InsertPartnerBonusPolicy): Promise<PartnerBonusPolicy> {
-    const [created] = await db
-      .insert(partnerBonusPolicies)
-      .values(policy)
-      .returning();
-    return created;
-  }
-
-  async updatePartnerBonusPolicy(id: string, updates: Partial<InsertPartnerBonusPolicy>): Promise<PartnerBonusPolicy> {
-    const [updated] = await db
-      .update(partnerBonusPolicies)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(partnerBonusPolicies.id, id))
-      .returning();
-    return updated;
-  }
-
-  async deletePartnerBonusPolicy(id: string): Promise<void> {
-    await db
-      .delete(partnerBonusPolicies)
-      .where(eq(partnerBonusPolicies.id, id));
-  }
-
-  // Individual Quota Bonus Settings methods
-  async getIndividualQuotaBonusSettings(): Promise<IndividualQuotaBonusSettings[]> {
-    return await db
-      .select()
-      .from(individualQuotaBonusSettings)
-      .orderBy(individualQuotaBonusSettings.employmentType);
-  }
-
-  async getIndividualQuotaBonusByType(employmentType: string): Promise<IndividualQuotaBonusSettings | undefined> {
-    const [settings] = await db
-      .select()
-      .from(individualQuotaBonusSettings)
-      .where(eq(individualQuotaBonusSettings.employmentType, employmentType));
-    return settings;
-  }
-
-  async updateIndividualQuotaBonusSettings(id: string, updates: Partial<InsertIndividualQuotaBonusSettings>): Promise<IndividualQuotaBonusSettings> {
-    const [updated] = await db
-      .update(individualQuotaBonusSettings)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(individualQuotaBonusSettings.id, id))
-      .returning();
-    return updated;
-  }
-
   // Quota Periods methods
   async getQuotaPeriods(): Promise<QuotaPeriod[]> {
     return await db
@@ -2276,35 +2202,6 @@ export class DatabaseStorage implements IStorage {
         percentageComplete: Math.round(percentageComplete * 10) / 10,
       };
     });
-  }
-
-  async getPartnerHoursByAgency(month: string): Promise<Array<{
-    agencyId: string;
-    totalBilledHours: number;
-  }>> {
-    const [year, monthNum] = month.split("-").map(Number);
-    const startDate = new Date(year, monthNum - 1, 1);
-    const endDate = new Date(year, monthNum, 1);
-
-    const results = await db
-      .select({
-        agencyId: timeLogs.agencyId,
-        totalBilledHours: sql<string>`COALESCE(SUM(CAST(${timeLogs.billedHours} AS DECIMAL)), 0)`,
-      })
-      .from(timeLogs)
-      .where(
-        and(
-          isNotNull(timeLogs.agencyId),
-          gte(timeLogs.logDate, startDate),
-          sql`${timeLogs.logDate} < ${endDate}`
-        )
-      )
-      .groupBy(timeLogs.agencyId);
-
-    return results.map(r => ({
-      agencyId: r.agencyId!,
-      totalBilledHours: parseFloat(r.totalBilledHours),
-    }));
   }
 
   async getAccountQuotaTracker(month: string, agencyId?: string): Promise<Array<{
@@ -2588,6 +2485,60 @@ export class DatabaseStorage implements IStorage {
         efficiency: Math.round(efficiency * 100) / 100
       };
     });
+  }
+
+  async getMonthlyBillableSummary(month: string): Promise<{
+    totalBilledHours: number;
+    totalActualHours: number;
+    byAgency: Array<{
+      agencyId: string;
+      agencyName: string;
+      billedHours: number;
+      actualHours: number;
+      percentage: number;
+    }>;
+  }> {
+    const [year, monthNum] = month.split("-").map(Number);
+    const startDate = new Date(year, monthNum - 1, 1);
+    const endDate = new Date(year, monthNum, 1);
+
+    const results = await db
+      .select({
+        agencyId: agencies.id,
+        agencyName: agencies.name,
+        billedHours: sql<string>`COALESCE(SUM(CAST(${timeLogs.billedHours} AS DECIMAL)), 0)`,
+        actualHours: sql<string>`COALESCE(SUM(CAST(${timeLogs.actualHours} AS DECIMAL)), 0)`,
+      })
+      .from(timeLogs)
+      .innerJoin(agencies, eq(timeLogs.agencyId, agencies.id))
+      .where(
+        and(
+          gte(timeLogs.logDate, startDate),
+          sql`${timeLogs.logDate} < ${endDate}`
+        )
+      )
+      .groupBy(agencies.id, agencies.name);
+
+    const agencyData = results.map(r => ({
+      agencyId: r.agencyId,
+      agencyName: r.agencyName,
+      billedHours: parseFloat(r.billedHours),
+      actualHours: parseFloat(r.actualHours),
+      percentage: 0,
+    }));
+
+    const totalBilledHours = agencyData.reduce((sum, a) => sum + a.billedHours, 0);
+    const totalActualHours = agencyData.reduce((sum, a) => sum + a.actualHours, 0);
+
+    agencyData.forEach(a => {
+      a.percentage = totalBilledHours > 0
+        ? Math.round((a.billedHours / totalBilledHours) * 1000) / 10
+        : 0;
+    });
+
+    agencyData.sort((a, b) => b.billedHours - a.billedHours);
+
+    return { totalBilledHours, totalActualHours, byAgency: agencyData };
   }
 
   async getMonthlyBreakdownByPerson(): Promise<{ agency: Agency; account: Account; project: Project | null; user: User; actualHours: number; billedHours: number }[]> {

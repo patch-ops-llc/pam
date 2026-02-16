@@ -20,9 +20,9 @@ export default function Capacity() {
             <Table2 className="h-4 w-4 mr-2" />
             Capacity Worksheet
           </TabsTrigger>
-          <TabsTrigger value="quotas-bonuses" data-testid="tab-quotas-bonuses">
+          <TabsTrigger value="quotas" data-testid="tab-quotas">
             <Target className="h-4 w-4 mr-2" />
-            Quotas & Bonuses
+            Quotas
           </TabsTrigger>
           <TabsTrigger value="time-away" data-testid="tab-time-away">
             <CalendarX className="h-4 w-4 mr-2" />
@@ -34,7 +34,7 @@ export default function Capacity() {
           <CapacityWorksheetTab />
         </TabsContent>
 
-        <TabsContent value="quotas-bonuses">
+        <TabsContent value="quotas">
           <QuotasTab />
         </TabsContent>
 

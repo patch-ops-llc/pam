@@ -1973,18 +1973,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Partner hours by agency for a given month (used by bonus calculator)
-  app.get("/api/analytics/partner-hours", async (req, res) => {
+  app.get("/api/analytics/monthly-billable-summary", async (req, res) => {
     try {
       const month = req.query.month as string;
       if (!month) {
         return res.status(400).json({ error: "Month parameter is required (format: YYYY-MM)" });
       }
-      const data = await storage.getPartnerHoursByAgency(month);
+      const data = await storage.getMonthlyBillableSummary(month);
       res.json(data);
     } catch (error) {
-      console.error("Error fetching partner hours:", error);
-      res.status(500).json({ error: "Failed to fetch partner hours" });
+      console.error("Error fetching monthly billable summary:", error);
+      res.status(500).json({ error: "Failed to fetch monthly billable summary" });
     }
   });
 
@@ -2411,85 +2410,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting resource quota:", error);
       res.status(500).json({ error: "Failed to delete resource quota" });
-    }
-  });
-
-  // Partner Bonus Policy Routes
-  app.get("/api/partner-bonus-policies", async (_req, res) => {
-    try {
-      const policies = await storage.getPartnerBonusPolicies();
-      res.json(policies);
-    } catch (error) {
-      console.error("Error fetching partner bonus policies:", error);
-      res.status(500).json({ error: "Failed to fetch partner bonus policies" });
-    }
-  });
-
-  app.get("/api/partner-bonus-policies/agency/:agencyId", async (req, res) => {
-    try {
-      const { agencyId } = req.params;
-      const policy = await storage.getPartnerBonusPolicyByAgency(agencyId);
-      if (!policy) {
-        return res.status(404).json({ error: "Policy not found for this agency" });
-      }
-      res.json(policy);
-    } catch (error) {
-      console.error("Error fetching partner bonus policy:", error);
-      res.status(500).json({ error: "Failed to fetch partner bonus policy" });
-    }
-  });
-
-  app.post("/api/partner-bonus-policies", requireQuotaAdmin, async (req, res) => {
-    try {
-      const policy = await storage.createPartnerBonusPolicy(req.body);
-      res.status(201).json(policy);
-    } catch (error) {
-      console.error("Error creating partner bonus policy:", error);
-      res.status(500).json({ error: "Failed to create partner bonus policy" });
-    }
-  });
-
-  app.patch("/api/partner-bonus-policies/:id", requireQuotaAdmin, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const policy = await storage.updatePartnerBonusPolicy(id, req.body);
-      res.json(policy);
-    } catch (error) {
-      console.error("Error updating partner bonus policy:", error);
-      res.status(500).json({ error: "Failed to update partner bonus policy" });
-    }
-  });
-
-  app.delete("/api/partner-bonus-policies/:id", requireQuotaAdmin, async (req, res) => {
-    try {
-      const { id } = req.params;
-      await storage.deletePartnerBonusPolicy(id);
-      res.json({ message: "Partner bonus policy deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting partner bonus policy:", error);
-      res.status(500).json({ error: "Failed to delete partner bonus policy" });
-    }
-  });
-
-  // Individual Quota Bonus Settings Routes
-  app.get("/api/individual-quota-bonus-settings", async (_req, res) => {
-    try {
-      const settings = await storage.getIndividualQuotaBonusSettings();
-      res.json(settings);
-    } catch (error) {
-      console.error("Error fetching individual quota bonus settings:", error);
-      res.status(500).json({ error: "Failed to fetch individual quota bonus settings" });
-    }
-  });
-
-  app.patch("/api/individual-quota-bonus-settings/:id", requireQuotaAdmin, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const settings = await storage.updateIndividualQuotaBonusSettings(id, req.body);
-      res.json(settings);
-    } catch (error) {
-      console.error("Error updating individual quota bonus settings:", error);
-      res.status(500).json({ error: "Failed to update individual quota bonus settings" });
     }
   });
 
