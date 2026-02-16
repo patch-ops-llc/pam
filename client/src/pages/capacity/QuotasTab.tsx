@@ -215,29 +215,26 @@ export function QuotasTab() {
 
   const { data: forecastSettings } = useQuery<ForecastSettings>({
     queryKey: ["/api/forecast/settings"],
-    queryFn: async () => {
-      const res = await fetch('/api/forecast/settings');
-      if (!res.ok) throw new Error('Failed to fetch forecast settings');
-      return res.json();
-    },
   });
 
   // Initialize topline quota input from settings
   useEffect(() => {
-    if (forecastSettings?.toplineQuotaTarget && !toplineQuotaInput) {
+    if (forecastSettings?.toplineQuotaTarget != null && forecastSettings.toplineQuotaTarget !== "") {
       setToplineQuotaInput(forecastSettings.toplineQuotaTarget);
     }
   }, [forecastSettings?.toplineQuotaTarget]);
 
   const updateToplineQuotaMutation = useMutation({
     mutationFn: async (target: string) => {
-      setSavingTopline(true);
-      setSavedTopline(false);
-      const response = await apiRequest(`/api/forecast/settings`, "PUT", {
+      const response = await apiRequest("/api/forecast/settings", "PUT", {
         blendedRate: forecastSettings?.blendedRate || "90",
         toplineQuotaTarget: target || null,
       });
       return response;
+    },
+    onMutate: () => {
+      setSavingTopline(true);
+      setSavedTopline(false);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/forecast/settings"] });

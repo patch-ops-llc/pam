@@ -3293,8 +3293,17 @@ export class DatabaseStorage implements IStorage {
   async upsertForecastSettings(settings: InsertForecastSettings): Promise<ForecastSettings> {
     const existing = await this.getForecastSettings();
     if (existing) {
+      // Explicitly build update object to ensure all fields are included
+      const updatePayload: Record<string, any> = {
+        blendedRate: settings.blendedRate ?? existing.blendedRate,
+        updatedAt: sql`NOW()`,
+      };
+      // Always include toplineQuotaTarget in the update (even if null)
+      if ('toplineQuotaTarget' in settings) {
+        updatePayload.toplineQuotaTarget = settings.toplineQuotaTarget;
+      }
       const [updated] = await db.update(forecastSettings)
-        .set({ ...settings, updatedAt: sql`NOW()` })
+        .set(updatePayload)
         .where(eq(forecastSettings.id, existing.id))
         .returning();
       return updated;

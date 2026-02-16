@@ -3796,13 +3796,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/forecast/settings", requireAuth, async (req, res) => {
     try {
-      const validation = insertForecastSettingsSchema.safeParse(req.body);
+      const { blendedRate, toplineQuotaTarget } = req.body;
       
-      if (!validation.success) {
-        return res.status(400).json({ error: "Invalid settings data", details: validation.error });
+      // Build the update payload explicitly to ensure toplineQuotaTarget is always included
+      const updateData: { blendedRate: string; toplineQuotaTarget?: string | null } = {
+        blendedRate: blendedRate || "90",
+      };
+      
+      // Explicitly include toplineQuotaTarget (even if null) so the DB column is always updated
+      if (toplineQuotaTarget !== undefined) {
+        updateData.toplineQuotaTarget = toplineQuotaTarget || null;
       }
       
-      const settings = await storage.upsertForecastSettings(validation.data);
+      const settings = await storage.upsertForecastSettings(updateData as any);
       res.json(settings);
     } catch (error) {
       console.error("Error updating forecast settings:", error);
