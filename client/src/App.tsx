@@ -141,7 +141,6 @@ function Router() {
       <Route path="/tasks" component={() => <Layout><Tasks /></Layout>} />
       <Route path="/settings" component={() => <Layout><Settings /></Layout>} />
       <Route path="/slack-configuration" component={() => <Layout><SlackConfiguration /></Layout>} />
-      <Route path="/quota-settings" component={() => <Redirect to="/capacity" />} />
       <Route path="/forecasting" component={() => <Layout><Forecasting /></Layout>} />
       <Route path="/holidays" component={() => <Redirect to="/capacity" />} />
       <Route path="/proposals" component={() => <Layout><Proposals /></Layout>} />

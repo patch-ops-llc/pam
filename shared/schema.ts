@@ -459,32 +459,6 @@ export const slackConfigurations = pgTable(
   }),
 );
 
-// Quota configurations - configurable quota targets and visibility per agency
-export const quotaConfigs = pgTable(
-  "quota_configs",
-  {
-    id: varchar("id")
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-    agencyId: varchar("agency_id")
-      .notNull()
-      .references(() => agencies.id, { onDelete: "cascade" }),
-    monthlyTarget: decimal("monthly_target", { precision: 8, scale: 2 })
-      .notNull()
-      .default("160"),
-    showBillable: boolean("show_billable").notNull().default(true),
-    showPreBilled: boolean("show_pre_billed").notNull().default(true),
-    noQuota: boolean("no_quota").notNull().default(false),
-    isVisible: boolean("is_visible").notNull().default(true),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-  (table) => ({
-    agencyIdIdx: index("quota_configs_agency_id_idx").on(table.agencyId),
-    agencyIdUnique: unique("quota_configs_agency_id_key").on(table.agencyId),
-  }),
-);
-
 // Resource quotas - individual quota targets for team members
 export const resourceQuotas = pgTable(
   "resource_quotas",
@@ -1729,25 +1703,6 @@ export const insertSlackConfigurationSchema = createInsertSchema(
   updatedAt: true,
 });
 
-export const insertQuotaConfigSchema = createInsertSchema(quotaConfigs)
-  .omit({
-    id: true,
-    createdAt: true,
-    updatedAt: true,
-  })
-  .extend({
-    weeklyTarget: z.union([z.number(), z.string()]).transform((val) => {
-      if (val === undefined || val === null || val === "") return "40";
-      const num = typeof val === "number" ? val.toString() : val;
-      return num;
-    }),
-    monthlyTarget: z.union([z.number(), z.string()]).transform((val) => {
-      if (val === undefined || val === null || val === "") return "160";
-      const num = typeof val === "number" ? val.toString() : val;
-      return num;
-    }),
-  });
-
 export const insertResourceQuotaSchema = createInsertSchema(
   resourceQuotas,
 ).omit({
@@ -2155,9 +2110,6 @@ export type InsertSlackConfiguration = z.infer<
   typeof insertSlackConfigurationSchema
 >;
 export type SlackConfiguration = typeof slackConfigurations.$inferSelect;
-
-export type InsertQuotaConfig = z.infer<typeof insertQuotaConfigSchema>;
-export type QuotaConfig = typeof quotaConfigs.$inferSelect;
 
 export type InsertResourceQuota = z.infer<typeof insertResourceQuotaSchema>;
 export type ResourceQuota = typeof resourceQuotas.$inferSelect;

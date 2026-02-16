@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertUserSchema, insertBrandingConfigSchema, insertAgencySchema, insertAccountSchema, insertAccountNoteSchema, insertProjectSchema, insertProjectAttachmentSchema, insertTaskSchema, insertSlackConfigurationSchema, insertQuotaConfigSchema, insertResourceQuotaSchema, insertPenguinHoursTrackerSchema, insertForecastInvoiceSchema, insertForecastExpenseSchema, insertForecastPayrollMemberSchema, insertForecastScenarioSchema, insertForecastRetainerSchema, insertForecastAccountRevenueSchema, insertForecastCapacityResourceSchema, insertForecastCapacityAllocationSchema, insertForecastResourceSchema, insertResourceMonthlyCapacitySchema, insertAccountForecastAllocationSchema, insertProjectTeamMemberSchema, insertUserAvailabilitySchema, insertHolidaySchema, insertProposalSchema, insertProposalDraftSchema, insertProposalPublishSchema, insertProposalScopeItemSchema, insertKnowledgeBaseDocumentSchema, insertGuidanceSettingSchema, insertChatTranscriptSchema, insertUatSessionSchema, insertUatGuestSchema, insertUatSessionCollaboratorSchema, insertUatChecklistItemSchema, insertUatResponseSchema, insertUatItemCommentSchema, insertUatChecklistItemStepSchema, uatImportSchema, insertTrainingProgramSchema, insertTrainingPhaseSchema, insertTrainingModuleSchema, insertTrainingModuleSectionSchema, insertTrainingEnrollmentSchema, insertTrainingModuleSubmissionSchema, insertForecastSettingsSchema } from "@shared/schema";
+import { insertUserSchema, insertBrandingConfigSchema, insertAgencySchema, insertAccountSchema, insertAccountNoteSchema, insertProjectSchema, insertProjectAttachmentSchema, insertTaskSchema, insertSlackConfigurationSchema, insertResourceQuotaSchema, insertPenguinHoursTrackerSchema, insertForecastInvoiceSchema, insertForecastExpenseSchema, insertForecastPayrollMemberSchema, insertForecastScenarioSchema, insertForecastRetainerSchema, insertForecastAccountRevenueSchema, insertForecastCapacityResourceSchema, insertForecastCapacityAllocationSchema, insertForecastResourceSchema, insertResourceMonthlyCapacitySchema, insertAccountForecastAllocationSchema, insertProjectTeamMemberSchema, insertUserAvailabilitySchema, insertHolidaySchema, insertProposalSchema, insertProposalDraftSchema, insertProposalPublishSchema, insertProposalScopeItemSchema, insertKnowledgeBaseDocumentSchema, insertGuidanceSettingSchema, insertChatTranscriptSchema, insertUatSessionSchema, insertUatGuestSchema, insertUatSessionCollaboratorSchema, insertUatChecklistItemSchema, insertUatResponseSchema, insertUatItemCommentSchema, insertUatChecklistItemStepSchema, uatImportSchema, insertTrainingProgramSchema, insertTrainingPhaseSchema, insertTrainingModuleSchema, insertTrainingModuleSectionSchema, insertTrainingEnrollmentSchema, insertTrainingModuleSubmissionSchema, insertForecastSettingsSchema } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { z } from "zod";
 import session from "express-session";
@@ -1933,16 +1933,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/analytics/target-progress", async (req, res) => {
-    try {
-      const data = await storage.getTargetProgressByAgency();
-      res.json(data);
-    } catch (error) {
-      console.error("Error fetching target progress:", error);
-      res.status(500).json({ error: "Failed to fetch target progress" });
-    }
-  });
-
   app.get("/api/analytics/hours-by-account", async (req, res) => {
     try {
       const data = await storage.getHoursByAccount();
@@ -1950,16 +1940,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching hours by account:", error);
       res.status(500).json({ error: "Failed to fetch hours by account" });
-    }
-  });
-
-  app.get("/api/analytics/hours-by-agency", async (req, res) => {
-    try {
-      const data = await storage.getHoursByAgency();
-      res.json(data);
-    } catch (error) {
-      console.error("Error fetching hours by agency:", error);
-      res.status(500).json({ error: "Failed to fetch hours by agency" });
     }
   });
 
@@ -1993,13 +1973,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/analytics/bonus-eligibility", async (req, res) => {
+  // Partner hours by agency for a given month (used by bonus calculator)
+  app.get("/api/analytics/partner-hours", async (req, res) => {
     try {
-      const data = await storage.getWeeklyBonusEligibility();
+      const month = req.query.month as string;
+      if (!month) {
+        return res.status(400).json({ error: "Month parameter is required (format: YYYY-MM)" });
+      }
+      const data = await storage.getPartnerHoursByAgency(month);
       res.json(data);
     } catch (error) {
-      console.error("Error fetching bonus eligibility:", error);
-      res.status(500).json({ error: "Failed to fetch bonus eligibility" });
+      console.error("Error fetching partner hours:", error);
+      res.status(500).json({ error: "Failed to fetch partner hours" });
     }
   });
 
@@ -2014,20 +1999,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching resource quota tracker:", error);
       res.status(500).json({ error: "Failed to fetch resource quota tracker" });
-    }
-  });
-
-  app.get("/api/analytics/client-quota-tracker", async (req, res) => {
-    try {
-      const month = req.query.month as string;
-      if (!month) {
-        return res.status(400).json({ error: "Month parameter is required (format: YYYY-MM)" });
-      }
-      const data = await storage.getClientQuotaTracker(month);
-      res.json(data);
-    } catch (error) {
-      console.error("Error fetching client quota tracker:", error);
-      res.status(500).json({ error: "Failed to fetch client quota tracker" });
     }
   });
 
@@ -2389,77 +2360,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Failed to test slack configuration",
         details: error instanceof Error ? error.message : String(error)
       });
-    }
-  });
-
-  // Quota Configuration Routes
-  app.get("/api/quota-configs", async (req, res) => {
-    try {
-      const configs = await storage.getAllQuotaConfigs();
-      res.json(configs);
-    } catch (error) {
-      console.error("Error fetching quota configs:", error);
-      res.status(500).json({ error: "Failed to fetch quota configurations" });
-    }
-  });
-
-  app.get("/api/quota-configs/agency/:agencyId", async (req, res) => {
-    try {
-      const { agencyId } = req.params;
-      const config = await storage.getQuotaConfigByAgency(agencyId);
-      
-      if (!config) {
-        return res.status(404).json({ error: "Quota configuration not found for this agency" });
-      }
-      
-      res.json(config);
-    } catch (error) {
-      console.error("Error fetching quota config:", error);
-      res.status(500).json({ error: "Failed to fetch quota configuration" });
-    }
-  });
-
-  app.post("/api/quota-configs", async (req, res) => {
-    try {
-      const validation = insertQuotaConfigSchema.safeParse(req.body);
-      
-      if (!validation.success) {
-        return res.status(400).json({ error: "Invalid quota configuration data", details: validation.error });
-      }
-      
-      const config = await storage.createQuotaConfig(validation.data);
-      res.status(201).json(config);
-    } catch (error) {
-      console.error("Error creating quota config:", error);
-      res.status(500).json({ error: "Failed to create quota configuration" });
-    }
-  });
-
-  app.put("/api/quota-configs/:agencyId", async (req, res) => {
-    try {
-      const { agencyId } = req.params;
-      const validation = insertQuotaConfigSchema.partial().safeParse(req.body);
-      
-      if (!validation.success) {
-        return res.status(400).json({ error: "Invalid quota configuration data", details: validation.error });
-      }
-      
-      const config = await storage.upsertQuotaConfig(agencyId, validation.data);
-      res.json(config);
-    } catch (error) {
-      console.error("Error updating quota config:", error);
-      res.status(500).json({ error: "Failed to update quota configuration" });
-    }
-  });
-
-  app.delete("/api/quota-configs/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      await storage.deleteQuotaConfig(id);
-      res.json({ message: "Quota configuration deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting quota config:", error);
-      res.status(500).json({ error: "Failed to delete quota configuration" });
     }
   });
 
@@ -3202,102 +3102,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Forecasting - Revenue Breakdowns by Client
-  app.get("/api/forecast/quota-breakdown", async (req, res) => {
-    try {
-      // Get blended rate from settings
-      let settings = await storage.getForecastSettings();
-      if (!settings) {
-        settings = await storage.upsertForecastSettings({ blendedRate: "90" });
-      }
-      const BLENDED_RATE = parseFloat(settings.blendedRate);
-      
-      // Accept months parameter directly instead of converting from days
-      const forecastMonths = parseInt(req.query.months as string) || 1;
-      const today = new Date();
-      
-      console.log('[quota-breakdown] Request params:', { months: req.query.months, forecastMonths, today: today.toISOString() });
-      
-      // Start from the beginning of the current month
-      const forecastStartDate = new Date(today.getFullYear(), today.getMonth(), 1);
-      forecastStartDate.setHours(0, 0, 0, 0);
-      
-      console.log('[quota-breakdown] Forecast months:', forecastMonths);
-      
-      // Helper function to get month key (YYYY-MM format)
-      const getMonthKey = (date: Date): string => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        return `${year}-${month}`;
-      };
-      
-      // Helper function to parse date string as local date (not UTC)
-      const parseAsLocalDate = (dateString: string): Date => {
-        const date = new Date(dateString);
-        // If the string is in YYYY-MM-DD format, new Date() treats it as UTC
-        // We need to adjust it to be interpreted as local
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-          return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-        }
-        return date;
-      };
-      
-      // Get all invoices - use ALL invoices (pending and received) for blocking, but only pending for revenue
-      const invoices = await storage.getForecastInvoices();
-      const pendingInvoices = invoices.filter((inv: any) => inv.status === 'pending');
-      
-      // Build a set of agency-month pairs that have ANY invoices (pending or received) for blocking quota/retainers
-      const invoicedMonths = new Set<string>();
-      invoices.forEach((invoice: any) => {
-        // Use forecastMonth if available, otherwise fall back to realizationDate, dueDate, or date
-        const relevantDate = invoice.forecastMonth
-          ? parseAsLocalDate(invoice.forecastMonth)
-          : invoice.realizationDate 
-            ? parseAsLocalDate(invoice.realizationDate)
-            : invoice.dueDate 
-              ? parseAsLocalDate(invoice.dueDate) 
-              : parseAsLocalDate(invoice.date);
-        const agencyId = invoice.agencyId || "unassigned";
-        const monthKey = getMonthKey(relevantDate);
-        invoicedMonths.add(`${agencyId}-${monthKey}`);
-      });
-      
-      console.log('[quota-breakdown] Invoiced months:', Array.from(invoicedMonths));
-      
-      // Get all quota configs
-      const quotaConfigs = await storage.getAllQuotaConfigs();
-      
-      // Calculate quota revenue breakdown by agency
-      // Only count quota for months without invoices (quota is for collecting, not invoicing)
-      const quotaByAgency: { [agencyId: string]: number } = {};
-      
-      quotaConfigs.forEach((config: any) => {
-        if (config.monthlyTarget && !config.noQuota && config.agencyId) {
-          const monthlyRevenue = parseFloat(config.monthlyTarget) * BLENDED_RATE;
-          const agencyId = config.agencyId;
-          
-          // Count only months without invoices
-          let quotaRevenue = 0;
-          for (let i = 0; i < forecastMonths; i++) {
-            const month = new Date(forecastStartDate.getFullYear(), forecastStartDate.getMonth() + i, 1);
-            const monthKey = getMonthKey(month);
-            
-            // Only add quota revenue if this month doesn't have an invoice
-            if (!invoicedMonths.has(`${agencyId}-${monthKey}`)) {
-              quotaRevenue += monthlyRevenue;
-            }
-          }
-          
-          quotaByAgency[agencyId] = (quotaByAgency[agencyId] || 0) + quotaRevenue;
-        }
-      });
-      
-      console.log('[quota-breakdown] Final result:', quotaByAgency);
-      
-      res.json(quotaByAgency);
-    } catch (error) {
-      console.error("Error calculating quota breakdown:", error);
-      res.status(500).json({ error: "Failed to calculate quota breakdown" });
-    }
+  // Client quotas have been removed; this endpoint returns empty for backward compatibility
+  app.get("/api/forecast/quota-breakdown", async (_req, res) => {
+    res.json({});
   });
 
   app.get("/api/forecast/invoice-breakdown", async (req, res) => {
@@ -3589,40 +3396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      // Get quota configs and calculate quota revenue
-      // Only count quota for FUTURE months without invoices (quota is for projecting, not for current/past months)
-      const quotaConfigs = await storage.getAllQuotaConfigs();
-      
-      quotaConfigs.forEach((config: any) => {
-        if (config.monthlyTarget && !config.noQuota && config.agencyId) {
-          const monthlyRevenue = parseFloat(config.monthlyTarget) * BLENDED_RATE;
-          const agencyId = config.agencyId;
-          
-          // For each month in the forecast period (full months only)
-          for (let i = 0; i < forecastMonths; i++) {
-            const forecastMonth = new Date(forecastStartDate.getFullYear(), forecastStartDate.getMonth() + i, 1);
-            const monthKey = getMonthKey(forecastMonth);
-            
-            // Skip current month - quota projections are only for future months
-            // Current month should be invoiced, not projected
-            if (monthKey === currentMonthKey) {
-              continue;
-            }
-            
-            // Only add quota if this agency-month doesn't have an invoice
-            if (!invoicedMonths.has(`${agencyId}-${monthKey}`)) {
-              if (!monthlyByAgency[agencyId]) {
-                monthlyByAgency[agencyId] = {};
-              }
-              if (!monthlyByAgency[agencyId][monthKey]) {
-                monthlyByAgency[agencyId][monthKey] = { quota: 0, invoices: 0, retainers: 0, projects: 0 };
-              }
-              
-              monthlyByAgency[agencyId][monthKey].quota += monthlyRevenue;
-            }
-          }
-        }
-      });
+      // Client quotas removed - quota revenue no longer projected per agency
       
       // Get retainers and distribute by month (full months only)
       const retainers = await storage.getForecastRetainers();

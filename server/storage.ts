@@ -1,6 +1,6 @@
 import { 
   users, agencies, accounts, accountNotes, projects, projectAttachments, tasks, taskLabels, taskLabelAssignments, taskCollaborators, timeLogs,
-  calendarConnections, calendars, calendarEvents, slackConfigurations, quotaConfigs, resourceQuotas,
+  calendarConnections, calendars, calendarEvents, slackConfigurations, resourceQuotas,
   partnerBonusPolicies, individualQuotaBonusSettings, quotaPeriods,
   penguinHoursTracker, forecastInvoices, forecastExpenses, forecastPayrollMembers, forecastScenarios, forecastRetainers,
   forecastAccountRevenue, forecastSettings, forecastCapacityResources, forecastCapacityAllocations, forecastResources, resourceMonthlyCapacity, accountForecastAllocations,
@@ -21,7 +21,6 @@ import {
   type Calendar, type InsertCalendar,
   type CalendarEvent, type InsertCalendarEvent,
   type SlackConfiguration, type InsertSlackConfiguration,
-  type QuotaConfig, type InsertQuotaConfig,
   type ResourceQuota, type InsertResourceQuota,
   type PartnerBonusPolicy, type InsertPartnerBonusPolicy,
   type IndividualQuotaBonusSettings, type InsertIndividualQuotaBonusSettings,
@@ -203,23 +202,6 @@ export interface IStorage {
   updateCalendarEvent(id: string, updates: Partial<InsertCalendarEvent>): Promise<CalendarEvent>;
   deleteCalendarEvent(id: string): Promise<void>;
 
-  // Analytics
-  getHoursByAgency(): Promise<Array<{
-    type: 'agency';
-    id: string;
-    name: string;
-    weeklyBillable: number;
-    monthlyBillable: number;
-    weeklyPreBilled: number;
-    monthlyPreBilled: number;
-    weeklyTarget: number;
-    monthlyTarget: number;
-    showBillable: boolean;
-    showPreBilled: boolean;
-    noQuota: boolean;
-    isVisible: boolean;
-  }>>;
-
   // Slack Configurations
   createSlackConfiguration(config: InsertSlackConfiguration): Promise<SlackConfiguration>;
   getSlackConfigurationById(id: string): Promise<SlackConfiguration | undefined>;
@@ -230,14 +212,6 @@ export interface IStorage {
   updateSlackConfiguration(id: string, updates: Partial<InsertSlackConfiguration>): Promise<SlackConfiguration>;
   deleteSlackConfiguration(id: string): Promise<void>;
   getActiveSlackConfigurationsForEvent(eventType: string, agencyId?: string, accountId?: string): Promise<SlackConfiguration[]>;
-
-  // Quota Configurations
-  createQuotaConfig(config: InsertQuotaConfig): Promise<QuotaConfig>;
-  getQuotaConfigByAgency(agencyId: string): Promise<QuotaConfig | undefined>;
-  getAllQuotaConfigs(): Promise<QuotaConfig[]>;
-  updateQuotaConfig(id: string, updates: Partial<InsertQuotaConfig>): Promise<QuotaConfig>;
-  upsertQuotaConfig(agencyId: string, config: Partial<InsertQuotaConfig>): Promise<QuotaConfig>;
-  deleteQuotaConfig(id: string): Promise<void>;
 
   // Resource Quotas
   getAllResourceQuotas(): Promise<ResourceQuota[]>;
@@ -272,12 +246,10 @@ export interface IStorage {
     billedHours: number;
     percentageComplete: number;
   }>>;
-  getClientQuotaTracker(month: string): Promise<Array<{
-    agency: Agency;
-    monthlyTarget: number;
-    actualHours: number;
-    expectedHours: number;
-    percentageComplete: number;
+  // Partner hours by agency (for bonus calculations)
+  getPartnerHoursByAgency(month: string): Promise<Array<{
+    agencyId: string;
+    totalBilledHours: number;
   }>>;
 
   // Analytics
@@ -308,25 +280,8 @@ export interface IStorage {
   }>;
   getHoursSummaryByWeek(startDate: Date, endDate: Date): Promise<{ date: string; actualHours: number; billedHours: number }[]>;
   getHoursSummaryByMonth(startDate: Date, endDate: Date): Promise<{ month: string; actualHours: number; billedHours: number }[]>;
-  getTargetProgressByAgency(): Promise<{ agency: Agency; weeklyActual: number; monthlyActual: number; weeklyBillable: number; monthlyBillable: number; weeklyPreBilled: number; monthlyPreBilled: number; weeklyTarget: number; monthlyTarget: number; showBillable: boolean; showPreBilled: boolean; noQuota: boolean }[]>;
   getEfficiencyRatesByAccount(): Promise<{ account: Account; agency: Agency; actualHours: number; billedHours: number; efficiency: number }[]>;
   getEfficiencyRatesByAgency(): Promise<{ agency: Agency; actualHours: number; billedHours: number; efficiency: number }[]>;
-  getWeeklyBonusEligibility(): Promise<Array<{
-    agency: Agency;
-    monthlyTarget: number;
-    weeks: Array<{
-      weekNumber: number;
-      startDate: Date;
-      endDate: Date;
-      billedHours: number;
-      weeklyTarget: number;
-      hitTarget: boolean;
-    }>;
-    weeksHit: number;
-    totalWeeks: number;
-    eligibleForBonus: boolean;
-  }>>;
-
   // Penguin Hours Tracker
   getPenguinHoursTracker(agencyId: string): Promise<PenguinHoursTracker | undefined>;
   createPenguinHoursTracker(tracker: InsertPenguinHoursTracker): Promise<PenguinHoursTracker>;
@@ -1998,55 +1953,6 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(slackConfigurations.createdAt));
   }
 
-  // Quota Configuration methods
-  async createQuotaConfig(config: InsertQuotaConfig): Promise<QuotaConfig> {
-    const [quotaConfig] = await db
-      .insert(quotaConfigs)
-      .values(config)
-      .returning();
-    return quotaConfig;
-  }
-
-  async getQuotaConfigByAgency(agencyId: string): Promise<QuotaConfig | undefined> {
-    const [config] = await db
-      .select()
-      .from(quotaConfigs)
-      .where(eq(quotaConfigs.agencyId, agencyId));
-    return config || undefined;
-  }
-
-  async getAllQuotaConfigs(): Promise<QuotaConfig[]> {
-    return await db
-      .select()
-      .from(quotaConfigs)
-      .orderBy(quotaConfigs.createdAt);
-  }
-
-  async updateQuotaConfig(id: string, updates: Partial<InsertQuotaConfig>): Promise<QuotaConfig> {
-    const [config] = await db
-      .update(quotaConfigs)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(quotaConfigs.id, id))
-      .returning();
-    return config;
-  }
-
-  async upsertQuotaConfig(agencyId: string, config: Partial<InsertQuotaConfig>): Promise<QuotaConfig> {
-    const existing = await this.getQuotaConfigByAgency(agencyId);
-    
-    if (existing) {
-      return await this.updateQuotaConfig(existing.id, config);
-    } else {
-      return await this.createQuotaConfig({ ...config, agencyId } as InsertQuotaConfig);
-    }
-  }
-
-  async deleteQuotaConfig(id: string): Promise<void> {
-    await db
-      .delete(quotaConfigs)
-      .where(eq(quotaConfigs.id, id));
-  }
-
   // Resource Quota methods
   async getAllResourceQuotas(): Promise<ResourceQuota[]> {
     return await db
@@ -2372,84 +2278,14 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async getClientQuotaTracker(month: string): Promise<Array<{
-    agency: Agency;
-    monthlyTarget: number;
-    billedHours: number;
-    expectedHours: number;
-    percentageComplete: number;
+  async getPartnerHoursByAgency(month: string): Promise<Array<{
+    agencyId: string;
+    totalBilledHours: number;
   }>> {
-    // Parse month (format: "YYYY-MM")
     const [year, monthNum] = month.split("-").map(Number);
     const startDate = new Date(year, monthNum - 1, 1);
-    const endDate = new Date(year, monthNum, 1); // Start of next month (exclusive)
-    const today = new Date();
-    const currentDate = today < endDate ? today : new Date(endDate.getTime() - 1);
+    const endDate = new Date(year, monthNum, 1);
 
-    // Get all agencies
-    const allAgencies = await this.getAgencies();
-
-    // Get all quota configs (note: there is one current config per agency, not versioned/historical records)
-    const allConfigs = await this.getAllQuotaConfigs();
-
-    // Get holidays for the month to calculate working days
-    // Include holidays that start within the month OR started before but extend into it
-    const monthHolidays = await db
-      .select()
-      .from(holidays)
-      .where(
-        and(
-          eq(holidays.isActive, true),
-          or(
-            and(
-              gte(holidays.date, startDate.toISOString().split('T')[0]),
-              sql`${holidays.date} < ${endDate.toISOString().split('T')[0]}`
-            ),
-            and(
-              sql`${holidays.date} < ${startDate.toISOString().split('T')[0]}`,
-              sql`COALESCE(${holidays.endDate}, ${holidays.date}) >= ${startDate.toISOString().split('T')[0]}`
-            )
-          )
-        )
-      );
-
-    // Convert holiday dates to Date objects (parse in local time to avoid timezone issues)
-    // Only include dates that fall within the current month range
-    const holidayDates = monthHolidays.flatMap(h => {
-      const dates: Date[] = [];
-      // Parse dates in local time by splitting the string (avoids UTC parsing)
-      const startParts = h.date.split('-').map(Number);
-      const holidayStart = new Date(startParts[0], startParts[1] - 1, startParts[2]);
-      
-      let holidayEnd = holidayStart;
-      if (h.endDate) {
-        const endParts = h.endDate.split('-').map(Number);
-        holidayEnd = new Date(endParts[0], endParts[1] - 1, endParts[2]);
-      }
-      
-      // Clamp to month boundaries - only include dates within the month
-      const effectiveStart = holidayStart < startDate ? startDate : holidayStart;
-      const monthEnd = new Date(endDate.getTime() - 1);
-      const effectiveEnd = holidayEnd > monthEnd ? monthEnd : holidayEnd;
-      
-      const current = new Date(effectiveStart);
-      
-      while (current <= effectiveEnd) {
-        dates.push(new Date(current));
-        current.setDate(current.getDate() + 1);
-      }
-      
-      return dates;
-    });
-
-    // Calculate working days (with and without holidays for proper adjustment calculation)
-    // Standard working days = baseline for quota (excluding weekends only, NOT holidays)
-    const standardWorkingDays = this.countWorkingDays(startDate, endDate, []);
-    // Actual working days after holidays
-    const totalWorkingDays = this.countWorkingDays(startDate, endDate, holidayDates);
-    const workingDaysElapsed = this.countWorkingDays(startDate, currentDate, holidayDates);
-
-    // Get time logs for the month grouped by agency (using agencyId directly to include logs without projects)
     const results = await db
       .select({
         agencyId: timeLogs.agencyId,
@@ -2465,31 +2301,10 @@ export class DatabaseStorage implements IStorage {
       )
       .groupBy(timeLogs.agencyId);
 
-    // Build tracker data only for agencies with explicit quota configs
-    return allAgencies
-      .filter(agency => agency.isActive && allConfigs.some(c => c.agencyId === agency.id))
-      .map(agency => {
-        const config = allConfigs.find(c => c.agencyId === agency.id)!; // safe because we filtered
-        const monthlyTarget = parseFloat(config.monthlyTarget);
-
-        // Calculate expected hours based on working days elapsed
-        const expectedHours = totalWorkingDays > 0 
-          ? (monthlyTarget * workingDaysElapsed) / totalWorkingDays 
-          : 0;
-
-        const hoursData = results.find(r => r.agencyId === agency.id);
-        const billedHours = hoursData ? parseFloat(hoursData.totalBilledHours) : 0;
-
-        const percentageComplete = monthlyTarget > 0 ? (billedHours / monthlyTarget) * 100 : 0;
-
-        return {
-          agency,
-          monthlyTarget,
-          billedHours,
-          expectedHours: Math.round(expectedHours * 100) / 100,
-          percentageComplete: Math.round(percentageComplete * 100) / 100,
-        };
-      });
+    return results.map(r => ({
+      agencyId: r.agencyId!,
+      totalBilledHours: parseFloat(r.totalBilledHours),
+    }));
   }
 
   async getAccountQuotaTracker(month: string, agencyId?: string): Promise<Array<{
@@ -2664,81 +2479,6 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
-  async getTargetProgressByAgency(): Promise<{ agency: Agency; weeklyActual: number; monthlyActual: number; weeklyBillable: number; monthlyBillable: number; weeklyPreBilled: number; monthlyPreBilled: number; weeklyTarget: number; monthlyTarget: number; showBillable: boolean; showPreBilled: boolean; noQuota: boolean }[]> {
-    const now = new Date();
-    // Calculate Monday-Sunday week (weekStartsOn: 1)
-    const dayOfWeek = now.getDay();
-    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // If Sunday, go back 6 days to Monday
-    let startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
-    startOfWeek.setHours(0, 0, 0, 0); // Start of Monday
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(endOfWeek.getDate() + 6); // Monday + 6 days = Sunday
-    endOfWeek.setHours(23, 59, 59, 999); // Include the entire Sunday
-    
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    endOfMonth.setHours(23, 59, 59, 999); // Include the entire last day
-    
-    // IMPORTANT: Clamp week start to current month to avoid including previous month hours
-    // This ensures weekly pacing only shows hours from the current month
-    if (startOfWeek < startOfMonth) {
-      startOfWeek = new Date(startOfMonth);
-      startOfWeek.setHours(0, 0, 0, 0);
-    }
-    
-    // Calculate prorated weekly target based on days in month that fall within the current week
-    const daysInMonth = endOfMonth.getDate();
-    const weekStartInMonth = startOfWeek < startOfMonth ? startOfMonth : startOfWeek;
-    const weekEndInMonth = endOfWeek > endOfMonth ? endOfMonth : endOfWeek;
-    const daysInWeek = Math.floor((weekEndInMonth.getTime() - weekStartInMonth.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    
-    const agencyStats = await db
-      .select({
-        agency: agencies,
-        quotaConfig: quotaConfigs,
-        weeklyActual: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.logDate} >= ${startOfWeek} AND ${timeLogs.logDate} <= ${endOfWeek} THEN CAST(${timeLogs.billedHours} as DECIMAL) ELSE 0 END), 0)`,
-        monthlyActual: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.logDate} >= ${startOfMonth} AND ${timeLogs.logDate} <= ${endOfMonth} THEN CAST(${timeLogs.billedHours} as DECIMAL) ELSE 0 END), 0)`,
-        weeklyBillable: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.logDate} >= ${startOfWeek} AND ${timeLogs.logDate} <= ${endOfWeek} AND ${timeLogs.billingType} = 'billed' THEN CAST(${timeLogs.billedHours} as DECIMAL) ELSE 0 END), 0)`,
-        monthlyBillable: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.logDate} >= ${startOfMonth} AND ${timeLogs.logDate} <= ${endOfMonth} AND ${timeLogs.billingType} = 'billed' THEN CAST(${timeLogs.billedHours} as DECIMAL) ELSE 0 END), 0)`,
-        weeklyPreBilled: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.logDate} >= ${startOfWeek} AND ${timeLogs.logDate} <= ${endOfWeek} AND ${timeLogs.billingType} = 'prebilled' THEN CAST(${timeLogs.billedHours} as DECIMAL) ELSE 0 END), 0)`,
-        monthlyPreBilled: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.logDate} >= ${startOfMonth} AND ${timeLogs.logDate} <= ${endOfMonth} AND ${timeLogs.billingType} = 'prebilled' THEN CAST(${timeLogs.billedHours} as DECIMAL) ELSE 0 END), 0)`
-      })
-      .from(agencies)
-      .leftJoin(quotaConfigs, eq(agencies.id, quotaConfigs.agencyId))
-      .leftJoin(timeLogs, eq(agencies.id, timeLogs.agencyId))
-      .where(and(
-        eq(agencies.isActive, true),
-        or(
-          eq(quotaConfigs.isVisible, true),
-          isNull(quotaConfigs.isVisible)
-        )
-      ))
-      .groupBy(agencies.id, quotaConfigs.id);
-    
-    return agencyStats
-      .filter(stat => stat.quotaConfig?.isVisible !== false)
-      .map(stat => {
-        const monthlyTarget = parseFloat(stat.quotaConfig?.monthlyTarget || '160');
-        const dailyRate = monthlyTarget / daysInMonth;
-        const proratedWeeklyTarget = Math.round(dailyRate * daysInWeek);
-        
-        return {
-          agency: stat.agency,
-          weeklyActual: parseFloat(stat.weeklyActual || '0'),
-          monthlyActual: parseFloat(stat.monthlyActual || '0'),
-          weeklyBillable: parseFloat(stat.weeklyBillable || '0'),
-          monthlyBillable: parseFloat(stat.monthlyBillable || '0'),
-          weeklyPreBilled: parseFloat(stat.weeklyPreBilled || '0'),
-          monthlyPreBilled: parseFloat(stat.monthlyPreBilled || '0'),
-          weeklyTarget: proratedWeeklyTarget,
-          monthlyTarget: monthlyTarget,
-          showBillable: stat.quotaConfig?.showBillable ?? true,
-          showPreBilled: stat.quotaConfig?.showPreBilled ?? true,
-          noQuota: stat.quotaConfig?.noQuota ?? false
-        };
-      });
-  }
-
   async getHoursByAccount(): Promise<{ account: { id: string; name: string; agencyId: string }; agency: { id: string; name: string }; weeklyActual: number; monthlyActual: number; weeklyBilled: number; monthlyBilled: number }[]> {
     const now = new Date();
     // Calculate Monday-Sunday week (weekStartsOn: 1)
@@ -2795,89 +2535,6 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
-  async getHoursByAgency(): Promise<Array<{
-    type: 'agency';
-    id: string;
-    name: string;
-    weeklyBillable: number;
-    monthlyBillable: number;
-    weeklyPreBilled: number;
-    monthlyPreBilled: number;
-    weeklyTarget: number;
-    monthlyTarget: number;
-    showBillable: boolean;
-    showPreBilled: boolean;
-    noQuota: boolean;
-    isVisible: boolean;
-  }>> {
-    const now = new Date();
-    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(endOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-    
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    endOfMonth.setHours(23, 59, 59, 999);
-
-    // Calculate prorated weekly target based on days in month that fall within the current week
-    const daysInMonth = endOfMonth.getDate();
-    const weekStartInMonth = startOfWeek < startOfMonth ? startOfMonth : startOfWeek;
-    const weekEndInMonth = endOfWeek > endOfMonth ? endOfMonth : endOfWeek;
-    const daysInWeek = Math.floor((weekEndInMonth.getTime() - weekStartInMonth.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-    // Get agency-level aggregations with quota configs
-    const agencyStats = await db
-      .select({
-        agencyId: agencies.id,
-        agencyName: agencies.name,
-        weeklyBillable: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.logDate} >= ${startOfWeek} AND ${timeLogs.logDate} <= ${endOfWeek} THEN CAST(${timeLogs.billedHours} as DECIMAL) ELSE 0 END), 0)`,
-        monthlyBillable: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.logDate} >= ${startOfMonth} AND ${timeLogs.logDate} <= ${endOfMonth} THEN CAST(${timeLogs.billedHours} as DECIMAL) ELSE 0 END), 0)`,
-        weeklyActual: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.logDate} >= ${startOfWeek} AND ${timeLogs.logDate} <= ${endOfWeek} THEN CAST(${timeLogs.actualHours} as DECIMAL) ELSE 0 END), 0)`,
-        monthlyActual: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.logDate} >= ${startOfMonth} AND ${timeLogs.logDate} <= ${endOfMonth} THEN CAST(${timeLogs.actualHours} as DECIMAL) ELSE 0 END), 0)`,
-        monthlyTarget: quotaConfigs.monthlyTarget,
-        showBillable: quotaConfigs.showBillable,
-        showPreBilled: quotaConfigs.showPreBilled,
-        noQuota: quotaConfigs.noQuota,
-        isVisible: quotaConfigs.isVisible
-      })
-      .from(agencies)
-      .leftJoin(timeLogs, eq(agencies.id, timeLogs.agencyId))
-      .leftJoin(quotaConfigs, eq(agencies.id, quotaConfigs.agencyId))
-      .where(eq(agencies.isActive, true))
-      .groupBy(agencies.id, agencies.name, quotaConfigs.monthlyTarget, quotaConfigs.showBillable, quotaConfigs.showPreBilled, quotaConfigs.noQuota, quotaConfigs.isVisible);
-
-    // Transform to consistent format with configuration
-    return agencyStats.map(stat => {
-      const weeklyActual = parseFloat(stat.weeklyActual || '0');
-      const monthlyActual = parseFloat(stat.monthlyActual || '0');
-      const weeklyBillable = parseFloat(stat.weeklyBillable || '0');
-      const monthlyBillable = parseFloat(stat.monthlyBillable || '0');
-      const weeklyPreBilled = weeklyActual - weeklyBillable;
-      const monthlyPreBilled = monthlyActual - monthlyBillable;
-
-      const monthlyTarget = parseFloat(stat.monthlyTarget || '160');
-      const dailyRate = monthlyTarget / daysInMonth;
-      const proratedWeeklyTarget = Math.round(dailyRate * daysInWeek);
-
-      return {
-        type: 'agency' as const,
-        id: stat.agencyId,
-        name: stat.agencyName,
-        weeklyBillable,
-        monthlyBillable,
-        weeklyPreBilled,
-        monthlyPreBilled,
-        weeklyTarget: proratedWeeklyTarget,
-        monthlyTarget: monthlyTarget,
-        showBillable: stat.showBillable ?? true,
-        showPreBilled: stat.showPreBilled ?? true,
-        noQuota: stat.noQuota ?? false,
-        isVisible: stat.isVisible ?? true
-      };
-    });
-  }
-
   async getEfficiencyRatesByAccount(): Promise<{ account: Account; agency: Agency; actualHours: number; billedHours: number; efficiency: number }[]> {
     const accountStats = await db
       .select({
@@ -2931,142 +2588,6 @@ export class DatabaseStorage implements IStorage {
         efficiency: Math.round(efficiency * 100) / 100
       };
     });
-  }
-
-  async getWeeklyBonusEligibility(): Promise<Array<{
-    agency: Agency;
-    monthlyTarget: number;
-    weeks: Array<{
-      weekNumber: number;
-      startDate: Date;
-      endDate: Date;
-      billedHours: number;
-      weeklyTarget: number;
-      hitTarget: boolean;
-    }>;
-    weeksHit: number;
-    totalWeeks: number;
-    eligibleForBonus: boolean;
-  }>> {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-    
-    // Get first and last day of current month
-    const startOfMonth = new Date(currentYear, currentMonth, 1);
-    const endOfMonth = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
-    
-    // Calculate all weeks in the current month (Monday to Sunday)
-    // Keep full week boundaries for accurate hour calculations
-    const weeks: Array<{ weekNumber: number; startDate: Date; endDate: Date }> = [];
-    let weekNumber = 1;
-    let currentDate = new Date(startOfMonth);
-    
-    // Find the first Monday on or after the start of the month
-    const firstDayOfWeek = currentDate.getDay();
-    // If it's already Monday (1), stay; if Sunday (0), advance 1 day; otherwise advance to next Monday
-    const daysToMonday = firstDayOfWeek === 1 ? 0 : (firstDayOfWeek === 0 ? 1 : 8 - firstDayOfWeek);
-    currentDate.setDate(currentDate.getDate() + daysToMonday);
-    
-    while (currentDate <= endOfMonth) {
-      const weekStart = new Date(currentDate);
-      const weekEnd = new Date(currentDate);
-      weekEnd.setDate(weekEnd.getDate() + 6); // Monday + 6 days = Sunday
-      weekEnd.setHours(23, 59, 59, 999);
-      
-      // Include all weeks that start on or before the last day of the month
-      // Time log queries are already clamped to [startOfMonth, endOfMonth]
-      // and weekly targets are prorated by actual days in month
-      weeks.push({
-        weekNumber,
-        startDate: weekStart,
-        endDate: weekEnd
-      });
-      weekNumber++;
-      
-      currentDate.setDate(currentDate.getDate() + 7);
-    }
-    
-    // Get all active agencies with quota configs, excluding those with noQuota = true
-    const agenciesData = await db
-      .select({
-        agency: agencies,
-        quotaConfig: quotaConfigs
-      })
-      .from(agencies)
-      .leftJoin(quotaConfigs, eq(agencies.id, quotaConfigs.agencyId))
-      .where(and(
-        eq(agencies.isActive, true),
-        or(
-          isNull(quotaConfigs.noQuota),
-          eq(quotaConfigs.noQuota, false)
-        )
-      ));
-    
-    // Calculate days in month for prorating weekly targets
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    
-    // For each agency, calculate weekly hours across all accounts and check targets
-    const results = await Promise.all(agenciesData.map(async ({ agency, quotaConfig }) => {
-      const monthlyTarget = parseFloat(quotaConfig?.monthlyTarget || '160');
-      const dailyRate = monthlyTarget / daysInMonth;
-      
-      const weekResults = await Promise.all(weeks.map(async (week) => {
-        // Calculate how many days of this month fall in this week
-        const weekStartInMonth = week.startDate < startOfMonth ? startOfMonth : week.startDate;
-        const weekEndInMonth = week.endDate > endOfMonth ? endOfMonth : week.endDate;
-        
-        const daysInWeek = Math.floor((weekEndInMonth.getTime() - weekStartInMonth.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        
-        // Prorated weekly target based on days in this week
-        const weeklyTarget = dailyRate * daysInWeek;
-        
-        // Clamp the query to only pull data from within the current month
-        // This prevents October data from bleeding into November calculations
-        const queryStartDate = week.startDate < startOfMonth ? startOfMonth : week.startDate;
-        const queryEndDate = week.endDate > endOfMonth ? endOfMonth : week.endDate;
-        
-        const [hourData] = await db
-          .select({
-            billedHours: sql<string>`COALESCE(SUM(CASE WHEN ${timeLogs.billingType} = 'billed' THEN CAST(${timeLogs.billedHours} as DECIMAL) ELSE 0 END), 0)`
-          })
-          .from(timeLogs)
-          .where(
-            and(
-              eq(timeLogs.agencyId, agency.id),
-              gte(timeLogs.logDate, queryStartDate),
-              lte(timeLogs.logDate, queryEndDate)
-            )
-          );
-        
-        const billedHours = parseFloat(hourData?.billedHours || '0');
-        const hitTarget = billedHours >= weeklyTarget;
-        
-        return {
-          weekNumber: week.weekNumber,
-          startDate: week.startDate,
-          endDate: week.endDate,
-          billedHours,
-          weeklyTarget,
-          hitTarget
-        };
-      }));
-      
-      const weeksHit = weekResults.filter(w => w.hitTarget).length;
-      const totalWeeks = weeks.length;
-      const eligibleForBonus = weeksHit === totalWeeks && totalWeeks >= 4;
-      
-      return {
-        agency,
-        monthlyTarget,
-        weeks: weekResults,
-        weeksHit,
-        totalWeeks,
-        eligibleForBonus
-      };
-    }));
-    
-    return results.sort((a, b) => a.agency.name.localeCompare(b.agency.name));
   }
 
   async getMonthlyBreakdownByPerson(): Promise<{ agency: Agency; account: Account; project: Project | null; user: User; actualHours: number; billedHours: number }[]> {

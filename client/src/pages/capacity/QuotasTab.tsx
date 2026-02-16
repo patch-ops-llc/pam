@@ -8,7 +8,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Check, Loader2, ChevronRight, ChevronDown, DollarSign, Users, Target, TrendingUp, Info, Plus, Pencil, Trash2 } from "lucide-react";
+import { Check, Loader2, ChevronRight, DollarSign, Users, Target, TrendingUp, Info, Plus, Pencil, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -25,24 +25,6 @@ type Agency = {
   id: string;
   name: string;
   isActive: boolean;
-};
-
-type Account = {
-  id: string;
-  name: string;
-  agencyId: string;
-  monthlyQuotaHours: string | null;
-  isActive: boolean;
-};
-
-type QuotaConfig = {
-  id: string;
-  agencyId: string;
-  monthlyTarget: string;
-  showBillable: boolean;
-  showPreBilled: boolean;
-  noQuota: boolean;
-  isVisible: boolean;
 };
 
 type ResourceQuota = {
@@ -91,14 +73,6 @@ type QuotaPeriod = {
   isFinalized: boolean;
 };
 
-type ClientQuotaProgress = {
-  agency: Agency;
-  monthlyTarget: number;
-  billedHours: number;
-  expectedHours: number;
-  percentageComplete: number;
-};
-
 type ResourceQuotaProgress = {
   user: User;
   monthlyTarget: number;
@@ -109,23 +83,25 @@ type ResourceQuotaProgress = {
   percentageComplete: number;
 };
 
+type PartnerHoursData = {
+  agencyId: string;
+  totalBilledHours: number;
+};
+
 const ADMIN_EMAIL = "zach@patchops.io";
 const STANDARD_MONTHLY_HOURS = 160; // 40 hours/week * 4 weeks
 
 // Hardcoded Bonus Policy - Effective January 2025
 const BONUS_POLICY = {
   partnerBonuses: {
-    // When team hits partner's monthly quota
     fullTime: 135,  // $135 per partner
     partTime: 68,   // $68 per partner
   },
   individualQuota: {
-    // Personal bonus for hitting monthly target
     fullTime: 270,  // $270
     partTime: 135,  // $135
   },
   overageRate: 5,  // $5 per hour over individual quota
-  partners: ['Domestique', 'New Edge', 'Instrumental'],
 };
 
 type ForecastSettings = {
@@ -140,21 +116,15 @@ export function QuotasTab() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.email === ADMIN_EMAIL;
   
-  const [configs, setConfigs] = useState<Record<string, Partial<QuotaConfig>>>({});
   const [resourceQuotas, setResourceQuotas] = useState<Record<string, Partial<ResourceQuota>>>({});
   
   const [partnerPolicyDialogOpen, setPartnerPolicyDialogOpen] = useState(false);
   const [editingPartnerPolicy, setEditingPartnerPolicy] = useState<PartnerBonusPolicy | null>(null);
   const [individualSettingsDialogOpen, setIndividualSettingsDialogOpen] = useState(false);
   const [editingIndividualSetting, setEditingIndividualSetting] = useState<IndividualQuotaBonusSettings | null>(null);
-  const [expandedClients, setExpandedClients] = useState<Set<string>>(new Set());
-  const [savingAgencies, setSavingAgencies] = useState<Set<string>>(new Set());
-  const [savedAgencies, setSavedAgencies] = useState<Set<string>>(new Set());
   const [savingResources, setSavingResources] = useState<Set<string>>(new Set());
   const [savedResources, setSavedResources] = useState<Set<string>>(new Set());
-  const saveTimers = useRef<Record<string, NodeJS.Timeout>>({});
   const resourceSaveTimers = useRef<Record<string, NodeJS.Timeout>>({});
-  const configsRef = useRef<Record<string, Partial<QuotaConfig>>>({});
   const resourceQuotasRef = useRef<Record<string, Partial<ResourceQuota>>>({});
   const [toplineQuotaInput, setToplineQuotaInput] = useState<string>("");
   const [savingTopline, setSavingTopline] = useState(false);
@@ -171,10 +141,6 @@ export function QuotasTab() {
   const activeMonthDisplay = selectedMonth === 'current' 
     ? format(new Date(), 'MMMM yyyy')
     : format(new Date(new Date().setMonth(new Date().getMonth() - 1)), 'MMMM yyyy');
-  
-  useEffect(() => {
-    configsRef.current = configs;
-  }, [configs]);
 
   useEffect(() => {
     resourceQuotasRef.current = resourceQuotas;
@@ -183,14 +149,6 @@ export function QuotasTab() {
 
   const { data: agencies = [], isLoading: agenciesLoading } = useQuery<Agency[]>({
     queryKey: ["/api/clients"],
-  });
-
-  const { data: accounts = [], isLoading: accountsLoading } = useQuery<Account[]>({
-    queryKey: ["/api/accounts"],
-  });
-
-  const { data: quotaConfigs = [], isLoading: configsLoading } = useQuery<QuotaConfig[]>({
-    queryKey: ["/api/quota-configs"],
   });
 
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
@@ -249,15 +207,6 @@ export function QuotasTab() {
     },
   });
 
-  const { data: clientQuotaProgress = [], isLoading: clientProgressLoading } = useQuery<ClientQuotaProgress[]>({
-    queryKey: ["/api/analytics/client-quota-tracker", activeMonth],
-    queryFn: async () => {
-      const res = await fetch(`/api/analytics/client-quota-tracker?month=${activeMonth}`);
-      if (!res.ok) throw new Error('Failed to fetch client quota progress');
-      return res.json();
-    },
-  });
-
   const { data: resourceQuotaProgress = [], isLoading: resourceProgressLoading } = useQuery<ResourceQuotaProgress[]>({
     queryKey: ["/api/analytics/resource-quota-tracker", activeMonth],
     queryFn: async () => {
@@ -266,36 +215,16 @@ export function QuotasTab() {
       return res.json();
     },
   });
-  
-  // Filter client progress by visibility (only show agencies with isVisible=true)
-  const visibleClientProgress = useMemo(() => {
-    return clientQuotaProgress.filter(progress => {
-      const config = configs[progress.agency.id];
-      return config?.isVisible !== false;
-    });
-  }, [clientQuotaProgress, configs]);
 
-  useEffect(() => {
-    if (!agenciesLoading && !configsLoading) {
-      const configMap: Record<string, Partial<QuotaConfig>> = {};
-      
-      agencies.forEach(agency => {
-        if (agency.isActive) {
-          const existingConfig = quotaConfigs.find(c => c.agencyId === agency.id);
-          configMap[agency.id] = existingConfig || {
-            agencyId: agency.id,
-            monthlyTarget: "160",
-            showBillable: true,
-            showPreBilled: true,
-            noQuota: false,
-            isVisible: true,
-          };
-        }
-      });
-      
-      setConfigs(configMap);
-    }
-  }, [agencies, quotaConfigs, agenciesLoading, configsLoading]);
+  // Fetch billed hours per agency for partner bonus calculations
+  const { data: partnerHoursData = [] } = useQuery<PartnerHoursData[]>({
+    queryKey: ["/api/analytics/partner-hours", activeMonth],
+    queryFn: async () => {
+      const res = await fetch(`/api/analytics/partner-hours?month=${activeMonth}`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
 
   useEffect(() => {
     if (!usersLoading && !resourceQuotasLoading) {
@@ -313,53 +242,6 @@ export function QuotasTab() {
       setResourceQuotas(quotaMap);
     }
   }, [users, existingResourceQuotas, usersLoading, resourceQuotasLoading]);
-
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ agencyId, data }: { agencyId: string; data: Partial<QuotaConfig> }) => {
-      setSavingAgencies(prev => new Set(prev).add(agencyId));
-      setSavedAgencies(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(agencyId);
-        return newSet;
-      });
-      return await apiRequest(`/api/quota-configs/${agencyId}`, "PUT", data);
-    },
-    onSuccess: (_, variables) => {
-      const { agencyId } = variables;
-      queryClient.invalidateQueries({ queryKey: ["/api/quota-configs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/hours-by-agency"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics/client-quota-tracker"] });
-      
-      setSavingAgencies(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(agencyId);
-        return newSet;
-      });
-      setSavedAgencies(prev => new Set(prev).add(agencyId));
-      
-      setTimeout(() => {
-        setSavedAgencies(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(agencyId);
-          return newSet;
-        });
-      }, 2000);
-    },
-    onError: (error: any, variables) => {
-      const { agencyId } = variables;
-      setSavingAgencies(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(agencyId);
-        return newSet;
-      });
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update quota configuration",
-        variant: "destructive",
-      });
-    },
-  });
 
   const updateResourceQuotaMutation = useMutation({
     mutationFn: async ({ userId, quota }: { userId: string; quota: Partial<ResourceQuota> }) => {
@@ -525,27 +407,6 @@ export function QuotasTab() {
     },
   });
 
-  const autoSave = (agencyId: string) => {
-    const config = configsRef.current[agencyId];
-    if (!config) return;
-
-    const completeConfig = {
-      agencyId,
-      monthlyTarget: config.monthlyTarget || "160",
-      showBillable: config.showBillable ?? true,
-      showPreBilled: config.showPreBilled ?? true,
-      noQuota: config.noQuota ?? false,
-      isVisible: config.isVisible ?? true,
-    };
-
-    updateMutation.mutate({
-      agencyId,
-      data: completeConfig,
-    });
-    
-    delete saveTimers.current[agencyId];
-  };
-
   const autoSaveResource = (userId: string) => {
     const quota = resourceQuotasRef.current[userId];
     if (!quota) return;
@@ -559,25 +420,6 @@ export function QuotasTab() {
     });
     
     delete resourceSaveTimers.current[userId];
-  };
-
-  const handleConfigChange = (agencyId: string, field: keyof QuotaConfig, value: any) => {
-    setConfigs(prev => ({
-      ...prev,
-      [agencyId]: {
-        ...prev[agencyId],
-        agencyId,
-        [field]: value,
-      },
-    }));
-
-    if (saveTimers.current[agencyId]) {
-      clearTimeout(saveTimers.current[agencyId]);
-    }
-
-    saveTimers.current[agencyId] = setTimeout(() => {
-      autoSave(agencyId);
-    }, 800);
   };
 
   const handleResourceQuotaChange = (userId: string, field: 'monthlyTarget' | 'isActive', value: string | boolean) => {
@@ -625,35 +467,13 @@ export function QuotasTab() {
     updateUserEmploymentTypeMutation.mutate({ userId, employmentType });
   };
 
-  const toggleClientExpanded = (agencyId: string) => {
-    setExpandedClients(prev => {
-      const next = new Set(prev);
-      if (next.has(agencyId)) {
-        next.delete(agencyId);
-      } else {
-        next.add(agencyId);
-      }
-      return next;
-    });
-  };
-
   useEffect(() => {
     return () => {
-      Object.values(saveTimers.current).forEach(timer => clearTimeout(timer));
       Object.values(resourceSaveTimers.current).forEach(timer => clearTimeout(timer));
     };
   }, []);
 
-  // Group accounts by agency
-  const accountsByAgency = accounts.reduce<Record<string, Account[]>>((acc, account) => {
-    if (!acc[account.agencyId]) {
-      acc[account.agencyId] = [];
-    }
-    acc[account.agencyId].push(account);
-    return acc;
-  }, {});
-
-  const isLoading = agenciesLoading || configsLoading || usersLoading || resourceQuotasLoading || accountsLoading || partnerPoliciesLoading || individualSettingsLoading;
+  const isLoading = agenciesLoading || usersLoading || resourceQuotasLoading || partnerPoliciesLoading || individualSettingsLoading;
 
   if (isLoading) {
     return (
@@ -680,11 +500,26 @@ export function QuotasTab() {
     );
   }
 
-  const activeAgencies = agencies.filter(a => a.isActive);
-
   // Get individual settings for display
   const fullTimeSetting = individualBonusSettings.find(s => s.employmentType === 'full-time');
   const partTimeSetting = individualBonusSettings.find(s => s.employmentType === 'part-time');
+
+  // Calculate partner quota progress using partner bonus policies targets + billed hours
+  const partnerQuotaStatus = partnerBonusPolicies
+    .filter(p => p.isActive)
+    .map(policy => {
+      const hoursData = partnerHoursData.find(h => h.agencyId === policy.agencyId);
+      const billedHours = hoursData?.totalBilledHours || 0;
+      const target = parseFloat(policy.monthlyTargetHours);
+      const percentComplete = target > 0 ? (billedHours / target) * 100 : 0;
+      return {
+        policy,
+        billedHours,
+        target,
+        percentComplete,
+        quotaHit: percentComplete >= 100,
+      };
+    });
 
   return (
     <div className="space-y-6">
@@ -792,13 +627,13 @@ export function QuotasTab() {
         </CardContent>
       </Card>
 
-      {/* Topline Quota Target & Worksheet Calculator */}
+      {/* Topline Quota Target */}
       {isAdmin && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-blue-600" />
-              Topline Quota Target
+              Billable Hours Quota Target
             </CardTitle>
             <CardDescription>
               Set a single aggregate monthly hours target for the entire company. This number populates the dashboard and is used in forecasting calculations.
@@ -841,271 +676,9 @@ export function QuotasTab() {
                 )}
               </div>
             </div>
-
-            {/* Worksheet Calculator */}
-            {(() => {
-              const topline = parseFloat(toplineQuotaInput) || 0;
-              const agencySum = Object.values(configs).reduce((sum, cfg) => {
-                if (cfg.noQuota) return sum;
-                return sum + (parseFloat(cfg.monthlyTarget || "0") || 0);
-              }, 0);
-              const delta = topline - agencySum;
-              const blendedRate = parseFloat(forecastSettings?.blendedRate || "90");
-
-              return (
-                <div className="border rounded-lg p-4 bg-muted/20 space-y-4">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Quota Feasibility Worksheet
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    Compare your topline target against the sum of individual agency allocations below to see if it's realistic.
-                  </p>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="p-3 rounded-md border bg-background">
-                      <div className="text-xs text-muted-foreground">Topline Target</div>
-                      <div className="text-xl font-bold">{topline > 0 ? `${topline}h` : '—'}</div>
-                      {topline > 0 && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          ${(topline * blendedRate).toLocaleString()}/mo @ ${blendedRate}/hr
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3 rounded-md border bg-background">
-                      <div className="text-xs text-muted-foreground">Sum of Agency Targets</div>
-                      <div className="text-xl font-bold">{agencySum}h</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        ${(agencySum * blendedRate).toLocaleString()}/mo @ ${blendedRate}/hr
-                      </div>
-                    </div>
-                    <div className={cn("p-3 rounded-md border bg-background", 
-                      topline > 0 && delta !== 0 ? (delta > 0 ? "border-amber-300 dark:border-amber-700" : "border-green-300 dark:border-green-700") : ""
-                    )}>
-                      <div className="text-xs text-muted-foreground">Gap</div>
-                      <div className={cn("text-xl font-bold",
-                        topline > 0 && delta > 0 ? "text-amber-600" : topline > 0 && delta < 0 ? "text-green-600" : ""
-                      )}>
-                        {topline > 0 ? `${delta > 0 ? '+' : ''}${delta}h` : '—'}
-                      </div>
-                      {topline > 0 && delta !== 0 && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {delta > 0 ? "Need more agency allocation" : "Agencies exceed target"}
-                        </div>
-                      )}
-                      {topline > 0 && delta === 0 && (
-                        <div className="text-xs text-green-600 mt-1 font-medium">Perfectly allocated</div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Agency breakdown within calculator */}
-                  <div className="space-y-1">
-                    <div className="text-xs font-medium text-muted-foreground mb-2">Agency Allocation Breakdown</div>
-                    {activeAgencies.filter(a => !configs[a.id]?.noQuota).map(agency => {
-                      const target = parseFloat(configs[agency.id]?.monthlyTarget || "0") || 0;
-                      const pctOfTopline = topline > 0 ? ((target / topline) * 100) : 0;
-                      return (
-                        <div key={agency.id} className="flex items-center justify-between py-1.5 px-2 rounded text-sm hover:bg-background">
-                          <span>{agency.name}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-muted-foreground">{target}h</span>
-                            {topline > 0 && (
-                              <Badge variant="outline" className="text-xs min-w-[50px] justify-center">
-                                {pctOfTopline.toFixed(0)}%
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {topline > 0 && agencySum > 0 && (
-                    <Progress value={Math.min((agencySum / topline) * 100, 100)} className="h-2" />
-                  )}
-                </div>
-              );
-            })()}
           </CardContent>
         </Card>
       )}
-
-      {/* Team Progress & Client Quotas */}
-          {/* Team/Partner Progress Tracking */}
-          <Card className="mb-6">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Team Progress - {activeMonthDisplay}
-                  </CardTitle>
-                  <CardDescription>
-                    Real-time tracking of team billing progress toward monthly targets. Toggle "Show on Dashboard" below to hide clients.
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant={selectedMonth === 'previous' ? 'default' : 'outline'} 
-                    size="sm"
-                    onClick={() => setSelectedMonth('previous')}
-                    data-testid="btn-previous-month"
-                  >
-                    Last Month
-                  </Button>
-                  <Button 
-                    variant={selectedMonth === 'current' ? 'default' : 'outline'} 
-                    size="sm"
-                    onClick={() => setSelectedMonth('current')}
-                    data-testid="btn-current-month"
-                  >
-                    This Month
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {clientProgressLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="space-y-2">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-3 w-full" />
-                    </div>
-                  ))}
-                </div>
-              ) : visibleClientProgress.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">No visible client quotas configured. Toggle "Show on Dashboard" below to display clients.</p>
-              ) : (
-                <div className="space-y-4">
-                  {visibleClientProgress.map((progress) => {
-                    const pacing = progress.billedHours - progress.expectedHours;
-                    const isPacingAhead = pacing >= 0;
-                    const progressPercent = Math.min(100, progress.percentageComplete);
-                    
-                    return (
-                      <div key={progress.agency.id} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{progress.agency.name}</span>
-                            <Badge variant={isPacingAhead ? "default" : "secondary"} className={cn("text-xs", isPacingAhead ? "bg-green-600 hover:bg-green-600" : "")}>
-                              {isPacingAhead ? "+" : ""}{pacing.toFixed(2)}hrs
-                            </Badge>
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            {progress.billedHours.toFixed(2)} / {progress.monthlyTarget} hrs ({progressPercent.toFixed(0)}%)
-                          </span>
-                        </div>
-                        <Progress value={progressPercent} className="h-2" />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Client Quotas */}
-          <Card>
-        <CardHeader>
-          <CardTitle>Client Quota Configuration</CardTitle>
-          <CardDescription>
-            Set monthly targets and control which metrics are visible on the dashboard. Weekly targets are automatically calculated based on days in each week.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[200px]">Client</TableHead>
-                <TableHead className="w-[150px]">Monthly Target</TableHead>
-                <TableHead className="w-[120px]">Show on Dashboard</TableHead>
-                <TableHead className="w-[120px]">No Quota</TableHead>
-                <TableHead className="w-[120px]">Show Billable</TableHead>
-                <TableHead className="w-[120px]">Show Pre-billed</TableHead>
-                <TableHead className="w-[80px]">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {activeAgencies.map((agency) => {
-                const config = configs[agency.id] || {
-                  agencyId: agency.id,
-                  monthlyTarget: "160",
-                  showBillable: true,
-                  showPreBilled: true,
-                  noQuota: false,
-                  isVisible: true,
-                };
-
-                const isSaving = savingAgencies.has(agency.id);
-                const isSaved = savedAgencies.has(agency.id);
-
-                return (
-                  <TableRow key={agency.id}>
-                    <TableCell className="font-medium" data-testid={`cell-agency-${agency.id}`}>
-                      {agency.name}
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.5"
-                        value={config.monthlyTarget}
-                        onChange={(e) => handleConfigChange(agency.id, 'monthlyTarget', e.target.value)}
-                        data-testid={`input-monthly-${agency.id}`}
-                        className="w-28"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox
-                        checked={config.isVisible ?? true}
-                        onCheckedChange={(checked) => handleConfigChange(agency.id, 'isVisible', checked)}
-                        data-testid={`checkbox-visible-${agency.id}`}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox
-                        checked={config.noQuota ?? false}
-                        onCheckedChange={(checked) => handleConfigChange(agency.id, 'noQuota', checked)}
-                        data-testid={`checkbox-no-quota-${agency.id}`}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox
-                        checked={config.showBillable ?? true}
-                        onCheckedChange={(checked) => handleConfigChange(agency.id, 'showBillable', checked)}
-                        data-testid={`checkbox-billable-${agency.id}`}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox
-                        checked={config.showPreBilled ?? true}
-                        onCheckedChange={(checked) => handleConfigChange(agency.id, 'showPreBilled', checked)}
-                        data-testid={`checkbox-prebilled-${agency.id}`}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {isSaving && (
-                        <Badge variant="secondary" className="flex items-center gap-1 w-fit" data-testid={`badge-saving-${agency.id}`}>
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          Saving
-                        </Badge>
-                      )}
-                      {isSaved && !isSaving && (
-                        <Badge variant="default" className="flex items-center gap-1 w-fit bg-green-600 hover:bg-green-600" data-testid={`badge-saved-${agency.id}`}>
-                          <Check className="h-3 w-3" />
-                          Saved
-                        </Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
 
       {/* Individual Progress & Resource Quotas */}
           <Card className="mb-6">
@@ -1190,7 +763,7 @@ export function QuotasTab() {
                 Bonus Calculator - {activeMonthDisplay}
               </CardTitle>
               <CardDescription>
-                Estimated bonus amounts based on current month progress. Partner bonuses require all team members to hit partner quotas.
+                Estimated bonus amounts based on current month progress. Partner bonuses require hitting the partner's monthly target.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1198,29 +771,17 @@ export function QuotasTab() {
               <div className="mb-6">
                 <h4 className="font-medium text-sm mb-3">Partner Quota Status</h4>
                 <div className="flex flex-wrap gap-2">
-                  {clientQuotaProgress.filter(p => 
-                    BONUS_POLICY.partners.some(partner => 
-                      p.agency.name.toLowerCase().includes(partner.toLowerCase())
-                    )
-                  ).map((progress) => {
-                    const quotaHit = progress.percentageComplete >= 100;
-                    return (
-                      <Badge 
-                        key={progress.agency.id}
-                        variant={quotaHit ? "default" : "secondary"}
-                        className={cn("text-sm py-1 px-3", quotaHit && "bg-green-600 hover:bg-green-600")}
-                      >
-                        {quotaHit ? <Check className="h-3 w-3 mr-1" /> : null}
-                        {progress.agency.name}: {progress.percentageComplete.toFixed(0)}%
-                      </Badge>
-                    );
-                  })}
-                  {clientQuotaProgress.filter(p => 
-                    BONUS_POLICY.partners.some(partner => 
-                      p.agency.name.toLowerCase().includes(partner.toLowerCase())
-                    )
-                  ).length === 0 && (
-                    <p className="text-sm text-muted-foreground italic">No partner quotas found matching: {BONUS_POLICY.partners.join(', ')}</p>
+                  {partnerQuotaStatus.length > 0 ? partnerQuotaStatus.map((status) => (
+                    <Badge 
+                      key={status.policy.id}
+                      variant={status.quotaHit ? "default" : "secondary"}
+                      className={cn("text-sm py-1 px-3", status.quotaHit && "bg-green-600 hover:bg-green-600")}
+                    >
+                      {status.quotaHit ? <Check className="h-3 w-3 mr-1" /> : null}
+                      {status.policy.name}: {status.percentComplete.toFixed(0)}%
+                    </Badge>
+                  )) : (
+                    <p className="text-sm text-muted-foreground italic">No partner bonus policies configured</p>
                   )}
                 </div>
               </div>
@@ -1240,25 +801,21 @@ export function QuotasTab() {
                   </TableHeader>
                   <TableBody>
                     {resourceQuotaProgress.map((progress) => {
-                      const user = users.find(u => u.id === progress.user.id);
-                      const isFullTime = user?.employmentType !== 'part-time';
+                      const thisUser = users.find(u => u.id === progress.user.id);
+                      const isFullTime = thisUser?.employmentType !== 'part-time';
                       
-                      // Count partners that hit quota
-                      const partnersHitQuota = clientQuotaProgress.filter(p => 
-                        BONUS_POLICY.partners.some(partner => 
-                          p.agency.name.toLowerCase().includes(partner.toLowerCase())
-                        ) && p.percentageComplete >= 100
-                      ).length;
+                      // Count partners that hit quota (using partner bonus policies)
+                      const partnersHitQuota = partnerQuotaStatus.filter(s => s.quotaHit).length;
                       
-                      // Partner bonus: $150 FT / $75 PT per partner quota hit
+                      // Partner bonus per partner quota hit
                       const partnerBonus = partnersHitQuota * (isFullTime ? BONUS_POLICY.partnerBonuses.fullTime : BONUS_POLICY.partnerBonuses.partTime);
                       
-                      // Individual quota bonus: $300 FT / $150 PT if hit target
+                      // Individual quota bonus
                       const totalHours = progress.billedHours + (progress.prebilledHours || 0);
                       const hitQuota = totalHours >= progress.adjustedTarget;
                       const quotaBonus = hitQuota ? (isFullTime ? BONUS_POLICY.individualQuota.fullTime : BONUS_POLICY.individualQuota.partTime) : 0;
                       
-                      // Overage bonus: $5/hour over quota
+                      // Overage bonus
                       const overageHours = Math.max(0, totalHours - progress.adjustedTarget);
                       const overageBonus = overageHours * BONUS_POLICY.overageRate;
                       
@@ -1315,19 +872,15 @@ export function QuotasTab() {
                     )}
                     {/* Total Payout Row */}
                     {resourceQuotaProgress.length > 0 && (() => {
-                      const partnersHitQuota = clientQuotaProgress.filter(p => 
-                        BONUS_POLICY.partners.some(partner => 
-                          p.agency.name.toLowerCase().includes(partner.toLowerCase())
-                        ) && p.percentageComplete >= 100
-                      ).length;
+                      const partnersHitQuota = partnerQuotaStatus.filter(s => s.quotaHit).length;
 
                       let totalPartnerBonus = 0;
                       let totalQuotaBonus = 0;
                       let totalOverageBonus = 0;
 
                       resourceQuotaProgress.forEach((progress) => {
-                        const user = users.find(u => u.id === progress.user.id);
-                        const isFullTime = user?.employmentType !== 'part-time';
+                        const thisUser = users.find(u => u.id === progress.user.id);
+                        const isFullTime = thisUser?.employmentType !== 'part-time';
                         
                         totalPartnerBonus += partnersHitQuota * (isFullTime ? BONUS_POLICY.partnerBonuses.fullTime : BONUS_POLICY.partnerBonuses.partTime);
                         
@@ -1390,29 +943,29 @@ export function QuotasTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => {
-                    const quota = resourceQuotas[user.id] || {
-                      userId: user.id,
+                  {users.map((u) => {
+                    const quota = resourceQuotas[u.id] || {
+                      userId: u.id,
                       monthlyTarget: "160",
                       isActive: true,
                     };
 
-                    const isSaving = savingResources.has(user.id);
-                    const isSaved = savedResources.has(user.id);
+                    const isSaving = savingResources.has(u.id);
+                    const isSaved = savedResources.has(u.id);
                     const target = parseFloat(quota.monthlyTarget || "160");
                     const assumedEfficiency = (target / STANDARD_MONTHLY_HOURS) * 100;
 
                     return (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium" data-testid={`cell-user-${user.id}`}>
-                          {user.firstName} {user.lastName}
+                      <TableRow key={u.id}>
+                        <TableCell className="font-medium" data-testid={`cell-user-${u.id}`}>
+                          {u.firstName} {u.lastName}
                         </TableCell>
                         <TableCell>
                           <Select
-                            value={user.employmentType || 'full-time'}
-                            onValueChange={(value) => handleEmploymentTypeChange(user.id, value)}
+                            value={u.employmentType || 'full-time'}
+                            onValueChange={(value) => handleEmploymentTypeChange(u.id, value)}
                           >
-                            <SelectTrigger className="w-24" data-testid={`select-employment-type-${user.id}`}>
+                            <SelectTrigger className="w-24" data-testid={`select-employment-type-${u.id}`}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -1428,8 +981,8 @@ export function QuotasTab() {
                             min="0"
                             step="0.5"
                             value={quota.monthlyTarget}
-                            onChange={(e) => handleResourceQuotaChange(user.id, 'monthlyTarget', e.target.value)}
-                            data-testid={`input-resource-monthly-${user.id}`}
+                            onChange={(e) => handleResourceQuotaChange(u.id, 'monthlyTarget', e.target.value)}
+                            data-testid={`input-resource-monthly-${u.id}`}
                             className="w-28"
                           />
                         </TableCell>
@@ -1445,19 +998,19 @@ export function QuotasTab() {
                         <TableCell>
                           <Checkbox
                             checked={quota.isActive ?? true}
-                            onCheckedChange={(checked) => handleResourceQuotaChange(user.id, 'isActive', checked as boolean)}
-                            data-testid={`checkbox-resource-active-${user.id}`}
+                            onCheckedChange={(checked) => handleResourceQuotaChange(u.id, 'isActive', checked as boolean)}
+                            data-testid={`checkbox-resource-active-${u.id}`}
                           />
                         </TableCell>
                         <TableCell>
                           {isSaving && (
-                            <Badge variant="secondary" className="flex items-center gap-1 w-fit" data-testid={`badge-resource-saving-${user.id}`}>
+                            <Badge variant="secondary" className="flex items-center gap-1 w-fit" data-testid={`badge-resource-saving-${u.id}`}>
                               <Loader2 className="h-3 w-3 animate-spin" />
                               Saving
                             </Badge>
                           )}
                           {isSaved && !isSaving && (
-                            <Badge variant="default" className="flex items-center gap-1 w-fit bg-green-600 hover:bg-green-600" data-testid={`badge-resource-saved-${user.id}`}>
+                            <Badge variant="default" className="flex items-center gap-1 w-fit bg-green-600 hover:bg-green-600" data-testid={`badge-resource-saved-${u.id}`}>
                               <Check className="h-3 w-3" />
                               Saved
                             </Badge>
@@ -1679,13 +1232,6 @@ export function QuotasTab() {
                 {isAdmin && (
                   <Button 
                     onClick={() => {
-                      const partnerResults = clientQuotaProgress.map(p => ({
-                        agencyId: p.agency.id,
-                        name: p.agency.name,
-                        targetHours: p.monthlyTarget,
-                        actualHours: p.billedHours,
-                        percentComplete: p.percentageComplete,
-                      }));
                       const individualResults = resourceQuotaProgress.map(p => ({
                         userId: p.user.id,
                         name: `${p.user.firstName} ${p.user.lastName}`,
@@ -1697,7 +1243,7 @@ export function QuotasTab() {
                       }));
                       saveQuotaPeriodMutation.mutate({
                         yearMonth: activeMonth,
-                        partnerResults: JSON.stringify(partnerResults),
+                        partnerResults: JSON.stringify([]),
                         individualResults: JSON.stringify(individualResults),
                         isFinalized: false,
                       });
@@ -1732,13 +1278,7 @@ export function QuotasTab() {
               ) : (
                 <div className="space-y-4">
                   {quotaPeriods.map((period) => {
-                    let partnerData: any[] = [];
                     let individualData: any[] = [];
-                    try {
-                      partnerData = period.partnerResults ? JSON.parse(period.partnerResults) : [];
-                    } catch (e) {
-                      console.error('Failed to parse partner results:', e);
-                    }
                     try {
                       individualData = period.individualResults ? JSON.parse(period.individualResults) : [];
                     } catch (e) {
@@ -1784,34 +1324,6 @@ export function QuotasTab() {
                             </div>
                           </div>
                           <CollapsibleContent className="mt-4 space-y-4">
-                            <div>
-                              <h4 className="font-medium text-sm mb-2">Client Quotas ({partnerData.length})</h4>
-                              <Table>
-                                <TableHeader>
-                                  <TableRow>
-                                    <TableHead>Client</TableHead>
-                                    <TableHead className="text-right">Target</TableHead>
-                                    <TableHead className="text-right">Actual</TableHead>
-                                    <TableHead className="text-right">% Complete</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {partnerData.map((row: any) => (
-                                    <TableRow key={row.agencyId}>
-                                      <TableCell>{row.name}</TableCell>
-                                      <TableCell className="text-right">{row.targetHours}hrs</TableCell>
-                                      <TableCell className="text-right">{row.actualHours?.toFixed(2)}hrs</TableCell>
-                                      <TableCell className="text-right">
-                                        <Badge variant={row.percentComplete >= 100 ? "default" : "secondary"} 
-                                               className={cn(row.percentComplete >= 100 && "bg-green-600 hover:bg-green-600")}>
-                                          {row.percentComplete?.toFixed(0)}%
-                                        </Badge>
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            </div>
                             <div>
                               <h4 className="font-medium text-sm mb-2">Resource Quotas ({individualData.length})</h4>
                               <Table>

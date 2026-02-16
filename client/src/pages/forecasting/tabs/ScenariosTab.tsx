@@ -19,7 +19,6 @@ export function ScenariosTab() {
   });
 
   const { data: agencies = [] } = useQuery<any[]>({ queryKey: ["/api/clients"] });
-  const { data: quotaConfigs = [] } = useQuery<any[]>({ queryKey: ["/api/quota-configs"] });
 
   const deleteScenario = useMutation({
     mutationFn: async (id: string) => {
@@ -44,7 +43,7 @@ export function ScenariosTab() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Scenario Planning</CardTitle>
-              <CardDescription>Project outcomes based on quota changes and new accounts</CardDescription>
+              <CardDescription>Project outcomes based on new accounts and engagement changes</CardDescription>
             </div>
             <Button onClick={() => setIsCreating(!isCreating)} data-testid="button-create-scenario">
               {isCreating ? "Cancel" : "Create Scenario"}
@@ -56,7 +55,6 @@ export function ScenariosTab() {
             <ScenarioForm 
               onSuccess={() => setIsCreating(false)} 
               agencies={agencies || []}
-              quotaConfigs={quotaConfigs || []}
             />
           )}
           
@@ -99,7 +97,6 @@ export function ScenariosTab() {
             <ScenarioDetail 
               scenario={selectedScenario} 
               onClose={() => setSelectedScenario(null)}
-              quotaConfigs={quotaConfigs || []}
             />
           )}
         </CardContent>
@@ -108,10 +105,9 @@ export function ScenariosTab() {
   );
 }
 
-function ScenarioForm({ onSuccess, agencies, quotaConfigs }: { 
+function ScenarioForm({ onSuccess, agencies }: { 
   onSuccess: () => void; 
   agencies: any[];
-  quotaConfigs: any[];
 }) {
   const [name, setName] = useState("");
   const [blendedRate, setBlendedRate] = useState("90");
@@ -191,24 +187,21 @@ function ScenarioForm({ onSuccess, agencies, quotaConfigs }: {
       </div>
 
       <div className="space-y-2">
-        <Label>Quota Adjustments (hours/week)</Label>
-        {agencies.map((agency: any) => {
-          const currentQuota = quotaConfigs.find((q: any) => q.agencyId === agency.id);
-          return (
-            <div key={agency.id} className="flex items-center gap-2">
-              <span className="w-32 text-sm">{agency.name}:</span>
-              <Input
-                type="number"
-                step="0.5"
-                placeholder={currentQuota?.weeklyBillableTarget || "0"}
-                value={quotaChanges[agency.id] || ""}
-                onChange={(e) => setQuotaChanges({ ...quotaChanges, [agency.id]: e.target.value })}
-                className="flex-1"
-                data-testid={`input-quota-${agency.id}`}
-              />
-            </div>
-          );
-        })}
+        <Label>Hours Adjustments by Agency (hours/week)</Label>
+        {agencies.map((agency: any) => (
+          <div key={agency.id} className="flex items-center gap-2">
+            <span className="w-32 text-sm">{agency.name}:</span>
+            <Input
+              type="number"
+              step="0.5"
+              placeholder="0"
+              value={quotaChanges[agency.id] || ""}
+              onChange={(e) => setQuotaChanges({ ...quotaChanges, [agency.id]: e.target.value })}
+              className="flex-1"
+              data-testid={`input-quota-${agency.id}`}
+            />
+          </div>
+        ))}
       </div>
 
       <div className="space-y-4 p-4 bg-muted/30 rounded-md">
@@ -279,16 +272,15 @@ function ScenarioForm({ onSuccess, agencies, quotaConfigs }: {
   );
 }
 
-function ScenarioDetail({ scenario, onClose, quotaConfigs }: { 
+function ScenarioDetail({ scenario, onClose }: { 
   scenario: ForecastScenario;
   onClose: () => void;
-  quotaConfigs: any[];
 }) {
   const quotaChanges = scenario.agencyQuotaChanges ? JSON.parse(scenario.agencyQuotaChanges) : {};
   const newAccounts = scenario.newAccounts ? JSON.parse(scenario.newAccounts) : [];
   const blendedRate = parseFloat(scenario.blendedRate);
   
-  const quotaRevenue = Object.entries(quotaChanges).reduce((sum, [agencyId, hours]) => {
+  const quotaRevenue = Object.entries(quotaChanges).reduce((sum, [_, hours]) => {
     const weeklyHours = parseFloat(hours as string);
     const weeks = 13;
     return sum + (weeklyHours * blendedRate * weeks);
@@ -336,16 +328,13 @@ function ScenarioDetail({ scenario, onClose, quotaConfigs }: {
 
           {Object.keys(quotaChanges).length > 0 && (
             <div className="space-y-2">
-              <div className="text-sm font-medium">Quota Changes</div>
-              {Object.entries(quotaChanges).map(([agencyId, hours]) => {
-                const currentQuota = quotaConfigs.find((q: any) => q.agencyId === agencyId);
-                return (
-                  <div key={agencyId} className="flex justify-between text-sm">
-                    <span>Agency {agencyId.slice(0, 8)}...</span>
-                    <span>{currentQuota?.weeklyBillableTarget || 0} → {hours} hrs/week</span>
-                  </div>
-                );
-              })}
+              <div className="text-sm font-medium">Hours Adjustments</div>
+              {Object.entries(quotaChanges).map(([agencyId, hours]) => (
+                <div key={agencyId} className="flex justify-between text-sm">
+                  <span>Agency {agencyId.slice(0, 8)}...</span>
+                  <span>{hours} hrs/week</span>
+                </div>
+              ))}
             </div>
           )}
 

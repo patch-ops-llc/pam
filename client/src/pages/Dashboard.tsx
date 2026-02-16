@@ -1,4 +1,3 @@
-import { TargetProgress } from "@/components/TargetProgress";
 import { PenguinHoursTracker } from "@/components/PenguinHoursTracker";
 import { CustomPeriodClientTracker } from "@/components/CustomPeriodClientTracker";
 import { ResourceQuotaTracker } from "@/components/ResourceQuotaTracker";
@@ -34,7 +33,6 @@ export default function Dashboard() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <TargetProgress />
         <ResourceQuotaTracker />
         <PenguinHoursTracker />
         <CustomPeriodClientTracker />

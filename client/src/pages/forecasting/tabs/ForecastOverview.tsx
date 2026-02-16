@@ -56,10 +56,6 @@ export function ForecastOverview() {
     queryKey: ["/api/forecast/retainers"],
   });
 
-  const { data: quotaConfigs = [] } = useQuery<any[]>({
-    queryKey: ["/api/quota-configs"],
-  });
-
   const { data: accountRevenue = [] } = useQuery<any[]>({
     queryKey: ["/api/forecast/account-revenue"],
   });

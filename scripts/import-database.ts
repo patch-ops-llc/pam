@@ -38,7 +38,6 @@ const tableImportOrder = [
   'calendars',
   'calendar_events',
   'slack_configurations',
-  'quota_configs',
   'penguin_hours_tracker',
   'forecast_invoices',
   'forecast_expenses',
