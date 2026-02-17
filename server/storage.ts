@@ -265,6 +265,9 @@ export interface IStorage {
   getMonthlyBillableSummary(month: string): Promise<{
     totalBilledHours: number;
     totalActualHours: number;
+    expectedHours: number;
+    workingDaysTotal: number;
+    workingDaysElapsed: number;
     byAgency: Array<{
       agencyId: string;
       agencyName: string;
@@ -2490,6 +2493,9 @@ export class DatabaseStorage implements IStorage {
   async getMonthlyBillableSummary(month: string): Promise<{
     totalBilledHours: number;
     totalActualHours: number;
+    expectedHours: number;
+    workingDaysTotal: number;
+    workingDaysElapsed: number;
     byAgency: Array<{
       agencyId: string;
       agencyName: string;
@@ -2501,7 +2507,10 @@ export class DatabaseStorage implements IStorage {
     const [year, monthNum] = month.split("-").map(Number);
     const startDate = new Date(year, monthNum - 1, 1);
     const endDate = new Date(year, monthNum, 1);
+    const today = new Date();
+    const currentDate = today < endDate ? today : new Date(endDate.getTime() - 1);
 
+    // Only include billed hours (exclude prebilled/internal)
     const results = await db
       .select({
         agencyId: agencies.id,
@@ -2514,7 +2523,8 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           gte(timeLogs.logDate, startDate),
-          sql`${timeLogs.logDate} < ${endDate}`
+          sql`${timeLogs.logDate} < ${endDate}`,
+          eq(timeLogs.billingType, 'billed')
         )
       )
       .groupBy(agencies.id, agencies.name);
@@ -2538,7 +2548,58 @@ export class DatabaseStorage implements IStorage {
 
     agencyData.sort((a, b) => b.billedHours - a.billedHours);
 
-    return { totalBilledHours, totalActualHours, byAgency: agencyData };
+    // Calculate pacing based on working days elapsed vs total
+    const monthHolidays = await db
+      .select()
+      .from(holidays)
+      .where(
+        and(
+          eq(holidays.isActive, true),
+          or(
+            and(
+              gte(holidays.date, startDate.toISOString().split('T')[0]),
+              sql`${holidays.date} < ${endDate.toISOString().split('T')[0]}`
+            ),
+            and(
+              sql`${holidays.date} < ${startDate.toISOString().split('T')[0]}`,
+              sql`COALESCE(${holidays.endDate}, ${holidays.date}) >= ${startDate.toISOString().split('T')[0]}`
+            )
+          )
+        )
+      );
+
+    const holidayDates = monthHolidays.flatMap(h => {
+      const dates: Date[] = [];
+      const startParts = h.date.split('-').map(Number);
+      const holidayStart = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+      let holidayEnd = holidayStart;
+      if (h.endDate) {
+        const endParts = h.endDate.split('-').map(Number);
+        holidayEnd = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+      }
+      const effectiveStart = holidayStart < startDate ? startDate : holidayStart;
+      const monthEnd = new Date(endDate.getTime() - 1);
+      const effectiveEnd = holidayEnd > monthEnd ? monthEnd : holidayEnd;
+      const current = new Date(effectiveStart);
+      while (current <= effectiveEnd) {
+        dates.push(new Date(current));
+        current.setDate(current.getDate() + 1);
+      }
+      return dates;
+    });
+
+    const workingDaysTotal = this.countWorkingDays(startDate, endDate, holidayDates);
+    const workingDaysElapsed = this.countWorkingDays(startDate, currentDate, holidayDates);
+
+    // Get topline quota target from forecast settings
+    const settings = await db.select().from(forecastSettings).limit(1);
+    const toplineTarget = settings[0]?.toplineQuotaTarget ? parseFloat(settings[0].toplineQuotaTarget) : 0;
+
+    const expectedHours = workingDaysTotal > 0 && toplineTarget > 0
+      ? (toplineTarget * workingDaysElapsed) / workingDaysTotal
+      : 0;
+
+    return { totalBilledHours, totalActualHours, expectedHours, workingDaysTotal, workingDaysElapsed, byAgency: agencyData };
   }
 
   async getMonthlyBreakdownByPerson(): Promise<{ agency: Agency; account: Account; project: Project | null; user: User; actualHours: number; billedHours: number }[]> {

@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 type BillableSummary = {
   totalBilledHours: number;
   totalActualHours: number;
+  expectedHours: number;
+  workingDaysTotal: number;
+  workingDaysElapsed: number;
   byAgency: Array<{
     agencyId: string;
     agencyName: string;
@@ -101,6 +104,9 @@ export function MonthlyBillableTracker() {
   const totalBilled = summary?.totalBilledHours || 0;
   const progressPercent = toplineTarget && toplineTarget > 0 ? Math.min((totalBilled / toplineTarget) * 100, 100) : 0;
   const remaining = toplineTarget ? toplineTarget - totalBilled : null;
+  const expectedHours = summary?.expectedHours || 0;
+  const pacing = totalBilled - expectedHours;
+  const isPacingAhead = pacing >= 0;
 
   if (isLoading) {
     return (
@@ -187,8 +193,18 @@ export function MonthlyBillableTracker() {
               )}
             />
           )}
-          <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-            <span>Actual: {(summary?.totalActualHours || 0).toFixed(1)}h</span>
+          <div className="flex gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
+            {toplineTarget && expectedHours > 0 && (
+              <span className={cn(
+                "font-medium",
+                isPacingAhead ? "text-emerald-600" : "text-red-500"
+              )}>
+                {isPacingAhead ? "+" : ""}{pacing.toFixed(1)}h {isPacingAhead ? "ahead" : "behind"} pace
+              </span>
+            )}
+            {toplineTarget && expectedHours > 0 && (
+              <span>Expected: {expectedHours.toFixed(1)}h ({summary?.workingDaysElapsed}/{summary?.workingDaysTotal} days)</span>
+            )}
             {remaining !== null && (
               <span>{remaining > 0 ? `${remaining.toFixed(1)}h remaining` : `${(-remaining).toFixed(1)}h over target`}</span>
             )}
