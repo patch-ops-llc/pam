@@ -284,10 +284,14 @@ export interface IStorage {
       prebilledHours: number;
       actualHours: number;
       percentage: number;
-      byAccount: Array<{
-        accountId: string;
-        accountName: string;
+      byTask: Array<{
+        taskName: string;
         prebilledHours: number;
+        byUser: Array<{
+          userId: string;
+          userName: string;
+          prebilledHours: number;
+        }>;
       }>;
     }>;
   }>;
@@ -2625,10 +2629,14 @@ export class DatabaseStorage implements IStorage {
       prebilledHours: number;
       actualHours: number;
       percentage: number;
-      byAccount: Array<{
-        accountId: string;
-        accountName: string;
+      byTask: Array<{
+        taskName: string;
         prebilledHours: number;
+        byUser: Array<{
+          userId: string;
+          userName: string;
+          prebilledHours: number;
+        }>;
       }>;
     }>;
   }> {
@@ -2640,14 +2648,16 @@ export class DatabaseStorage implements IStorage {
       .select({
         agencyId: agencies.id,
         agencyName: agencies.name,
-        accountId: accounts.id,
-        accountName: accounts.name,
+        taskName: timeLogs.taskName,
+        userId: users.id,
+        userFirstName: users.firstName,
+        userLastName: users.lastName,
         prebilledHours: sql<string>`COALESCE(SUM(CAST(${timeLogs.billedHours} AS DECIMAL)), 0)`,
         actualHours: sql<string>`COALESCE(SUM(CAST(${timeLogs.actualHours} AS DECIMAL)), 0)`,
       })
       .from(timeLogs)
       .innerJoin(agencies, eq(timeLogs.agencyId, agencies.id))
-      .innerJoin(accounts, eq(timeLogs.accountId, accounts.id))
+      .innerJoin(users, eq(timeLogs.userId, users.id))
       .where(
         and(
           gte(timeLogs.logDate, startDate),
@@ -2655,7 +2665,13 @@ export class DatabaseStorage implements IStorage {
           eq(timeLogs.billingType, 'prebilled')
         )
       )
-      .groupBy(agencies.id, agencies.name, accounts.id, accounts.name);
+      .groupBy(agencies.id, agencies.name, timeLogs.taskName, users.id, users.firstName, users.lastName);
+
+    type TaskEntry = {
+      taskName: string;
+      prebilledHours: number;
+      byUser: Array<{ userId: string; userName: string; prebilledHours: number }>;
+    };
 
     const agencyMap = new Map<string, {
       agencyId: string;
@@ -2663,12 +2679,14 @@ export class DatabaseStorage implements IStorage {
       prebilledHours: number;
       actualHours: number;
       percentage: number;
-      byAccount: Array<{ accountId: string; accountName: string; prebilledHours: number }>;
+      taskMap: Map<string, TaskEntry>;
     }>();
 
     for (const row of results) {
       const prebilled = parseFloat(row.prebilledHours);
       const actual = parseFloat(row.actualHours);
+      if (prebilled <= 0) continue;
+
       if (!agencyMap.has(row.agencyId)) {
         agencyMap.set(row.agencyId, {
           agencyId: row.agencyId,
@@ -2676,29 +2694,47 @@ export class DatabaseStorage implements IStorage {
           prebilledHours: 0,
           actualHours: 0,
           percentage: 0,
-          byAccount: [],
+          taskMap: new Map(),
         });
       }
       const agency = agencyMap.get(row.agencyId)!;
       agency.prebilledHours += prebilled;
       agency.actualHours += actual;
-      if (prebilled > 0) {
-        agency.byAccount.push({
-          accountId: row.accountId,
-          accountName: row.accountName,
-          prebilledHours: prebilled,
+
+      if (!agency.taskMap.has(row.taskName)) {
+        agency.taskMap.set(row.taskName, {
+          taskName: row.taskName,
+          prebilledHours: 0,
+          byUser: [],
         });
       }
+      const task = agency.taskMap.get(row.taskName)!;
+      task.prebilledHours += prebilled;
+      task.byUser.push({
+        userId: row.userId,
+        userName: `${row.userFirstName} ${row.userLastName}`,
+        prebilledHours: prebilled,
+      });
     }
 
-    const byAgency = Array.from(agencyMap.values());
+    const byAgency = Array.from(agencyMap.values()).map(a => ({
+      agencyId: a.agencyId,
+      agencyName: a.agencyName,
+      prebilledHours: a.prebilledHours,
+      actualHours: a.actualHours,
+      percentage: a.percentage,
+      byTask: Array.from(a.taskMap.values()).map(t => {
+        t.byUser.sort((x, y) => y.prebilledHours - x.prebilledHours);
+        return t;
+      }).sort((x, y) => y.prebilledHours - x.prebilledHours),
+    }));
+
     const totalPrebilledHours = byAgency.reduce((sum, a) => sum + a.prebilledHours, 0);
 
     byAgency.forEach(a => {
       a.percentage = totalPrebilledHours > 0
         ? Math.round((a.prebilledHours / totalPrebilledHours) * 1000) / 10
         : 0;
-      a.byAccount.sort((x, y) => y.prebilledHours - x.prebilledHours);
     });
 
     byAgency.sort((a, b) => b.prebilledHours - a.prebilledHours);

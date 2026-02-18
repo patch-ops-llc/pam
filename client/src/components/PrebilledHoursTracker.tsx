@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, ChevronDown, ChevronRight } from "lucide-react";
-import { format, addMonths, startOfMonth, subMonths } from "date-fns";
+import { Clock, ChevronDown, ChevronRight, User } from "lucide-react";
+import { format, addMonths, startOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 
 type PrebilledSummary = {
@@ -14,10 +14,14 @@ type PrebilledSummary = {
     prebilledHours: number;
     actualHours: number;
     percentage: number;
-    byAccount: Array<{
-      accountId: string;
-      accountName: string;
+    byTask: Array<{
+      taskName: string;
       prebilledHours: number;
+      byUser: Array<{
+        userId: string;
+        userName: string;
+        prebilledHours: number;
+      }>;
     }>;
   }>;
 };
@@ -33,20 +37,38 @@ const AGENCY_COLORS = [
   "bg-orange-500",
 ];
 
-const AGENCY_TEXT_COLORS = [
-  "text-violet-500",
-  "text-teal-500",
-  "text-rose-500",
-  "text-sky-500",
-  "text-amber-500",
-  "text-indigo-500",
-  "text-emerald-500",
-  "text-orange-500",
-];
-
 export function PrebilledHoursTracker() {
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
-  const [expandedAgency, setExpandedAgency] = useState<string | null>(null);
+  const [expandedAgencies, setExpandedAgencies] = useState<Set<string>>(new Set());
+  const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
+
+  const toggleAgency = (id: string) => {
+    setExpandedAgencies(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        // collapse child tasks too
+        setExpandedTasks(pt => {
+          const nt = new Set(pt);
+          for (const key of pt) {
+            if (key.startsWith(id + ":")) nt.delete(key);
+          }
+          return nt;
+        });
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleTask = (key: string) => {
+    setExpandedTasks(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
 
   const monthOptions = [];
   const today = new Date();
@@ -140,32 +162,29 @@ export function PrebilledHoursTracker() {
             {/* Agency rows */}
             <div className="space-y-0.5">
               {summary.byAgency.map((agency, i) => {
-                const isExpanded = expandedAgency === agency.agencyId;
-                const hasAccounts = agency.byAccount.length > 1;
+                const agencyExpanded = expandedAgencies.has(agency.agencyId);
+                const hasTasks = agency.byTask.length > 0;
 
                 return (
                   <div key={agency.agencyId}>
+                    {/* Agency row */}
                     <button
                       className={cn(
                         "flex items-center justify-between text-sm w-full py-1.5 px-1 rounded hover:bg-muted/50 transition-colors",
-                        !hasAccounts && "cursor-default"
+                        !hasTasks && "cursor-default"
                       )}
-                      onClick={() => {
-                        if (hasAccounts) {
-                          setExpandedAgency(isExpanded ? null : agency.agencyId);
-                        }
-                      }}
+                      onClick={() => hasTasks && toggleAgency(agency.agencyId)}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        {hasAccounts ? (
-                          isExpanded
+                        {hasTasks ? (
+                          agencyExpanded
                             ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                             : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         ) : (
                           <div className="w-3.5" />
                         )}
                         <div className={cn("h-2.5 w-2.5 rounded-full shrink-0", AGENCY_COLORS[i % AGENCY_COLORS.length])} />
-                        <span className="truncate">{agency.agencyName}</span>
+                        <span className="truncate font-medium">{agency.agencyName}</span>
                       </div>
                       <span className="text-muted-foreground shrink-0 ml-2 tabular-nums">
                         {agency.prebilledHours.toFixed(1)}h
@@ -173,14 +192,67 @@ export function PrebilledHoursTracker() {
                       </span>
                     </button>
 
-                    {isExpanded && hasAccounts && (
-                      <div className="ml-9 space-y-0.5 mb-1">
-                        {agency.byAccount.map((account) => (
-                          <div key={account.accountId} className="flex items-center justify-between text-xs py-1 text-muted-foreground">
-                            <span className="truncate">{account.accountName}</span>
-                            <span className="shrink-0 ml-2 tabular-nums">{account.prebilledHours.toFixed(1)}h</span>
-                          </div>
-                        ))}
+                    {/* Task bucket rows */}
+                    {agencyExpanded && hasTasks && (
+                      <div className="ml-5 border-l border-muted pl-3 space-y-0.5 my-0.5">
+                        {agency.byTask.map((task) => {
+                          const taskKey = `${agency.agencyId}:${task.taskName}`;
+                          const taskExpanded = expandedTasks.has(taskKey);
+                          const hasUsers = task.byUser.length > 1;
+                          const taskPercent = agency.prebilledHours > 0
+                            ? Math.round((task.prebilledHours / agency.prebilledHours) * 1000) / 10
+                            : 0;
+
+                          return (
+                            <div key={taskKey}>
+                              <button
+                                className={cn(
+                                  "flex items-center justify-between text-sm w-full py-1 px-1 rounded hover:bg-muted/50 transition-colors",
+                                  !hasUsers && "cursor-default"
+                                )}
+                                onClick={() => hasUsers && toggleTask(taskKey)}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  {hasUsers ? (
+                                    taskExpanded
+                                      ? <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                      : <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                  ) : (
+                                    <div className="w-3" />
+                                  )}
+                                  <span className="truncate">{task.taskName}</span>
+                                </div>
+                                <span className="text-muted-foreground shrink-0 ml-2 tabular-nums text-xs">
+                                  {task.prebilledHours.toFixed(1)}h
+                                  <span className="ml-1 text-muted-foreground/70">{taskPercent}%</span>
+                                </span>
+                              </button>
+
+                              {/* User rows */}
+                              {taskExpanded && hasUsers && (
+                                <div className="ml-5 border-l border-muted/60 pl-3 space-y-0.5 my-0.5">
+                                  {task.byUser.map((u) => (
+                                    <div key={u.userId} className="flex items-center justify-between text-xs py-0.5 px-1 text-muted-foreground">
+                                      <div className="flex items-center gap-1.5 min-w-0">
+                                        <User className="h-3 w-3 shrink-0" />
+                                        <span className="truncate">{u.userName}</span>
+                                      </div>
+                                      <span className="shrink-0 ml-2 tabular-nums">{u.prebilledHours.toFixed(1)}h</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Single user — show inline */}
+                              {task.byUser.length === 1 && (
+                                <div className="ml-8 text-xs text-muted-foreground/70 -mt-0.5 mb-0.5 flex items-center gap-1">
+                                  <User className="h-2.5 w-2.5" />
+                                  {task.byUser[0].userName}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
