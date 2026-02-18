@@ -2,6 +2,7 @@ import { PenguinHoursTracker } from "@/components/PenguinHoursTracker";
 import { CustomPeriodClientTracker } from "@/components/CustomPeriodClientTracker";
 import { ResourceQuotaTracker } from "@/components/ResourceQuotaTracker";
 import { MonthlyBillableTracker } from "@/components/MonthlyBillableTracker";
+import { PrebilledHoursTracker } from "@/components/PrebilledHoursTracker";
 import { AccountHoursByWeekTracker } from "@/components/AccountHoursByWeekTracker";
 import { useAuth } from "@/hooks/use-auth";
 import { PageHeader } from "@/components/PageHeader";
@@ -36,6 +37,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <MonthlyBillableTracker />
         <ResourceQuotaTracker />
+        <PrebilledHoursTracker />
         <PenguinHoursTracker />
         <CustomPeriodClientTracker />
         <AccountHoursByWeekTracker />

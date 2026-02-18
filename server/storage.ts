@@ -276,6 +276,21 @@ export interface IStorage {
       percentage: number;
     }>;
   }>;
+  getPrebilledHoursByAgency(month: string): Promise<{
+    totalPrebilledHours: number;
+    byAgency: Array<{
+      agencyId: string;
+      agencyName: string;
+      prebilledHours: number;
+      actualHours: number;
+      percentage: number;
+      byAccount: Array<{
+        accountId: string;
+        accountName: string;
+        prebilledHours: number;
+      }>;
+    }>;
+  }>;
   // Penguin Hours Tracker
   getPenguinHoursTracker(agencyId: string): Promise<PenguinHoursTracker | undefined>;
   createPenguinHoursTracker(tracker: InsertPenguinHoursTracker): Promise<PenguinHoursTracker>;
@@ -2600,6 +2615,95 @@ export class DatabaseStorage implements IStorage {
       : 0;
 
     return { totalBilledHours, totalActualHours, expectedHours, workingDaysTotal, workingDaysElapsed, byAgency: agencyData };
+  }
+
+  async getPrebilledHoursByAgency(month: string): Promise<{
+    totalPrebilledHours: number;
+    byAgency: Array<{
+      agencyId: string;
+      agencyName: string;
+      prebilledHours: number;
+      actualHours: number;
+      percentage: number;
+      byAccount: Array<{
+        accountId: string;
+        accountName: string;
+        prebilledHours: number;
+      }>;
+    }>;
+  }> {
+    const [year, monthNum] = month.split("-").map(Number);
+    const startDate = new Date(year, monthNum - 1, 1);
+    const endDate = new Date(year, monthNum, 1);
+
+    const results = await db
+      .select({
+        agencyId: agencies.id,
+        agencyName: agencies.name,
+        accountId: accounts.id,
+        accountName: accounts.name,
+        prebilledHours: sql<string>`COALESCE(SUM(CAST(${timeLogs.billedHours} AS DECIMAL)), 0)`,
+        actualHours: sql<string>`COALESCE(SUM(CAST(${timeLogs.actualHours} AS DECIMAL)), 0)`,
+      })
+      .from(timeLogs)
+      .innerJoin(agencies, eq(timeLogs.agencyId, agencies.id))
+      .innerJoin(accounts, eq(timeLogs.accountId, accounts.id))
+      .where(
+        and(
+          gte(timeLogs.logDate, startDate),
+          sql`${timeLogs.logDate} < ${endDate}`,
+          eq(timeLogs.billingType, 'prebilled')
+        )
+      )
+      .groupBy(agencies.id, agencies.name, accounts.id, accounts.name);
+
+    const agencyMap = new Map<string, {
+      agencyId: string;
+      agencyName: string;
+      prebilledHours: number;
+      actualHours: number;
+      percentage: number;
+      byAccount: Array<{ accountId: string; accountName: string; prebilledHours: number }>;
+    }>();
+
+    for (const row of results) {
+      const prebilled = parseFloat(row.prebilledHours);
+      const actual = parseFloat(row.actualHours);
+      if (!agencyMap.has(row.agencyId)) {
+        agencyMap.set(row.agencyId, {
+          agencyId: row.agencyId,
+          agencyName: row.agencyName,
+          prebilledHours: 0,
+          actualHours: 0,
+          percentage: 0,
+          byAccount: [],
+        });
+      }
+      const agency = agencyMap.get(row.agencyId)!;
+      agency.prebilledHours += prebilled;
+      agency.actualHours += actual;
+      if (prebilled > 0) {
+        agency.byAccount.push({
+          accountId: row.accountId,
+          accountName: row.accountName,
+          prebilledHours: prebilled,
+        });
+      }
+    }
+
+    const byAgency = Array.from(agencyMap.values());
+    const totalPrebilledHours = byAgency.reduce((sum, a) => sum + a.prebilledHours, 0);
+
+    byAgency.forEach(a => {
+      a.percentage = totalPrebilledHours > 0
+        ? Math.round((a.prebilledHours / totalPrebilledHours) * 1000) / 10
+        : 0;
+      a.byAccount.sort((x, y) => y.prebilledHours - x.prebilledHours);
+    });
+
+    byAgency.sort((a, b) => b.prebilledHours - a.prebilledHours);
+
+    return { totalPrebilledHours, byAgency };
   }
 
   async getMonthlyBreakdownByPerson(): Promise<{ agency: Agency; account: Account; project: Project | null; user: User; actualHours: number; billedHours: number }[]> {

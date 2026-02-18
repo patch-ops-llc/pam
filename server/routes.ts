@@ -1987,6 +1987,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/analytics/prebilled-hours-by-agency", async (req, res) => {
+    try {
+      const month = req.query.month as string;
+      if (!month) {
+        return res.status(400).json({ error: "Month parameter is required (format: YYYY-MM)" });
+      }
+      const data = await storage.getPrebilledHoursByAgency(month);
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching prebilled hours by agency:", error);
+      res.status(500).json({ error: "Failed to fetch prebilled hours by agency" });
+    }
+  });
+
   app.get("/api/analytics/resource-quota-tracker", async (req, res) => {
     try {
       const month = req.query.month as string;
